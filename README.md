@@ -6,6 +6,8 @@ Adds thirst, support for half hearts so player now has 20 hp instead of default 
 Improves world generation so world looks better as well as caverns.
 And many more...
 
+I'm going to make mod updates and adding new content.
+
 # Original content
 https://github.com/chrisj42/minicraft-plus-revived/releases
 
