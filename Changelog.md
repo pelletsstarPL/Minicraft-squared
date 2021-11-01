@@ -24,6 +24,7 @@ Hardcore mode hearts now has separate texture
 Balancing:
 Some food restore more hunger
 Potions will regen thirst (each one regains 2 droplets out of 10)
+Bucket nerf you can craft one from 5 iron ores instead of ingots. This is to make early game possible and will be patched in 1.1.0 or in 1.0.1 if solution will be figured out by me. I hope it's gonna be solved fast.
 
 Added Carrot that you can gain from killing zombies, then farm on farmlands, cook or craft carrot juice out of it.
 
