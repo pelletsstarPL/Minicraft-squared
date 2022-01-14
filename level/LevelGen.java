@@ -344,7 +344,7 @@ public class LevelGen {
 						for (int yy = yo - 1; yy <= yo + 1; yy++)
 							for (int xx = xo - 1; xx <= xo + 1; xx++)
 								if (xx >= 0 && yy >= 0 && xx < w && yy < h) {
-									if (map[xx + yy * w] == Tiles.get("grass").id || map[xx + yy * w] == Tiles.get("tall grass").id) {
+									if (map[xx + yy * w] == Tiles.get("grass").id || map[xx + yy * w] == Tiles.get("tall grass").id || map[xx + yy * w] == Tiles.get("Grass small stones").id) {
 										double chance=Math.random();
 										if(chance>0.15)map[xx + yy * w] = Tiles.get("sand").id;
 										else if(chance<=0.15 && chance>0.14)map[xx + yy * w] = Tiles.get("cactus").id;
@@ -371,7 +371,7 @@ public class LevelGen {
 						for (int yy = yo - 1; yy <= yo + 1; yy++)
 							for (int xx = xo - 1; xx <= xo + 1; xx++)
 								if (xx >= 0 && yy >= 0 && xx < w && yy < h) {
-									if (map[xx + yy * w] == Tiles.get("grass").id || map[xx + yy * w] == Tiles.get("tall grass").id) {
+									if (map[xx + yy * w] == Tiles.get("grass").id || map[xx + yy * w] == Tiles.get("tall grass").id || map[xx + yy * w] == Tiles.get("Grass Small stones").id) {
 										double chance=Math.random();
 										if(chance>0.15)map[xx + yy * w] = Tiles.get("sand").id;
 										else if(chance<=0.15 && chance>0.14)map[xx + yy * w] = Tiles.get("cactus").id;
