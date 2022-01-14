@@ -33,7 +33,7 @@ public class TitleDisplay extends Display {
 	private boolean reverse = false;
 	public TitleDisplay() {
 		super(true, false, new Menu.Builder(false, 2, RelPos.CENTER,
-			new StringEntry(": )", Color.BLUE),
+			new StringEntry(":)", Color.BLUE),
 			new BlankEntry(),
 			new BlankEntry(),
 			new SelectEntry("Play", () -> /*Game.setMenu(new PlayDisplay())*/{
