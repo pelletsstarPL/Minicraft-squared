@@ -18,6 +18,10 @@
 14,time potion
 14,shield potion
 16,candy pickaxe
+17,gold apple juice
+8,cactus juice,2
+6,carrot juice
+7,herb tea,2
 16,candy shovel
 16,candy axe
 16,candy hoe
