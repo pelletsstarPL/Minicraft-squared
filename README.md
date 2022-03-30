@@ -1,5 +1,5 @@
 # Minicraft^2
-![](https://pipe.miroware.io/5db9be8a56a97834b159fd5b/ghlogo.png)
+![obraz](https://user-images.githubusercontent.com/54317957/160757108-ecb10438-a38e-4aa7-b9b9-a93f7a21274b.png)
 
 Mod for Chris J's Minicraft+.
 Adds thirst, support for half hearts so player now has 20 hp instead of default 10 and many more.
