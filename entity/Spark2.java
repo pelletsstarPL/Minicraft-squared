@@ -77,7 +77,7 @@ public class Spark2 extends Entity {
 			randmirror = random.nextInt(4);
 		}
 
-		screen.render(x - 4, y - 4 - 2, 8 + 24 * 32, randmirror, 2); // Renders the spark
+		screen.render(x - 4, y - 4 - 2, 8 + 28 * 32, randmirror, 2); // Renders the spark
 	}
 	
 	/**

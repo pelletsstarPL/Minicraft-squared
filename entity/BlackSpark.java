@@ -70,7 +70,7 @@ public class BlackSpark extends Entity {
 			randmirror = random.nextInt(4);
 		}
 
-		screen.render(x - 4, y - 4 - 2, 9 + 24 * 32, randmirror, 2); // Renders the spark
+		screen.render(x - 4, y - 4 - 2, 9 + 28 * 32, randmirror, 2); // Renders the spark
 	}
 	
 	/**
