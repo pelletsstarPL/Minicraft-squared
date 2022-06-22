@@ -1,0 +1,8 @@
+With the default controls...
+
+Move your character with arrow keys or WSAD. Press C to attack and X to open the inventory, and to use items. Pickup furniture and torches with V. Select an item in the inventory to equip it. Press T to sprint. Keep in mind that sprinting here has a cooldown regardless of your stamina level after you run out of stamina or you'll stop it other way, like starting swimming or pressing T for the second time.
+
+The Goal: Defeat the air wizard!
+
+The Side Goal 1: Defeat the night wizard!
+The Side Goal 2: Drink golden apple juice! :)

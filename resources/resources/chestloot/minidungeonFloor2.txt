@@ -1,0 +1,34 @@
+1,11th
+9,tnt
+7,bread,1
+2,bread,3
+7,leather armor
+50,gold apple
+5,apple,2
+3,lapis,2
+4,torch,4
+14,swim potion
+14,light potion
+14,speed potion
+16,gold armor
+5,stone brick,4
+5,stone brick,6
+4,string,3
+4,bone,2
+3,bone
+5,torch,3
+1,moss,2
+6,torch,6
+4,torch,3
+7,steak,3
+9,steak,4
+6,gem,3
+7,gem,5
+7,gem,4
+8,yellow clothes
+8,black clothes
+9,orange clothes
+9,cyan clothes
+9,purple clothes
+4,arrow,10
+:potion,1:coal,3:apple,3:dirt,7
