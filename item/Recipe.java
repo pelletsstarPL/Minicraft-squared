@@ -4,12 +4,16 @@ import java.util.HashMap;
 
 import minicraft.core.Game;
 import minicraft.entity.mob.Player;
+import org.jetbrains.annotations.Nullable;
+
+import javax.tools.Tool;
 
 public class Recipe {
 	private HashMap<String, Integer> costs = new HashMap<String, Integer>();  // A list of costs for the recipe
 	private String product; // The result item of the recipe
 	private int amount;
 	private boolean canCraft; // Checks if the player can craft the recipe
+	public static int coalfcycle=2;
 	
 	public Recipe(String createdItem, String... reqItems) {
 		canCraft = false;
@@ -66,15 +70,26 @@ public class Recipe {
 		if (!Game.isMode("creative")) {
 			// Remove the cost items from the inventory.
 			for (String cost: costs.keySet().toArray(new String[0])) {
-				player.getInventory().removeItems(Items.get(cost), costs.get(cost));
+
+				if(cost.contains("COAL FILTER")){
+					if(coalfcycle>2) {
+
+						player.getInventory().removeItems(Items.get(cost), costs.get(cost));
+						coalfcycle = 0;
+					}else
+						coalfcycle++;
+				}
+				else{
+					if(!cost.contains("DEMONICOLON")) //do not take demonicolon from the player once used
+					player.getInventory().removeItems(Items.get(cost), costs.get(cost));
+				}
 			}
 		}
 
 		// Add the crafted items.
 		for (int i = 0; i < amount; i++)
 			 player.getInventory().add(getProduct());
-		//refund Demonicolon
-		if(costs.containsKey("DEMONICOLON"))player.getInventory().add(Items.get("DEMONICOLON"));
+
 		return true;
 
 	}
