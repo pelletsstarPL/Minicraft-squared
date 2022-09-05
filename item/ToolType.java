@@ -8,7 +8,7 @@ public enum ToolType {
 	Axe (4, 24),
 	Bow (5, 20),
 	Claymore (6, 34),
-	Shears (0, 42, true);
+	Shears (0, 42, true,12);
 
 	public final int xPos; // X Position of origin
 	public final int yPos; // Y position of origin
@@ -36,9 +36,9 @@ public enum ToolType {
 	 * @param dur Durabiltity of the tool.
 	 * @param noLevel If the tool has only one level.
 	 */
-	ToolType(int xPos, int dur, boolean noLevel) {
-		yPos = 12;
+	ToolType(int xPos, int dur, boolean noLevel,int yPos) {
 		this.xPos = xPos;
+		this.yPos = yPos;
 		durability = dur;
 		this.noLevel = noLevel;
 	}
