@@ -43,22 +43,25 @@ public class DrinkItem extends StackableItem {
 	
 	/** What happens when the player uses the item on a tile */
 	public boolean interactOn(Tile tile, Level level, int xt, int yt, Player player, Direction attackDir) {
+		int onTile = level.getTile(player.x >> 4, player.y >> 4).id;
 		boolean success = false;
-		if (count > 0 && player.thirst < Player.maxThirst && player.payStamina(staminaCost)) { // If the player has thirst to fill, and stamina to pay...
+		if(getName()=="Bottle") {
+			if(onTile==6){ //0 bc its Bottle
+				staminaCost=1;
+				Game.player.getInventory().add(Items.get("Dirty water"));
+				success=true;
+			}
+		}else if (count > 0 && player.thirst < Player.maxThirst && player.payStamina(staminaCost) && getName()!="Bottle") { // If the player has thirst to fill, and stamina to pay... and bottle isn't empty
 			double chance=Math.random();
 			switch(getName()) {
 				case "Dirty water": if(chance>0.2){
 					Game.player.potioneffects.put(PotionType.Thirst, 500);
 				};break;
-				case "Purified water": if(chance<0.12){
+				case "Purified water": if(chance<0.04){
 					Game.player.potioneffects.put(PotionType.Thirst, 400);
 				};break;
 			}
-			int onTile = level.getTile(player.x >> 4, player.y >> 4).id;
-			if(feed==0 && onTile==6){ //0 bc its Bottle
-				staminaCost=1;
-				Game.player.getInventory().add(Items.get("Dirty water"));
-			}else Game.player.getInventory().add(Items.get("Bottle")); //refunds bottle on drinking
+			Game.player.getInventory().add(Items.get("Bottle"));
 			player.thirst = Math.min(player.thirst + feed, Player.maxThirst); // Restore the thirst
 			success = true;
 		}
