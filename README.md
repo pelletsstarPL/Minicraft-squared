@@ -1,5 +1,6 @@
 # Minicraft²
-![obraz](https://user-images.githubusercontent.com/54317957/161441052-4cdce0d6-72cb-4082-9969-e2a32602ea13.png)
+![image](https://user-images.githubusercontent.com/54317957/193396953-7dad0992-6f77-4468-bcea-b8d31e01f6c6.png)
+
 
 
 Mod for Chris J's Minicraft+.
