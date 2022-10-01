@@ -1,0 +1,27 @@
+10,book,1
+1,gunpowder,4
+2,gunpowder,1
+2,torch,3
+1,torch,2
+6,bread,3
+2,bread,1
+1,carrot,2
+7,wood,5
+7,rock sword,1
+15,iron pickaxe,1
+14,iron,2
+20,iron,1
+1,stick,5
+4,stone,9
+5,wood,4
+3,wood,1
+3,string,3
+3,string,2
+4,cloth,3
+1,purified water,3
+4,carrot juice,1
+1,iron ore,4
+18,gem,2
+36,gem,3
+11,leather armor,1
+:steak,2:wood,7
