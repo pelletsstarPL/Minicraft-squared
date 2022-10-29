@@ -25,14 +25,16 @@ public class TileItem extends StackableItem {
 		
 		/// TileItem sprites all have 1x1 sprites.
 		items.add(new TileItem("Flower", (new Sprite(4, 0, 0)), "flower", "grass","tall grass"));
+		items.add(new TileItem("Cloud Flower", (new Sprite(9, 1, 0)), "cloud flower", "cloud tallgrass","cloud"));
 		items.add(new TileItem("Rose", (new Sprite(5, 0, 0)), "rose", "grass","tall grass"));
 		items.add(new TileItem("Azalea", (new Sprite(5, 2, 0)), "azalea", "moss"));
 		items.add(new TileItem("Small rose", (new Sprite(5, 1, 0)), "small rose", "grass","tall grass"));
 		items.add(new TileItem("Small flower", (new Sprite(4, 2, 0)), "small flower", "grass","tall grass"));
 		items.add(new TileItem("Sunflower", (new Sprite(4, 1, 0)), "sunflower", "grass","tall grass"));
-		items.add(new TileItem("Acorn", (new Sprite(7, 3, 0)), "tree Sapling", "grass","tall grass"));
+		items.add(new TileItem("Acorn", (new Sprite(7, 3, 0)), "oak Sapling", "grass","tall grass"));
 		items.add(new TileItem("Catkin", (new Sprite(13, 3, 0)), "birch Sapling", "grass","tall grass"));
 		items.add(new TileItem("Dirt", (new Sprite(0, 0, 0)), "dirt", "hole", "water", "lava"));
+		items.add(new TileItem("Lily pad", (new Sprite(7, 1, 0)), "lily pad", "water"));
 		items.add(new TileItem("Coarse Dirt", (new Sprite(0, 1, 0)), "coarse dirt", "hole", "water", "lava"));
 		items.add(new TileItem("Natural Rock", (new Sprite(2, 0, 0)), "rock", "hole", "dirt", "sand", "grass", "path", "water", "lava"));
 		items.add(new TileItem("Deepslate", (new Sprite(2, 0, 0)), "deepslate", "hole", "dirt", "sand", "grass", "path", "water", "lava"));
@@ -58,6 +60,7 @@ public class TileItem extends StackableItem {
 		items.add(new TileItem("Lapis Block", (new Sprite(13, 5, 0)), "Lapis block", "dirt","sand","snow","grass","tallgrass","skygrass","coarse dirt","tallgrass","cloud","darkcloud"));
 		items.add(new TileItem("Iron Block", (new Sprite(12, 5, 0)), "Iron block", "dirt","sand","snow","grass","tallgrass","skygrass","coarse dirt","tallgrass","cloud","darkcloud"));
 		items.add(new TileItem("Gold Block", (new Sprite(14, 5, 0)), "Gold block", "dirt","sand","snow","grass","tallgrass","skygrass","coarse dirt","tallgrass","cloud","darkcloud"));
+		items.add(new TileItem("Gem Block", (new Sprite(15, 5, 0)), "Gem block", "dirt","sand","snow","grass","tallgrass","skygrass","coarse dirt","tallgrass","cloud","darkcloud"));
 
 		//WOOLS
 		items.add(new TileItem("Wool", (new Sprite(5, 3, 0)), "Wool", "hole", "water"));
@@ -80,7 +83,6 @@ public class TileItem extends StackableItem {
 		items.add(new TileItem("Sand", (new Sprite(6, 3, 0)), "sand", "dirt"));
 		items.add(new TileItem("Cactus", (new Sprite(8, 3, 0)), "cactus Sapling", "sand","desert grass"));
 		items.add(new TileItem("Cloud Cactus", (new Sprite(19, 4, 0)), "cloud cactus Sapling", "cloud"));
-		items.add(new TileItem("Bone", (new Sprite(9, 3, 0)), "tree", "tree Sapling"));
 		items.add(new TileItem("Cloud", (new Sprite(10, 3, 0)), "cloud", "Infinite Fall"));
 
 		items.add(new TileItem("Wheat Seeds", (new Sprite(3, 0, 0)), "wheat", "farmland"));
@@ -95,7 +97,9 @@ public class TileItem extends StackableItem {
 		items.add(new TileItem("Beetroot Seeds", (new Sprite(3, 1, 0)), "beetroot", "farmland"));
 		items.add(new TileItem("Cone", (new Sprite(20, 3, 0)), "Conifer sapling", "grass","tall grass"));
 		items.add(new TileItem("Snow Cone", (new Sprite(20, 3, 0)), "Snowy Conifer sapling", "snow"));
-		items.add(new TileItem("Bonemeal", (new Sprite(18, 4, 0)), "Snowy Conifer sapling", "wheat","potato","carrot","beetroot","reed","cactus sapling","tree sapling","conifer sapling","birch sapling","cloud cactus sapling"));
+		items.add(new TileItem("Fern spores", (new Sprite(8, 1, 0)), "Fern spores", "grass"));
+		//items.add(new TileItem("Snow Cone", (new Sprite(20, 3, 0)), "Snowy Conifer sapling", "snow"));
+		items.add(new TileItem("Bonemeal", (new Sprite(18, 4, 0)), "Snowy Conifer sapling", "wheat","potato","carrot","beetroot","reed","cactus sapling","oak sapling","conifer sapling","birch sapling","cloud cactus sapling","Grass"));
 		return items;
 	}
 	
@@ -118,12 +122,28 @@ public class TileItem extends StackableItem {
 	
 	public boolean interactOn(Tile tile, Level level, int xt, int yt, Player player, Direction attackDir) {
 		int age=level.getData(xt,yt);
-		int maxA=level.getTile(xt,yt)==Tiles.get("Wheat") || level.getTile(xt,yt)==Tiles.get("Carrot") || level.getTile(xt,yt)==Tiles.get("Reed") || level.getTile(xt,yt)==Tiles.get("Potato") || level.getTile(xt,yt)==Tiles.get("Beetroot") ? 80 : level.getTile(xt,yt)==Tiles.get("Cloud cactus sapling") ? 250 : level.getTile(xt,yt)==Tiles.get("Tree sapling") || level.getTile(xt,yt)==Tiles.get("Birch sapling") || level.getTile(xt,yt)==Tiles.get("Cactus sapling") || level.getTile(xt,yt)==Tiles.get("Conifer sapling") || level.getTile(xt,yt)==Tiles.get("Snowy Conifer sapling") ? 100 : 1000;
+		int maxA=level.getTile(xt,yt)==Tiles.get("Wheat") || level.getTile(xt,yt)==Tiles.get("Carrot") || level.getTile(xt,yt)==Tiles.get("Reed") || level.getTile(xt,yt)==Tiles.get("Potato") || level.getTile(xt,yt)==Tiles.get("Beetroot") ? 80 : level.getTile(xt,yt)==Tiles.get("Cloud cactus sapling") ? 250 : level.getTile(xt,yt)==Tiles.get("oak sapling") || level.getTile(xt,yt)==Tiles.get("Birch sapling") || level.getTile(xt,yt)==Tiles.get("Cactus sapling") || level.getTile(xt,yt)==Tiles.get("Conifer sapling") || level.getTile(xt,yt)==Tiles.get("Snowy Conifer sapling") ? 100 : 1000;
 		for (String tilename : validTiles) {
-			if (tile.matches(level.getData(xt, yt), tilename)) {;
-				if(getName()=="Bonemeal") {
+			if (tile.matches(level.getData(xt, yt), tilename)) {
+				if(getName()=="Lily pad"){
+					level.setTile(xt, yt, model); //place lily
+					level.setData(xt,yt,3); //lily will have no flower
+				}
+				else if(getName()=="Bonemeal") {
+					//turning surrounding grass into tallgrass
+					if(level.getTile(xt,yt)==Tiles.get("Grass")){
+						Tile[] tiles=level.getAreaTiles(xt,yt,1);
+						for(int y = yt - 1; y <= yt + 1; y++) {
+							for (int x = xt - 1; x <= xt + 1; x++) {
+								System.out.println(level.getTile(x, y).name);
+								if(level.getTile(x, y).name.contains("GRASS") && !level.getTile(x, y).name.contains("SMALL STONES") && Math.random()<0.4) //basically if tile name begins with grass
+									if(Math.random()<0.1) level.setTile(x, y, Tiles.get("flower"));
+									else level.setTile(x, y, Tiles.get("tall grass"));
+							}
+						}
+					}
 
-
+					//speeding up plants/trees growth
 					if(age< maxA) {
 						for (int i = 0; i < 3; i++) {
 							int randX = (int) Math.ceil(Math.random() * 12) - 4;
@@ -156,7 +176,7 @@ public class TileItem extends StackableItem {
 			note = "Dig a hole first!";
 		}
 		else if((model.contains("BONEMEAL"))) {
-			note = "Only on plants!";
+			note = "Only on plants or grass!";
 		}
 		if (note.length() > 0) {
 			if (!Game.isValidServer())
