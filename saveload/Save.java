@@ -24,17 +24,12 @@ import minicraft.entity.furniture.DeathChest;
 import minicraft.entity.furniture.DungeonChest;
 import minicraft.entity.furniture.Lantern;
 import minicraft.entity.furniture.Spawner;
-import minicraft.entity.mob.NightWizard;
-import minicraft.entity.mob.AirWizard;
-import minicraft.entity.mob.EnemyMob;
-import minicraft.entity.mob.Mob;
-import minicraft.entity.mob.Player;
-import minicraft.entity.mob.RemotePlayer;
-import minicraft.entity.mob.Sheep;
+import minicraft.entity.mob.*;
 import minicraft.entity.particle.Particle;
 import minicraft.entity.particle.TextParticle;
 import minicraft.item.Inventory;
 import minicraft.item.Item;
+import minicraft.item.Recipe;
 import minicraft.level.tile.SandTile;
 import minicraft.item.PotionType;
 import minicraft.network.MinicraftServer;
@@ -274,13 +269,15 @@ public class Save {
 		data.add(String.valueOf(player.spawnx));
 		data.add(String.valueOf(player.spawny));
 		data.add(String.valueOf(player.health));
-		data.add(String.valueOf(player.thirst));
 		data.add(String.valueOf(player.hunger));
+		data.add(String.valueOf(player.thirst));
 		data.add(String.valueOf(player.armor));
 		data.add(String.valueOf(player.armorDamageBuffer));
 		data.add(String.valueOf(player.curArmor == null ? "NULL" : player.curArmor.getName()));
 		data.add(String.valueOf(player.getScore()));
 		data.add(String.valueOf(Game.currentLevel));
+		data.add(String.valueOf(player.stamina));
+
 
 
 		StringBuilder subdata = new StringBuilder("PotionEffects[");
@@ -295,6 +292,8 @@ public class Save {
 		
 		data.add(String.valueOf(player.shirtColor));
 		data.add(String.valueOf(player.suitOn));
+		data.add(String.valueOf(player.burningDuration));
+		data.add(String.valueOf(Recipe.coalfcycle));
 	}
 	
 	private void writeInventory(String filename, Player player) {
@@ -349,15 +348,19 @@ public class Save {
 		else if(e instanceof Mob) {
 			Mob m = (Mob)e;
 			extradata.append(":").append(m.health);
-
+			extradata.append(":").append(m.burningDuration==1 ? 0 : m.burningDuration);
 			if(e instanceof EnemyMob) {
 				extradata.append(":").append(((EnemyMob) m).lvl);
 
 			}else if (e instanceof Sheep) {
 				extradata.append(":").append(((Sheep) m).cut); // Saves if the sheep is cut. If not, we could reload the save and the wool would regenerate.
 
+			}else if (e instanceof Cow) {
+				extradata.append(":").append(((Cow) m).milkCooldown); // Saves if this cow is milked
+
 			}
-			extradata.append(":").append(m.burningDuration==1 ? 0 : m.burningDuration);
+
+
 		}
 		
 		if (e instanceof Chest) {
@@ -402,6 +405,7 @@ public class Save {
 			depth = e.getLevel().depth;
 		
 		extradata.append(":").append(World.lvlIdx(depth));
+
 		
 		return name + "[" + e.x + ":" + e.y + extradata + "]";
 	}
