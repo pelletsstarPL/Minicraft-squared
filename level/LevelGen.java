@@ -1287,7 +1287,7 @@ public class LevelGen {
 
 			}
 
-		/*for (int i = 0; i < w * h / 4000; i++) { works but it is postponed as there are many more changes planned
+		for (int i = 0; i < w * h / 4000; i++) {
 			int xs = random.nextInt(w);
 			int ys = random.nextInt(h);
 			for (int k = 0; k < 10; k++) {
@@ -1304,7 +1304,7 @@ public class LevelGen {
 								}
 							}
 				}
-			}*/
+			}
 		for (int l = 0; l < w*h/2; l++) { //duplicating the loop to populate waters
 			int xx = random.nextInt(w);
 			int yy = random.nextInt(h);
