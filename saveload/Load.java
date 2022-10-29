@@ -14,6 +14,7 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import minicraft.entity.mob.*;
+import minicraft.item.*;
 import minicraft.level.tile.SandTile;
 import minicraft.screen.SkinDisplay;
 import org.jetbrains.annotations.Nullable;
@@ -42,13 +43,6 @@ import minicraft.entity.particle.FireParticle;
 import minicraft.entity.particle.SmashParticle;
 import minicraft.entity.particle.TextParticle;
 import minicraft.gfx.Color;
-import minicraft.item.ArmorItem;
-import minicraft.item.Inventory;
-import minicraft.item.Item;
-import minicraft.item.Items;
-import minicraft.item.PotionItem;
-import minicraft.item.PotionType;
-import minicraft.item.StackableItem;
 import minicraft.level.Level;
 import minicraft.level.tile.Tiles;
 import minicraft.network.MinicraftServer;
@@ -426,19 +420,19 @@ public class Load {
 		player.spawnx = Integer.parseInt(data.remove(0));
 		player.spawny = Integer.parseInt(data.remove(0));
 		player.health = Integer.parseInt(data.remove(0));
-			player.thirst = Integer.parseInt(data.remove(0));
 		player.hunger = Integer.parseInt(data.remove(0));
+		player.thirst = Integer.parseInt(data.remove(0));
 		player.armor = Integer.parseInt(data.remove(0));
 		if (worldVer.compareTo(new Version("2.2.0")) <= 0 )AirWizard.invulnerability = Integer.parseInt(data.remove(0));
 
 		if (worldVer.compareTo(new Version("2.0.5-dev5")) >= 0 || player.armor > 0 || worldVer.compareTo(new Version("2.0.5-dev4")) == 0 && data.size() > 5) {
-			if(worldVer.compareTo(new Version("2.0.4-dev7")) < 0) {
+			if (worldVer.compareTo(new Version("2.0.4-dev7")) < 0) {
 				// Reverse order b/c we are taking from the end
-				player.curArmor = (ArmorItem) Items.get(data.remove(data.size()-1));
-				player.armorDamageBuffer = Integer.parseInt(data.remove(data.size()-1));
-			}
-			else {
+				player.curArmor = (ArmorItem) Items.get(data.remove(data.size() - 1));
+				player.armorDamageBuffer = Integer.parseInt(data.remove(data.size() - 1));
+			} else {
 				player.armorDamageBuffer = Integer.parseInt(data.remove(0));
+
 				player.curArmor = (ArmorItem) Items.get(data.remove(0), true);
 			}
 		}
@@ -451,6 +445,11 @@ public class Load {
 		}
 
 		Game.currentLevel = Integer.parseInt(data.remove(0));
+		if (worldVer.compareTo(new Version("2.5.0")) >= 0) {
+			int stam=Integer.parseInt(data.remove(0)); //TODO: make overcaps be reduced to max stat
+			player.stamina = stam > player.maxStat ? player.maxStat : stam;
+		}
+
 		Level level = World.levels[Game.currentLevel];
 		if (!player.isRemoved()) player.remove(); // Removes the user player from the level, in case they would be added twice.
 		if (!Game.isValidServer() || player != Game.player) {
@@ -499,7 +498,10 @@ public class Load {
 
 		// This works for some reason... lol
 		Settings.set("skinon", player.suitOn = Boolean.parseBoolean(data.remove(0)));
-		if (worldVer.compareTo(new Version("1.9.4-dev4")) < 0)player.burningDuration = Integer.parseInt(data.remove(0));
+		player.burningDuration = Integer.parseInt(data.remove(0));
+		if (worldVer.compareTo(new Version("2.3.0")) >= 0){
+			Recipe.coalfcycle = Integer.parseInt(data.remove(0));
+		}
 	}
 
 	protected static String subOldName(String name, Version worldVer) {
@@ -707,18 +709,29 @@ public class Load {
 				mob = enemyMob;
 			} else if (worldVer.compareTo(new Version("2.0.7-dev1")) >= 0) { // If the version is more or equal to 2.0.7-dev1
 				if (newEntity instanceof Sheep) {
-					Sheep sheep = ((Sheep) mob);
-
-					if (info.get(3).equalsIgnoreCase("true")) {
-
-						sheep.cut = true;
+					if(worldVer.compareTo(new Version("2.5.0")) < 0) { //old saving
+						Sheep sheep = ((Sheep) mob);
+						if (info.get(3).equalsIgnoreCase("true")) {
+							sheep.cutOld = Boolean.parseBoolean(info.get(3)); //old way of saving
+						}
+						mob = sheep;
+					}else{ //new saving
+							Sheep sheep = ((Sheep) mob);
+							sheep.cut = Integer.parseInt(info.get(4));
+							mob = sheep;
 					}
-					mob = sheep;
 				}
 
 
 			}
-			mob.burningDuration=Integer.parseInt(info.get(mob instanceof Sheep || mob instanceof EnemyMob ? 4 : 3)); //BURNING
+			if(worldVer.compareTo(new Version("2.5.0")) >= 0){
+				if (newEntity instanceof Cow) {
+					Cow cow = ((Cow) mob);
+						cow.milkCooldown = Integer.parseInt(info.get(4));
+					mob = cow;
+				}
+			}
+			mob.burningDuration=Integer.parseInt(worldVer.compareTo(new Version("2.5.0")) < 0 && newEntity instanceof Sheep ? info.get(4) : info.get(3)); //BURNING
 			newEntity = mob;
 
 		} else if (newEntity instanceof Chest) {
