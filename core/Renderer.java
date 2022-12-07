@@ -183,10 +183,10 @@ public class Renderer extends Game {
 		level.renderSprites(screen, xScroll, yScroll); // Renders level sprites on screen
 
 		// This creates the darkness in the caves and blindness
-		if (((currentLevel != 5 || Updater.tickCount < Updater.dayLength/4 || Updater.tickCount > Updater.dayLength/2) /*&& !isMode("creative")*/) || player.potioneffects.containsKey(PotionType.Blind) && !Game.isMode("creative")) {
+		if (((currentLevel != 5 || Updater.tickCount < Updater.dayLength/4 || Updater.tickCount > Updater.dayLength/2) /*&& !isMode("creative")*/) || player.potionEffects.containsKey(PotionType.Blind) && !Game.isMode("creative")) {
 			lightScreen.clear(0);		// This doesn't mean that the pixel will be black; it means that the pixel will be DARK, by default; lightScreen is about light vs. dark, not necessarily a color. The light level it has is compared with the minimum light values in dither to decide whether to leave the cell alone, or mark it as "dark", which will do different things depending on the game level and time of day.
-			int brightnessMultiplier = player.potioneffects.containsKey(PotionType.Light) ? 12 : player.potioneffects.containsKey(PotionType.Blind) ? 3 : 8; // Brightens all light sources by a factor of 1.5 when the player has the Light potion effect. (8 above is normal)
-			if(player.potioneffects.containsKey(PotionType.Light) && player.potioneffects.containsKey(PotionType.Blind)) brightnessMultiplier =2;
+			int brightnessMultiplier = player.potionEffects.containsKey(PotionType.Light) ? 12 : player.potionEffects.containsKey(PotionType.Blind) ? 3 : 8; // Brightens all light sources by a factor of 1.5 when the player has the Light potion effect. (8 above is normal)
+			if(player.potionEffects.containsKey(PotionType.Light) && player.potionEffects.containsKey(PotionType.Blind)) brightnessMultiplier =2;
 			//System.out.println(currentLevel);
 
 			level.renderLight(lightScreen, xScroll, yScroll, brightnessMultiplier); // Finds (and renders) all the light from objects (like the player, lanterns, and lava).
@@ -209,9 +209,10 @@ public class Renderer extends Game {
 			if (((ToolItem) player.activeItem).type == ToolType.Bow) {
 				int ac = player.getInventory().count(Items.arrowItem);
 
-				int xx = (Screen.w) / 2 - 32 - player.activeItem.arrAdjusted; // the width of the box
+				int xx = 16 + ((Screen.w) / 2) - 48 - player.activeItem.arrAdjusted; // the width of the box
 				int yy = (Screen.h - 8) - 13; // the height of the box
-				int w = 3; // length of message in characters.
+				String aC=ac+"";
+				int w = Game.isMode("Creative") || ac>=1000 ? 4 : aC.length()+2; // length of message in characters.
 				int h = 1;
 
 				int x = 170;
@@ -238,15 +239,14 @@ public class Renderer extends Game {
 					screen.render(xx + x * 8, yy, 3 + 20 * 32, 0, 3);
 				}
 
-				if (isMode("creative") || ac >= 10000) {
-					screen.render(108 - player.activeItem.arrAdjusted, Screen.h - 24, 4 + 3 * 32, 0, 3);
-					Font.drawTransparentBackground(" x" + "∞", screen, 108 - player.activeItem.arrAdjusted, Screen.h - 24);
+				if (isMode("creative") || ac >= 1000) {
+					Font.drawTransparentBackground(" INF", screen, 108 - player.activeItem.arrAdjusted , Screen.h - 24);
 				} else {
 					Font.drawTransparentBackground(" x" + ac, screen, 108 - player.activeItem.arrAdjusted, Screen.h - 24);
 				}
 
 				// Displays the arrow icon
-				screen.render(20 * 8 + 20 - player.activeItem.arrAdjusted, Screen.h - 24, 5 + 3 * 32, 0, 3);
+				screen.render(108 - player.activeItem.arrAdjusted, Screen.h - 24, 0 + 2 * 32, 0, 0);
 			}
 		}
 
@@ -254,15 +254,16 @@ public class Renderer extends Game {
 		if (player.activeItem instanceof ToolItem) {
 			// Draws the text
 			ToolItem tool = (ToolItem) player.activeItem;
-			int dura = tool.dur * 100 / (tool.type.durability * (tool.level + 1));
+			int dura = tool.dur * 100 / tool.maxDur;
 			int green = (int)(dura * 2.55f);
-
-			int xx = (Screen.w) / 2 + 8 + player.activeItem.durAdjusted; // The width of the box
-			int yy = (Screen.h - 8) - 13; // The height of the box
-			int w = 3; // Length of message in characters.
+			String Dura=dura + "%";
+			int w = Dura.length(); // Length of message in characters.
 			int h = 1;
+			int xx = ((Screen.w) / 2) + player.activeItem.durAdjusted; // The width of the box
+			int yy = (Screen.h - 8) - 13; // The height of the box
 
-			int x = 250;
+
+			int x = 200;
 			int y = 25;
 
 			// Renders the four corners of the box
@@ -286,7 +287,7 @@ public class Renderer extends Game {
 				screen.render(xx + x * 8, yy, 3 + 20 * 32, 0, 3);
 			}
 
-			Font.drawTransparentBackground(dura + "%", screen, 149 + player.activeItem.durAdjusted, Screen.h - 24, Color.get(1, 255 - green, green, 0));
+			Font.drawTransparentBackground(dura + "%", screen, 140 + player.activeItem.durAdjusted , Screen.h - 24, Color.get(1, 255 - green, green, 0));
 		}
 
 		// This draws the black square where the selected item would be if you were holding it
@@ -391,16 +392,15 @@ public class Renderer extends Game {
 		}
 
 		/// This renders the potions overlay
-		if (player.showpotioneffects && player.potioneffects.size() > 0) {
-			Map.Entry < PotionType, Integer > [] effects = player.potioneffects.entrySet().toArray(new Map.Entry[0]);
+		if (player.showpotioneffects && player.potionEffects.size() > 0) {
+			Map.Entry < PotionType, Integer > [] effects = player.potionEffects.entrySet().toArray(new Map.Entry[0]);
 
 			// The key is potion type, value is remaining potion duration.
 			for (int i = 0; i < effects.length; i++) {
 				PotionType pType = effects[i].getKey();
 				int pTime = effects[i].getValue() / Updater.normSpeed;
-
 				Font.drawTransparentBackground("(" + input.getMapping("potionEffects") + " to hide!)", screen, 180, 9);
-				Font.drawTransparentBackground(pType + " (" + (pTime / 60) + ":" + ((pTime % 60 <10) ? "0"+(pTime % 60) : (pTime % 60)) + ")", screen, 180, 17 + i * Font.textHeight(), pType.dispColor);
+				Font.drawTransparentBackground(pType + " (" + (pTime / 60) + ":" + ((pTime % 60 <10) ? "0"+(pTime % 60) : (pTime % 60)) + ")", screen, 180-(pType.name().length()>7 ? (pType.name().length()-7)*8: 0), 17 + i * Font.textHeight(), pType.dispColor);
 			}
 		}
 		// This is the status icons, like health hearts, stamina bolts, and hunger "burgers".
@@ -459,7 +459,9 @@ public class Renderer extends Game {
 						Font.draw((player.armor < 0 ? "0" : String.valueOf(player.armor)), screen, 10, Screen.h - 24, Color.get(Color.WHITE_CODE));
 					}
 				}
+
 				if(player.hunger<5) {
+
 					if (Updater.tickCount % 10 > 5)
 						screen.render(Screen.w-8, Screen.h - 16, 2 + (2 + hungered) * 32, 0, 3); //full
 					else screen.render(Screen.w-8, Screen.h - 16, 2 + (4 + hungered) * 32, 0, 3); //null
@@ -471,6 +473,8 @@ public class Renderer extends Game {
 					else screen.render(Screen.w-8, Screen.h - 8, 7 + (4 + thirsted) * 32, 0, 3); //null
 				}else screen.render(Screen.w-8, Screen.h - 8, 7 + (2 + thirsted) * 32, 0, 3); //full
 				Font.draw((player.thirst < 0 ? "0/" + player.maxThirst : player.thirst + "/" + player.maxThirst), screen, Screen.w - 48, Screen.h - 8, Color.get(Color.WHITE_CODE));
+				if(player.getPotionEffects().containsKey(PotionType.WellFed))screen.render(Screen.w-8, Screen.h - 16, 2 + 8 * 32, 0, 3); //wellfed
+				if(player.getPotionEffects().containsKey(PotionType.WellHydrated))screen.render(Screen.w-8, Screen.h - 8, 7 + 8 * 32, 0, 3); //wellhydrated
 			} else {
 				for (int i = 0; i < Player.maxStat; i++) {
 					int poisoned = 0;
@@ -552,8 +556,10 @@ public class Renderer extends Game {
 						// Renders your current burgers, or null burgers.
 						if (i < player.hunger && hunmod >= 2) {
 							screen.render(j * 8 + (Screen.w - 80), Screen.h - 16, 2 + (2 + hungered) * 32, 0, 3); //full
+							if(player.getPotionEffects().containsKey(PotionType.WellFed))screen.render(j * 8 + (Screen.w - 80), Screen.h - 16, 2 + 8 * 32, 0, 3); //wellfed
 						} else if (hunmod == 1) {
 							screen.render(j * 8 + (Screen.w - 80), Screen.h - 16, 2 + (3 + hungered) * 32, 0, 3); //half
+							if(player.getPotionEffects().containsKey(PotionType.WellFed))screen.render(j * 8 + (Screen.w - 80), Screen.h - 16, 2 + 9 * 32, 0, 3); //wellfed
 							hunmod -= 1;
 						} else if (hunmod <= 0) {
 							screen.render(j * 8 + (Screen.w - 80), Screen.h - 16, 2 + (4 + hungered) * 32, 0, 3); //empty
@@ -562,11 +568,13 @@ public class Renderer extends Game {
 					}
 					for (int j = 0; j <= 10; j++) {
 
-						// Renders your current droplets, or dried drops.
-						if (i < player.thirst && thimod >= 2) {
+						// Renders your current burgers, or null burgers.
+						if (i < player.hunger && thimod >= 2) {
 							screen.render(j * 8 + (Screen.w - 80), Screen.h - 8, 7 + (2 + thirsted) * 32, 0, 3); //full
+							if(player.getPotionEffects().containsKey(PotionType.WellHydrated))screen.render(j * 8 + (Screen.w - 80), Screen.h - 8, 7 + 8 * 32, 0, 3); //wellfed
 						} else if (thimod == 1) {
 							screen.render(j * 8 + (Screen.w - 80), Screen.h - 8, 7 + (3 + thirsted) * 32, 0, 3); //half
+							if(player.getPotionEffects().containsKey(PotionType.WellHydrated))screen.render(j * 8 + (Screen.w - 80), Screen.h - 8, 7 + 9 * 32, 0, 3); //wellfed
 							thimod -= 1;
 						} else if (thimod <= 0) {
 							screen.render(j * 8 + (Screen.w - 80), Screen.h - 8, 7 + (4 + thirsted) * 32, 0, 3); //empty
@@ -597,6 +605,7 @@ public class Renderer extends Game {
 				info.add("Y: " + (player.y / 16) + "-" + (player.y % 16));
 				if (levels[currentLevel] != null)
 					info.add("Tile: " + levels[currentLevel].getTile(player.x >> 4, player.y >> 4).name);
+				//	info.add("Data: " + levels[currentLevel].getData(player.x >> 4, player.y >> 4));
 				if (isMode("score")) info.add("Score: " + player.getScore());
 			}
 
