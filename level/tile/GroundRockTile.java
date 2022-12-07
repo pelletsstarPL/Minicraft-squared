@@ -20,17 +20,20 @@ import minicraft.item.ToolType;
 import minicraft.level.Level;
 
 public class GroundRockTile extends Tile {
-	private ConnectorSprite sprite = new ConnectorSprite(GroundRockTile.class, new Sprite(42, 6, 3, 3, 1, 3), new Sprite(45, 8, 2, 2, 1, 3), new Sprite(45, 6, 2, 2, 1, 3));
+	private static ConnectorSprite sprite = new ConnectorSprite(GrassTile.class, new Sprite(42, 6, 3, 3, 1, 3), new Sprite(45, 6, 2, 2, 1))
+	{
 		public boolean connectsTo(Tile tile, boolean isSide) {
-			if (!isSide) return true;
+			if(!isSide) return true;
 			return tile.connectsToGroundRock;
-
+		}
 	};
+
+
 	private int maxHealth = 50;
 	private boolean dropCoal = false;
 	private int damage;
 	protected GroundRockTile(String name) {
-		super(name, (ConnectorSprite)null);
+		super(name, sprite);
 
 		csprite = sprite;
 		connectsToGroundRock = true;
