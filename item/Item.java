@@ -1,5 +1,6 @@
 package minicraft.item;
 
+import minicraft.core.Updater;
 import minicraft.core.io.Localization;
 import minicraft.core.io.Settings;
 import minicraft.entity.Direction;
@@ -15,6 +16,7 @@ public abstract class Item {
 	/* Note: Most of the stuff in the class is expanded upon in StackableItem/PowerGloveItem/FurnitureItem/etc */
 	
 	private final String name;
+	private final String shortenedName;
 	public Sprite sprite;
 
 	public int durAdjusted;
@@ -25,15 +27,16 @@ public abstract class Item {
 	protected Item(String name) {
 		sprite = Sprite.missingTexture(1, 1);
 		this.name = name;
+		this.shortenedName = name.substring(0,name.length()<12 ? name.length() : 11);
 	}
 	protected Item(String name, Sprite sprite) {
 		this.name = name;
+		this.shortenedName = name.substring(0,name.length()<12 ? name.length() : 11);
 		this.sprite = sprite;
 	}
 
 	/** Renders an item on the HUD */
 	public void renderHUD(Screen screen, int x, int y, int fontColor) {
-
 		String dispName = getDisplayName();
 
 		switch (dispName.length()) {
@@ -94,37 +97,59 @@ public abstract class Item {
 				break;
 		}
 
-		int xx = (Screen.w - Font.textWidth(dispName)) / 2; // The width of the box
+		int w = dispName.length(); // Length of message in characters.
+		int wCond =w>9 ? 9 : w;
+
+		int xx = ((Screen.w - Font.textWidth("..........")) / 2); // The width of the box
 		int yy = (Screen.h - 8) - 1; // The height of the box
-		int w = dispName.length() + 1; // Length of message in characters.
+
+
 		int h = 1;
 
 		// Renders the four corners of the box
 		screen.render(xx - 8, yy - 8, 0 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 0, 3);
-		screen.render(xx + w * 8, yy - 8, 0 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 1, 3);
+		screen.render(xx + (wCond+2) * 8, yy - 8, 0 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 1, 3);
 		screen.render(xx - 8, yy + 8, 0 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 2, 3);
-		screen.render(xx + w * 8, yy + 8, 0 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 3, 3);
+		screen.render(xx + (wCond+2) * 8, yy + 8, 0 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 3, 3);
 
 		// Renders each part of the box...
-		for (x = 0; x < w; x++) {
+		for (x = 0; x < (wCond+2); x++) {
 			screen.render(xx + x * 8, yy - 8, 1 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 0, 3); // ...top part
 			screen.render(xx + x * 8, yy + 8, 1 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 2, 3); // ...bottom part
 		}
 		for (y = 0; y < h; y++) {
 			screen.render(xx - 8, yy + y * 8, 2 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 0, 3); // ...left part
-			screen.render(xx + w * 8, yy + y * 8, 2 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 1, 3); // ...right part
+			screen.render(xx + (wCond+2) * 8, yy + y * 8, 2 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 1, 3); // ...right part
 		}
+		//text
+		char[] ch = new char[10];
 
+		// Copying character by character into array
+		// using for each loop
+		if(dispName.length()>10) {
+			for (int i = 0; i < 10; i++) {
+
+				//System.out.println(j > dispName.length() - 1);
+				//if (j + Updater.textDisplayMove>= dispName.length() ){ j = 0;Updater.textDisplayMove=j;};
+				ch[i] = dispName.charAt((i + Updater.textDisplayMove)%dispName.length());
+			}
+		}
 		// The middle
-		for (x = 0; x < w; x++) {
+		for (x = 0; x < (wCond+2); x++) {
 			screen.render(xx + x * 8, yy, 3 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 0, 3);
 		}
 
 		// Item sprite
 		sprite.render(screen, xx, yy);
 
+		String str="";
+		if(dispName.length()>10){
+			if(Updater.paused)str=dispName.substring(0,9);
+			else str=String.valueOf(ch);
+		}
+		else str=dispName;
 		// Item name
-		Font.drawTransparentBackground(dispName, screen, xx + 8, yy, fontColor);
+		Font.drawTransparentBackground(str, screen, xx + 8, yy, fontColor);
 	}
 	
 	/** Determines what happens when the player interacts with a tile */
@@ -171,4 +196,5 @@ public abstract class Item {
 	}
 	
 	public boolean interactsWithWorld() { return true; }
+
 }
