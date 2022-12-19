@@ -20,7 +20,7 @@ public class GrassTile extends Tile {
 			return tile.connectsToGrass;
 		}
 	};
-	
+
 	protected GrassTile(String name) {
 		super(name, sprite);
 		csprite.sides = csprite.sparse;

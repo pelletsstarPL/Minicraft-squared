@@ -59,6 +59,7 @@ public abstract class Tile {
 	public boolean connectsToSkygrass = false;
 	public boolean connectsToSnow = false;
 	public boolean connectsToFluid = false;
+	public boolean connectsToGlacier = false;
 	public int light;
 	protected boolean maySpawn;
 	

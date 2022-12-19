@@ -30,12 +30,12 @@ public class ReedTile extends Plant
             level.setTile(xn, yn, Tiles.get("Water"));
         }
         final int age = level.getData(x, y);
-        final int icon = age / (ReedTile.maxAge / 4);
+        final int icon = age < 0 ? 0 : age / (ReedTile.maxAge / 4);
         Tiles.get("Water").render(screen, level, x, y);
-        screen.render(x * 16 + 0, y * 16 + 0, 290 + (icon*2), 0, 1);
-        screen.render(x * 16 + 8, y * 16 + 0, 291 + (icon*2), 0, 1);
-        screen.render(x * 16 + 0, y * 16 + 8, 322 + (icon*2), 0, 1);
-        screen.render(x * 16 + 8, y * 16 + 8, 323 + (icon*2), 0, 1);
+        screen.render(x * 16 + 0, y * 16 + 0, 2 + 9 * 32 + (icon*2), 0, 1);
+        screen.render(x * 16 + 8, y * 16 + 0, 3 + 9 * 32 + (icon*2), 0, 1);
+        screen.render(x * 16 + 0, y * 16 + 8, 2 + 10 * 32 + (icon*2), 0, 1);
+        screen.render(x * 16 + 8, y * 16 + 8, 3 + 10 * 32 +(icon*2), 0, 1);
 
     }
    /* public boolean tick(Level level, int xt, int yt) {

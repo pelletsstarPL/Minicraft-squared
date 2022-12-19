@@ -16,7 +16,7 @@ public class LavaTile extends Tile {
 			return tile.connectsToFluid;
 		}
 	};
-	String[] toBurn={"OAK","BIRCH","CONIFER","SNOWYCONIFER","MANGROVEW","MANGROVE","SMALL TREE","DEAD TREE"};
+	String[] toBurn={"OAK","BIRCH","CONIFER","SNOWYCONIFER","MANGROVEW","MANGROVE","SMALL TREE","DEAD TREE","GLACIER","BRAMBLE"};
 	protected LavaTile(String name) {
 		super(name, (ConnectorSprite)null);
 		super.csprite = sprite;

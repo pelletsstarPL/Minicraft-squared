@@ -37,8 +37,6 @@ public class LilyPadTile extends Tile {
 		if (level.getTile(xn, yn) == Tiles.get("Hole")) {
 			level.setTile(xn, yn, Tiles.get("Water"));
 		}
-		int type = level.getData(xt, yt);
-		if(type==0) level.setData(xt,yt,random.nextInt(3)+1);
 
 		if (random.nextInt(30) != 0) return false; // Skips every 31 tick. Lily may collapse
 
@@ -69,7 +67,6 @@ public class LilyPadTile extends Tile {
 		if (entity instanceof Mob && (!(entity instanceof AirWizard)  && !(entity instanceof Ghost) && !(entity instanceof Wraith) && !(entity instanceof WraithA) && !(entity instanceof Clallay))) {
 			//lily is collapsing under you
 			if(chance==40) {
-				level.setTile(x, y, Tiles.get("Water"));
 				level.dropItem(x * 16 + 8, y * 16 + 8, Items.get("lily pad"));
 				switch (level.getData(x, y)) {
 					case 1:
@@ -79,6 +76,8 @@ public class LilyPadTile extends Tile {
 						level.dropItem(x * 16 + 8, y * 16 + 8, 1, 1, Items.get("Flower"));
 						break;
 				}
+				level.setTile(x, y, Tiles.get("Water"));
+
 			}
 		}
 	}
@@ -110,4 +109,5 @@ public class LilyPadTile extends Tile {
 		level.setTile(x, y, Tiles.get("water"));
 		return true;
 	}
+	public boolean maySpawn() { return false; }
 }

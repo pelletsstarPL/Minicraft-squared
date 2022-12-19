@@ -37,10 +37,7 @@ public class CloudCactusTile extends Tile {
 		if (Tiles.get("cloud") != null) {
 			Tiles.get("cloud").render(screen, level, x, y);
 		}
-		screen.render(x * 16 + 0, y * 16 + 0, 6 + 2 * 32, 0, 1);
-		screen.render(x * 16 + 8, y * 16 + 0, 7 + 2 * 32, 0, 1);
-		screen.render(x * 16 + 0, y * 16 + 8, 6 + 3 * 32, 0, 1);
-		screen.render(x * 16 + 8, y * 16 + 8, 7 + 3 * 32, 0, 1);
+		sprite.render(screen, x<<4, y<<4);
 	}
 	public boolean interact(Level level, int xt, int yt, Player player, Item item, Direction attackDir) {
 		if(Game.isMode("creative"))
@@ -68,7 +65,7 @@ public class CloudCactusTile extends Tile {
 		level.add(new TextParticle("" + dmg, x * 16 + 8, y * 16 + 8, Color.RED));
 		if (damage >= health) {
 			level.setTile(x, y, Tiles.get("Cloud"));
-			level.dropItem(x * 16 + 8, y * 16 + 8, 0, 2, Items.get("Cloud shard"));
+			level.dropItem(x * 16 + 8, y * 16 + 8, 0, 4, Items.get("Cloud shard"));
 			level.dropItem(x * 16 + 8, y * 16 + 8, 0, 3, Items.get("Cloud cactus"));
 		} else
 			level.setData(x, y, damage);

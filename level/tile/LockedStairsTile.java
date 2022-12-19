@@ -8,7 +8,6 @@ import minicraft.entity.mob.*;
 import minicraft.entity.particle.SmashParticle;
 import minicraft.entity.particle.TextParticle;
 import minicraft.gfx.Color;
-import minicraft.gfx.ConnectorSprite;
 import minicraft.gfx.Screen;
 import minicraft.gfx.Sprite;
 import minicraft.item.Item;
@@ -16,47 +15,46 @@ import minicraft.item.Items;
 import minicraft.item.ToolItem;
 import minicraft.item.ToolType;
 import minicraft.level.Level;
-//private static Sprite rock = new Sprite(46, 4,2,2, 1);
-//private static Sprite spikes = new Sprite(44, 4,2,2, 1);
-public class DeadTreeTile extends Tile {
-	private DeadTreeType type;
-	public enum DeadTreeType{
-		Sand(2,4,"Sand"),
-		Coarse(2,4,"Coarse dirt"),
-		Snow(2,11,"Snow");
 
-		private int spriteX,spriteY;
+/**
 
-		private String baseTile;
+	This class is for tiles that will locking our stairs or other forms of moving across the world levels.
+ Mostly destroying these tiles will uncover stairs or other forms of moving across the world levels allowing to use these for example
+ iced downstairs - break ice around'em and you will be able to use these stairs and enter the caverns ( AND leave since if upstairs are normal and downstairs are frozen
+ game won't allow you to use this path to move up one level.
 
-		DeadTreeType(int spriteX,int spriteY,String baseTile){
+*/
+public class LockedStairsTile extends Tile {
+	private LockedStairsType type;
+	public enum LockedStairsType{
+		IcedStairsDown(48,4,35,"Stairs Down");
+		//more tiles will be added in future updates
+
+		private int spriteX,spriteY,hp;
+		private String[] loot;
+		private String uncover;
+
+		LockedStairsType(int spriteX,int spriteY,int hp,String uncover){
 			this.spriteX= spriteX;this.spriteY= spriteY;
-			this.baseTile = baseTile;
+			this.uncover = uncover;
 		}
 	}
-	protected DeadTreeTile(String name,DeadTreeType type){
+	protected LockedStairsTile(String name, LockedStairsType type){
 		super(name,new Sprite(type.spriteX, type.spriteY, 1));
 		this.type= type;
 
-		switch(type.baseTile){
-			case "Grass": connectsToGrass = true; break;
-			case "Moss": connectsToMoss = true; break;
-			case "Water": connectsToFluid = true; break;
-			case "Snow": connectsToSnow = true; break;
-			case "Sand": connectsToSand = true; break;
+		switch(type.name()){
+			case "IcedStairsDown": connectsToGlacier = true; break;
 		}
 	}
 	private Sprite spr(){
 		return new Sprite(type.spriteX, type.spriteY, 2,2,1);
 	};
 	public void render(Screen screen, Level level, int x, int y) {
-		Tiles.get(type.baseTile).render(screen, level, x, y);
-		int data = level.getData(x, y);
-		int shape = (data / 16) % 2;
 
 		x = x << 4;
 		y = y << 4;
-		spr().render(screen, x + 8 * shape, y);
+		spr().render(screen, x, y);
 
 
 	}
@@ -89,16 +87,20 @@ public class DeadTreeTile extends Tile {
 	public void hurt(Level level, int x, int y, int dmg) {
 
 		int damage = level.getData(x, y) + dmg;
-		int treeHealth = 15; //all dead trees will have 15 hp
-		if (Game.isMode("Creative")) dmg = damage = treeHealth;
+		int Health = type.hp; //all dead trees will have 15 hp
+		if (Game.isMode("Creative")) dmg = damage = Health;
 
 		level.add(new SmashParticle(x*16, y*16));
 		Sound.monsterHurt.play();
 		level.add(new TextParticle("" + dmg, x * 16 + 8, y * 16 + 8, Color.RED));
-		if (damage >= treeHealth) {
-			level.dropItem(x * 16 + 8, y * 16 + 8, 1, 2, Items.get("Wood"));
-			level.dropItem(x * 16 + 8, y * 16 + 8, 0, 2, Items.get("Stick"));
-			level.setTile(x, y, Tiles.get(type.baseTile));
+		if (damage >= Health) {
+			for(int i=0;i< type.loot.length;i++){
+				switch(type.loot[i]){
+					case "Ice":level.dropItem(x * 16 + 8, y * 16 + 8, 2, 4, Items.get(type.loot[i]));break;
+					default:level.dropItem(x * 16 + 8, y * 16 + 8, 1, 2, Items.get(type.loot[i]));break;
+				}
+			}
+			level.setTile(x, y, Tiles.get(type.uncover));
 		} else {
 			level.setData(x, y, damage);
 		}

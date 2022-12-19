@@ -201,6 +201,10 @@ public class Structure {
 	static final Structure mine3;
 	static final Structure mine4;
 
+	//staircase structures
+	static final Structure stairsRuinsDown;
+	static final Structure stairsRuinsUp;
+
 	// Ok, because of the way the system works, these structures are rotated 90 degrees clockwise when placed
 	// Then it's flipped on the vertical
 	static {
@@ -936,6 +940,22 @@ public class Structure {
 						"*PP*PP*\n"+
 						"PPPPPPW\n"+
 						"PPPPWWW"
+		);
+		stairsRuinsDown = new Structure();
+		stairsRuinsDown.setData("B:Stone Bricks,W:Stone Wall,O:Ornate stone,S:Stairs Down",
+				"WWOWW\n" +
+						"WBOBW\n" +
+						"OOSOO\n" +
+						"WBOBW\n" +
+						"WWOWW"
+		);
+		stairsRuinsUp = new Structure();
+		stairsRuinsUp.setData("B:Stone Bricks,W:Stone Wall,O:Ornate stone,S:Stairs Up",
+				"WWBWW\n" +
+						"WOBOW\n" +
+						"BBSBB\n" +
+						"WOBOW\n" +
+						"WWBWW"
 		);
 	}
 }

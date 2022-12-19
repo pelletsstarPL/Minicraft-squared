@@ -26,9 +26,9 @@ public class FlowerTile extends Tile {
         CloudFlower(5,23,"Cloud",new String[] {"Cloud Flower"}),
         GrassStones(0,13,"Grass",new String[] {"Stone"}),
         DirtStones(0,13,"dirt",new String[] {"Stone"}),
-        DesertTallgrass(11,6,"Sand",new String[] {}),
+        DesertTallgrass(11,6,"Sand",new String[] {"Plant fiber"}),
         CloudTallgrass(5,22,"Cloud",new String[] {}),
-        Tallgrass(11,6,"Grass",new String[] {"Wheat seeds"});
+        Tallgrass(11,6,"Grass",new String[] {"Wheat seeds","Plant fiber"});
 
         private int spriteX,spriteY;
 

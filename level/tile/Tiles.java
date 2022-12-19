@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import minicraft.core.Game;
 import minicraft.level.tile.farming.*;
+import minicraft.level.tile.patch.*;
 
 public final class Tiles {
 	/// Idea: to save tile names while saving space, I could encode the names in base 64 in the save file...^M
@@ -78,7 +79,7 @@ public final class Tiles {
 		tiles.set(53, new TreeTile(TreeTile.TreeType.Birch));
 		tiles.set(54, new SaplingTile("Birch Sapling", Tiles.get("Grass"), Tiles.get("Birch")));
 		tiles.set(55, new RockTile("Deepslate", RockTile.RockType.Deepslate));
-		tiles.set(56, new DeadTreeTile("Dead Tree"));
+		tiles.set(56, new DeadTreeTile("Dead Tree", DeadTreeTile.DeadTreeType.Sand));
 		tiles.set(57, new SmallTreeTile("Small Tree"));
 		tiles.set(58, new HardRockTile("Hard Rock II", HardRockTile.HRType.Two));
 		tiles.set(59, new ReedTile("Reed"));
@@ -106,7 +107,7 @@ public final class Tiles {
 		tiles.set(81, new FlowerTile("Tall grass", FlowerTile.FlowerType.Tallgrass));
 		tiles.set(82, new FlowerTile("Desert grass", FlowerTile.FlowerType.DesertTallgrass));
 		tiles.set(83, new SkygrassTile("Skygrass"));
-		tiles.set(84, new SkyRockTile("Sky rock"));
+		tiles.set(84, new OtherRockTile("Sky rock", OtherRockTile.OtherRockType.Sky));
 		tiles.set(85, new IceTile("Ice"));
 		tiles.set(86, new SnowTile("Snow"));
 		tiles.set(87, new TreeTile(TreeTile.TreeType.Conifer));
@@ -127,7 +128,7 @@ public final class Tiles {
 		tiles.set(102, new SaplingTile("cloud cactus Sapling", Tiles.get("Cloud"), Tiles.get("Cloud Cactus")));
         tiles.set(103, new BrambleTile("Bramble"));
 		tiles.set(104, new CoarseDirtTile("Coarse dirt"));
-		tiles.set(105, new CDeadTreeTile("Dead Tree C"));
+		tiles.set(105, new DeadTreeTile("Dead Tree C", DeadTreeTile.DeadTreeType.Coarse));
 		tiles.set(106, new RockTileG("DeepslateG",RockTileG.RockType.Deepslate));
 		tiles.set(107, new OreBlockTile(OreBlockTile.OreType.Lapis));
 		tiles.set(108, new OreBlockTile(OreBlockTile.OreType.Iron));
@@ -146,6 +147,18 @@ public final class Tiles {
 		tiles.set(121, new FlowerTile("Fern", FlowerTile.FlowerType.Fern));
 		tiles.set(122, new FlowerTile("Cloud flower", FlowerTile.FlowerType.CloudFlower));
 		tiles.set(123, new SaplingTile("Fern spores", Tiles.get("Grass"), Tiles.get("Fern")));
+		tiles.set(124, new DeadTreeTile("snowy Dead Tree", DeadTreeTile.DeadTreeType.Snow));
+		tiles.set(125, new OtherRockTile("Glacier", OtherRockTile.OtherRockType.Iced));
+		tiles.set(126, new SmallGlacierTile("Small glacier", SmallGlacierTile.SmallGlacierType.Block));
+		tiles.set(127, new SmallGlacierTile("Small glacier spikes", SmallGlacierTile.SmallGlacierType.Spikes));
+		tiles.set(128, new PatchTile("Empty patch vase"));
+		tiles.set(129, new PlantPatchTile("Cloud Cactus", PlantPatchTile.PlantPatchType.CloudCactus));
+		tiles.set(130, new SaplingPatchTile("Cloud Cactus Sapling", Tiles.get("Empty patch vase"), Tiles.get("patch cloud cactus"),Tiles.get("Cloud")));
+		tiles.set(131, new PlantPatchTile("Cactus", PlantPatchTile.PlantPatchType.Cactus));
+		tiles.set(132, new SaplingPatchTile("Cactus Sapling", Tiles.get("Empty patch vase"), Tiles.get("patch cactus"),Tiles.get("sand")));
+        tiles.set(133, new SaplingTile("Fungus spores", Tiles.get("Moss"), Tiles.get("Big Fungus")));
+        tiles.set(134, new LockedStairsTile("Iced stairs down", LockedStairsTile.LockedStairsType.IcedStairsDown));
+		tiles.set(135, new OtherRockTile("Iced rock", OtherRockTile.OtherRockType.IcedRock));
 
 		// WARNING: don't use this tile for anything!
 		tiles.set(511, new ConnectTile());

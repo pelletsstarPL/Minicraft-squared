@@ -33,25 +33,8 @@ public class IceTile extends Tile {
 		maySpawn = true;
 	}
 
-
-	/*protected static int dCol(int depth) {
-		switch (depth) {
-			case 0: return Color.get(1, 129, 105, 83); // Surface.
-			case -4: return Color.get(1, 76, 30, 100); // Dungeons.
-			default: return Color.get(1, 102); // Caves.
-		}
-	}
-
-	protected static int dIdx(int depth) {
-		switch (depth) {
-			case 0: return 0; // Surface
-			case -4: return 2; // Dungeons
-			default: return 1; // Caves
-		}
-	}*/
 	
 	public void render(Screen screen, Level level, int x, int y) {
-		Tiles.get("Water").render(screen, level, x, y);
 		sprite.render(screen, level, x, y);
 	}
 	
@@ -99,4 +82,10 @@ public class IceTile extends Tile {
 		}
 		return false;
 	}
+	public boolean mayPass(Level level, int x, int y, Entity e){
+		if(e instanceof NightWizard  || e instanceof AirWizard || e instanceof Player || (NightWizard.revenge>0 && (e instanceof Zombie || e instanceof Slime || e instanceof Skeleton)))
+			return true;
+		else return false;
+	}
+	public boolean maySpawn() { return false; }
 }

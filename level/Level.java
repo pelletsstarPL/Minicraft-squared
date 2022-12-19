@@ -14,6 +14,7 @@ import java.util.function.ToIntFunction;
 import minicraft.core.Game;
 import minicraft.core.Network;
 import minicraft.core.Updater;
+import minicraft.core.World;
 import minicraft.core.io.Settings;
 import minicraft.entity.ClientTickable;
 import minicraft.entity.Entity;
@@ -28,6 +29,7 @@ import minicraft.gfx.Point;
 import minicraft.gfx.Rectangle;
 import minicraft.gfx.Screen;
 import minicraft.item.Item;
+import minicraft.level.tile.StairsTile;
 import minicraft.level.tile.Tile;
 import minicraft.level.tile.Tiles;
 import minicraft.level.tile.TorchTile;
@@ -53,6 +55,8 @@ public class Level {
 	public int maxMobCount;
 	public int chestCount;
 	public int mobCount = 0;
+	int stairStructCoordx =0;
+	int stairStructCoordy =0;
 
 	/**
 	 * I will be using this lock to avoid concurrency exceptions in entities and sparks set
@@ -143,17 +147,19 @@ public class Level {
 		
 		tiles = maps[0]; // Assigns the tiles in the map
 		data = maps[1]; // Assigns the data of the tiles
-
 		if(level<=-1 && level>=-3)generateMines();
 		if (level < 0)
 			generateSpawnerStructures();
 
 		if( level == -3)
 			generateFountains();
+		if( level == -2 || level == -1)
+			generateStairStructures();
 		if (level == 0){
 			generateVillages();
 			generateCastle();
 			}
+		System.out.println(stairStructCoordx + " " + stairStructCoordy);
 
 		
 		if (parentLevel != null) { // If the level above this one is not null (aka, if this isn't the sky level)
@@ -173,7 +179,16 @@ public class Level {
 							if(getTile(x,y)==Tiles.get("moss"))setAreaTiles(x, y, (Math.random()<0.04 ? 2 : 1), Tiles.get("Moss"), 0);
 							else setAreaTiles(x, y, (Math.random()<0.04 ? 2 : 1), Tiles.get("Dirt"), 0);
 						else setAreaTiles(x, y, (Math.random()<0.034 ? 2 : 1), Tiles.get("dirt"), 0);
-						if(parentLevel.getTile(x, y) == Tiles.get("Stairs Down")) setTile(x, y, Tiles.get("Stairs Up"));
+						if(parentLevel.getTile(x, y) == Tiles.get("Stairs Down")){
+							if(x%9>6 || y%9<2 && depth>-3){
+								Structure.stairsRuinsUp.draw(this,x,y);
+							}
+							else
+								setTile(x, y, Tiles.get("Stairs Up"));
+								if ((x % 12 == 0 || y % 12 == 0) && depth < -1)
+									setData(x, y, 30); //blocked upstairs will start appearing at -2 to let player enter the caverns for iron at last
+
+						}
 					}else if(parentLevel.getTile(x, y) == Tiles.get("Obsidian Stairs Down")){
 						Structure.dungeonGate.draw(this, x, y);
 						setTile(x, y, Tiles.get("Obsidian Stairs Up"));
@@ -227,8 +242,9 @@ public class Level {
 				int x = random.nextInt(this.w - 7);
 				int y = random.nextInt(this.h - 5);
 
-				if ((this.getTile(x - 1, y - 1) == Tiles.get("Cloud") || this.getTile(x - 1, y - 1) == Tiles.get("Skygrass")) && (this.getTile(x + 1, y - 1) == Tiles.get("Cloud") || this.getTile(x + 1, y - 1) == Tiles.get("Skygrass")) ) {
-					if ((this.getTile(x - 1, y + 1) == Tiles.get("Cloud") || this.getTile(x - 1, y + 1) == Tiles.get("Skygrass")) && (this.getTile(x + 1, y + 1) == Tiles.get("Cloud") || this.getTile(x + 1, y + 1) == Tiles.get("Skygrass")) ) {
+				String[] allowed=new String[]{"cloud","skygrass","cloud flower","cloud tallgrass","cloud cactus","sky tree","sky conifer"};
+				if (Arrays.asList(allowed).contains(this.getTile(x - 1, y - 1).name.toLowerCase()) && Arrays.asList(allowed).contains(this.getTile(x + 1, y - 1).name.toLowerCase())) {
+					if (Arrays.asList(allowed).contains(this.getTile(x - 1, y + 1).name.toLowerCase()) && Arrays.asList(allowed).contains(this.getTile(x + 1, y + 1).name.toLowerCase())) {
 						if (Game.debug) System.out.println("Setting tiles around " + x + "," + y + " to hard rock II");
 							setAreaTiles(x, y, 1, Tiles.get("Hard Rock II"), 1); // surround the sky stairs with hard rock
 
@@ -625,7 +641,8 @@ public class Level {
 	
 	public int getData(int x, int y) {
 		if (x < 0 || y < 0 || x >= w || y >= h) return 0;
-		return data[x + y * w] & 0xff;
+		//return data[x + y * w] & 0xff //why so? We only limit ourself with that;
+		return data[x + y * w]; //allows for negative data
 	}
 	
 	public void setData(int x, int y, int val) {
@@ -948,211 +965,337 @@ public class Level {
 	private boolean noStairs(int x, int y) {
 		return getTile(x, y) != Tiles.get("Stairs Down");
 	}
-	
-	
+
+	private void generateStairStructures() {
+		int xx = random.nextInt(w - 20) + 10;
+		int yy = random.nextInt(h - 20) + 10;
+		for (int i = 0; i < w / 128 - (w > 255 ? 1 : 0);i++) {
+			while ((getTile(xx, yy).name.contains("ROCK") || getTile(xx, yy).name.contains("ORE"))) {
+				xx = random.nextInt(w - 20) + 10;
+				yy = random.nextInt(h - 20) + 10;
+				stairStructCoordx = xx;stairStructCoordy = yy;
+			}
+
+			Structure.stairsRuinsDown.draw(this, xx, yy);
+
+		}//1 for 128 and 256 and 2 for 512
+	}
+
 	private void generateSpawnerStructures() {
 		for (int i = 0; i < 18 / -depth * (w / 128); i++) {
-			
-			/// For generating spawner dungeons
-			MobAi m;
-			int r = random.nextInt(5);
-			
-			if (r == 1) {
-				if(depth==-4)
-					m = new Skeleton(3);
-				else if(depth!=-3) m = new Skeleton(-depth);
-				else m = new AncSkeleton(1);
-			} else if (r == 2 || r == 0) {
-				if(depth==-4) m = new Slime(3);
-				else if(depth==-3)m = new Slime(2);
-				else m = new Slime(-depth);
-			} else {
-				if(depth==-4) m = new Zombie(3);
-				else if(depth==-3)m = new Zombie(2);
-				else m = new Zombie(-depth);
-			}
-			Spawner sp = new Spawner(m);
-			int x3 = random.nextInt(16 * w) / 16;
-			int y3 = random.nextInt(16 * h) / 16;
-			if (getTile(x3, y3) == Tiles.get("dirt") || getTile(x3, y3) == Tiles.get("Moss") || getTile(x3, y3) == Tiles.get("Azalea") || getTile(x3, y3) == Tiles.get("Spiky stone-L") || getTile(x3, y3) == Tiles.get("Big Fungus")  || getTile(x3, y3) == Tiles.get("Ground Rock") || getTile(x3, y3) == Tiles.get("Bramble") || getTile(x3, y3) == Tiles.get("Coarse dirt")) {
-				boolean xaxis2 = random.nextBoolean();
-				
-				if (xaxis2) {
-					for (int s2 = x3; s2 < w - s2; s2++) {
-						if (getTile(s2, y3) == Tiles.get("rock")) {
-							sp.x = s2 * 16 - 24;
-							sp.y = y3 * 16 - 24;
-						}
-					}
+			if(depth>-5 && depth<1) {
+				/// For generating spawner dungeons
+				MobAi m;
+				int r = random.nextInt(5);
+
+				if (r == 1) {
+					if (depth == -4)
+						m = new Skeleton(3);
+					else if (depth != -3) m = new Skeleton(-depth);
+					else m = new AncSkeleton(1);
+				} else if (r == 2 || r == 0) {
+					if (depth == -4) m = new Slime(3);
+					else if (depth == -3) m = new Slime(2);
+					else m = new Slime(-depth);
 				} else {
-					for (int s2 = y3; s2 < y3 - s2; s2++) {
-						if (getTile(x3, s2) == Tiles.get("rock")) {
-							sp.x = x3 * 16 - 24;
-							sp.y = s2 * 16 - 24;
-						}
-					}
+					if (depth == -4) m = new Zombie(3);
+					else if (depth == -3) m = new Zombie(2);
+					else m = new Zombie(-depth);
 				}
-				
-				if (sp.x == 0 && sp.y == 0) {
-					sp.x = x3 * 16 - 8;
-					sp.y = y3 * 16 - 8;
-				}
+				Spawner sp = new Spawner(m);
+				int x3 = random.nextInt(16 * w) / 16;
+				int y3 = random.nextInt(16 * h) / 16;
+				if (getTile(x3, y3) != Tiles.get("Rock") && getTile(x3, y3) != Tiles.get("RockG") && getTile(x3, y3) != Tiles.get("Lava") && getTile(x3, y3) != Tiles.get("Water") && !getTile(x3,y3).name.toLowerCase().contains("ore")) {
+					boolean xaxis2 = random.nextBoolean();
 
-				if (getTile(sp.x / 16, sp.y / 16) == Tiles.get("rock")) {
-					setTile(sp.x / 16, sp.y / 16, Tiles.get("dirt"));
-				}
-                if(depth==-3) {
-					int type=random.nextInt(7);
-                    if (r != 1) {
+					if (xaxis2) {
+						for (int s2 = x3; s2 < w - s2; s2++) {
+							if (getTile(s2, y3) == Tiles.get("rock") || getTile(s2, x3) == Tiles.get("rockG")) {
+								sp.x = s2 * 16 - 24;
+								sp.y = y3 * 16 - 24;
+							}
+						}
+					} else {
+						for (int s2 = y3; s2 < y3 - s2; s2++) {
+							if (getTile(x3, s2) == Tiles.get("rock") || getTile(x3, s2) == Tiles.get("rockG")) {
+								sp.x = x3 * 16 - 24;
+								sp.y = s2 * 16 - 24;
+							}
+						}
+					}
 
-						switch(type){
-							case 0:Structure.mobDungeonCenter.draw(this, sp.x / 16, sp.y / 16);break;
-							case 1:Structure.mobDungeonCenterRuined.draw(this, sp.x / 16, sp.y / 16);break;
-							case 2:Structure.mobDungeonCenter2.draw(this, sp.x / 16, sp.y / 16);break;
-							case 3:Structure.mobDungeonCenter2Ruined.draw(this, sp.x / 16, sp.y / 16);break;
-							case 4:Structure.mobDungeonCenter2Ruined2.draw(this, sp.x / 16, sp.y / 16);break;
-							case 5:Structure.mobDungeonCenterRuined2.draw(this, sp.x / 16, sp.y / 16);break;
-							case 6:Structure.mobDungeonCenterRuined2.draw(this, sp.x / 16, sp.y / 16);break;
-						}
-                    } else{
-						Structure.mobDungeonCenter2Pillars.draw(this, (sp.x / 16)-5, (sp.y / 16)-5);
-						Structure.mobDungeonCenter2Pillars.draw(this, (sp.x / 16)+5, (sp.y / 16)-5);
-						Structure.mobDungeonCenter2Pillars.draw(this, (sp.x / 16)-5, (sp.y / 16)+5);
-						Structure.mobDungeonCenter2Pillars.draw(this, (sp.x / 16)+5, (sp.y / 16)+5);
-						//for ancient skeletons dungeons will fully generate with all corridors
-						Structure.mobDungeonCenter2.draw(this, sp.x / 16, sp.y / 16);
-						Structure.mobDungeonNorth2.draw(this, sp.x / 16, sp.y / 16 - 5);
-						Structure.mobDungeonSouth2.draw(this, sp.x / 16, sp.y / 16 + 5);
-						Structure.mobDungeonEast2.draw(this, sp.x / 16 + 5, sp.y / 16);
-						Structure.mobDungeonWest2.draw(this, sp.x / 16 - 5, sp.y / 16);
+					if (sp.x == 0 && sp.y == 0) {
+						sp.x = x3 * 16 - 8;
+						sp.y = y3 * 16 - 8;
 					}
-                    if (getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("dirt") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("Moss") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("azalea") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("Spiky stone-L") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("Big Fungus")) {
-						type=random.nextInt(3);
-						switch(type){
-							case 0:Structure.mobDungeonNorth2.draw(this, sp.x / 16, sp.y / 16 - 5);break;
-							case 1:Structure.mobDungeonNorth2Ruined.draw(this, sp.x / 16, sp.y / 16 - 5);break;
-							case 2:Structure.mobDungeonNorth2Ruined2.draw(this, sp.x / 16, sp.y / 16 - 5);break;
-						}
-                    }
-                    if (getTile(sp.x / 16, sp.y / 16 + 4) == Tiles.get("dirt") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("Moss") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("azalea") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("Spiky stone-L") ||  getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("Big Fungus")) {
-						type=random.nextInt(3);
-						switch(type){
-							case 0:Structure.mobDungeonSouth2.draw(this, sp.x / 16, sp.y / 16 + 5);break;
-							case 1:Structure.mobDungeonSouth2Ruined.draw(this, sp.x / 16, sp.y / 16 + 5);break;
-							case 2:Structure.mobDungeonSouth2Ruined2.draw(this, sp.x / 16, sp.y / 16 + 5);break;
-						}
-                    }
-                    if (getTile(sp.x / 16 + 4, sp.y / 16) == Tiles.get("dirt") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("Moss") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("azalea") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("Spiky stone-L") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("Big Fungus")) {
-						type=random.nextInt(3);
-						switch(type){
-							case 0:Structure.mobDungeonEast2.draw(this, sp.x / 16 + 5, sp.y / 16);break;
-							case 1:Structure.mobDungeonEast2Ruined.draw(this, sp.x / 16 + 5, sp.y / 16);break;
-							case 2:Structure.mobDungeonEast2Ruined2.draw(this, sp.x / 16 + 5, sp.y / 16);break;
-						}
-                    }
-                    if (getTile(sp.x / 16 - 4, sp.y / 16) == Tiles.get("dirt") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("Moss") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("azalea") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("Spiky stone-L") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("Big Fungus")) {
-						type=random.nextInt(3);
-						switch(type){
-							case 0:Structure.mobDungeonWest2.draw(this, sp.x / 16 - 5, sp.y / 16);break;
-							case 1:Structure.mobDungeonWest2Ruined.draw(this, sp.x / 16 - 5, sp.y / 16);break;
-							case 2:Structure.mobDungeonWest2Ruined2.draw(this, sp.x / 16 - 5, sp.y / 16);break;
-						}
-                    }
-                }else if(depth==-4){
-					int type=random.nextInt(3);
 
-						switch(type){
-							case 0:Structure.mobDungeonCenter3.draw(this, sp.x / 16, sp.y / 16);break;
-							case 1:Structure.mobDungeonCenter3Ruined.draw(this, sp.x / 16, sp.y / 16);break;
-							case 2:Structure.mobDungeonCenter3Ruined2.draw(this, sp.x / 16, sp.y / 16);break;
+					if (getTile(sp.x / 16, sp.y / 16) == Tiles.get("rock") || getTile(sp.x / 16, sp.y / 16) == Tiles.get("rockG")) {
+						setTile(sp.x / 16, sp.y / 16, Tiles.get("dirt"));
+					}
+					if (depth == -3) {
+						int type = random.nextInt(7);
+						if (r != 1) {
+
+							switch (type) {
+								case 0:
+									Structure.mobDungeonCenter.draw(this, sp.x / 16, sp.y / 16);
+									break;
+								case 1:
+									Structure.mobDungeonCenterRuined.draw(this, sp.x / 16, sp.y / 16);
+									break;
+								case 2:
+									Structure.mobDungeonCenter2.draw(this, sp.x / 16, sp.y / 16);
+									break;
+								case 3:
+									Structure.mobDungeonCenter2Ruined.draw(this, sp.x / 16, sp.y / 16);
+									break;
+								case 4:
+									Structure.mobDungeonCenter2Ruined2.draw(this, sp.x / 16, sp.y / 16);
+									break;
+								case 5:
+									Structure.mobDungeonCenterRuined2.draw(this, sp.x / 16, sp.y / 16);
+									break;
+								case 6:
+									Structure.mobDungeonCenterRuined2.draw(this, sp.x / 16, sp.y / 16);
+									break;
+							}
+						} else {
+							Structure.mobDungeonCenter2Pillars.draw(this, (sp.x / 16) - 5, (sp.y / 16) - 5);
+							Structure.mobDungeonCenter2Pillars.draw(this, (sp.x / 16) + 5, (sp.y / 16) - 5);
+							Structure.mobDungeonCenter2Pillars.draw(this, (sp.x / 16) - 5, (sp.y / 16) + 5);
+							Structure.mobDungeonCenter2Pillars.draw(this, (sp.x / 16) + 5, (sp.y / 16) + 5);
+							//for ancient skeletons dungeons will fully generate with all corridors
+							Structure.mobDungeonCenter2.draw(this, sp.x / 16, sp.y / 16);
+							Structure.mobDungeonNorth2.draw(this, sp.x / 16, sp.y / 16 - 5);
+							Structure.mobDungeonSouth2.draw(this, sp.x / 16, sp.y / 16 + 5);
+							Structure.mobDungeonEast2.draw(this, sp.x / 16 + 5, sp.y / 16);
+							Structure.mobDungeonWest2.draw(this, sp.x / 16 - 5, sp.y / 16);
 						}
-					if (getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("dirt") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("coarse dirt")) {
-						type=random.nextInt(3);
-						switch(type){
-							case 0:Structure.mobDungeonNorth3.draw(this, sp.x / 16, sp.y / 16 - 6);break;
-							case 1:Structure.mobDungeonNorth3Ruined.draw(this, sp.x / 16, sp.y / 16 - 6);break;
-							case 2:Structure.mobDungeonNorth3Ruined2.draw(this, sp.x / 16, sp.y / 16 - 6);break;
+						if (getTile(sp.x / 16, sp.y / 16 - 4) != Tiles.get("Rock") && getTile(sp.x / 16, sp.y / 16 - 4) != Tiles.get("RockG")) {
+							type = random.nextInt(3);
+							switch (type) {
+								case 0:
+									Structure.mobDungeonNorth2.draw(this, sp.x / 16, sp.y / 16 - 5);
+									break;
+								case 1:
+									Structure.mobDungeonNorth2Ruined.draw(this, sp.x / 16, sp.y / 16 - 5);
+									break;
+								case 2:
+									Structure.mobDungeonNorth2Ruined2.draw(this, sp.x / 16, sp.y / 16 - 5);
+									break;
+							}
+						}
+						if (getTile(sp.x / 16, sp.y / 16 + 4) != Tiles.get("Rock") && getTile(sp.x / 16, sp.y / 16 + 4) != Tiles.get("RockG")) {
+							type = random.nextInt(3);
+							switch (type) {
+								case 0:
+									Structure.mobDungeonSouth2.draw(this, sp.x / 16, sp.y / 16 + 5);
+									break;
+								case 1:
+									Structure.mobDungeonSouth2Ruined.draw(this, sp.x / 16, sp.y / 16 + 5);
+									break;
+								case 2:
+									Structure.mobDungeonSouth2Ruined2.draw(this, sp.x / 16, sp.y / 16 + 5);
+									break;
+							}
+						}
+						if (getTile(sp.x / 16 + 4, sp.y / 16) != Tiles.get("Rock") && getTile(sp.x / 16 + 4, sp.y / 16) != Tiles.get("RockG")) {
+							type = random.nextInt(3);
+							switch (type) {
+								case 0:
+									Structure.mobDungeonEast2.draw(this, sp.x / 16 + 5, sp.y / 16);
+									break;
+								case 1:
+									Structure.mobDungeonEast2Ruined.draw(this, sp.x / 16 + 5, sp.y / 16);
+									break;
+								case 2:
+									Structure.mobDungeonEast2Ruined2.draw(this, sp.x / 16 + 5, sp.y / 16);
+									break;
+							}
+						}
+						if (getTile(sp.x / 16 - 4, sp.y / 16) != Tiles.get("Rock") && getTile(sp.x / 16 - 4, sp.y / 16) != Tiles.get("RockG")) {
+							type = random.nextInt(3);
+							switch (type) {
+								case 0:
+									Structure.mobDungeonWest2.draw(this, sp.x / 16 - 5, sp.y / 16);
+									break;
+								case 1:
+									Structure.mobDungeonWest2Ruined.draw(this, sp.x / 16 - 5, sp.y / 16);
+									break;
+								case 2:
+									Structure.mobDungeonWest2Ruined2.draw(this, sp.x / 16 - 5, sp.y / 16);
+									break;
+							}
+						}
+					} else if (depth == -4) {
+						int type = random.nextInt(3);
+
+						switch (type) {
+							case 0:
+								Structure.mobDungeonCenter3.draw(this, sp.x / 16, sp.y / 16);
+								break;
+							case 1:
+								Structure.mobDungeonCenter3Ruined.draw(this, sp.x / 16, sp.y / 16);
+								break;
+							case 2:
+								Structure.mobDungeonCenter3Ruined2.draw(this, sp.x / 16, sp.y / 16);
+								break;
+						}
+						if (getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("dirt") || getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("coarse dirt")) {
+							type = random.nextInt(3);
+							switch (type) {
+								case 0:
+									Structure.mobDungeonNorth3.draw(this, sp.x / 16, sp.y / 16 - 6);
+									break;
+								case 1:
+									Structure.mobDungeonNorth3Ruined.draw(this, sp.x / 16, sp.y / 16 - 6);
+									break;
+								case 2:
+									Structure.mobDungeonNorth3Ruined2.draw(this, sp.x / 16, sp.y / 16 - 6);
+									break;
+							}
+						}
+						if (getTile(sp.x / 16, sp.y / 16 + 4) == Tiles.get("dirt") || getTile(sp.x / 16, sp.y / 16 + 4) == Tiles.get("coarse dirt")) {
+							type = random.nextInt(3);
+							switch (type) {
+								case 0:
+									Structure.mobDungeonSouth3.draw(this, sp.x / 16, sp.y / 16 + 6);
+									break;
+								case 1:
+									Structure.mobDungeonSouth3Ruined.draw(this, sp.x / 16, sp.y / 16 + 6);
+									break;
+								case 2:
+									Structure.mobDungeonSouth3Ruined2.draw(this, sp.x / 16, sp.y / 16 + 6);
+									break;
+							}
+						}
+						if (getTile(sp.x / 16 + 4, sp.y / 16) == Tiles.get("dirt") || getTile(sp.x / 16 + 4, sp.y / 16) == Tiles.get("coarse dirt")) {
+							type = random.nextInt(3);
+							switch (type) {
+								case 0:
+									Structure.mobDungeonEast3.draw(this, sp.x / 16 + 6, sp.y / 16);
+									break;
+								case 1:
+									Structure.mobDungeonEast3Ruined.draw(this, sp.x / 16 + 6, sp.y / 16);
+									break;
+								case 2:
+									Structure.mobDungeonEast3Ruined2.draw(this, sp.x / 16 + 6, sp.y / 16);
+									break;
+							}
+						}
+						if (getTile(sp.x / 16 - 4, sp.y / 16) == Tiles.get("dirt") || getTile(sp.x / 16 - 4, sp.y / 16) == Tiles.get("coarse dirt")) {
+							type = random.nextInt(3);
+							switch (type) {
+								case 0:
+									Structure.mobDungeonWest3.draw(this, sp.x / 16 - 6, sp.y / 16);
+									break;
+								case 1:
+									Structure.mobDungeonWest3Ruined.draw(this, sp.x / 16 - 6, sp.y / 16);
+									break;
+								case 2:
+									Structure.mobDungeonWest3Ruined2.draw(this, sp.x / 16 - 6, sp.y / 16);
+									break;
+							}
+						}
+					} else if (depth > -5 && depth < 0) {
+						int type = random.nextInt(7);
+						switch (type) {
+							case 0:
+								Structure.mobDungeonCenter.draw(this, sp.x / 16, sp.y / 16);
+								break;
+							case 1:
+								Structure.mobDungeonCenterRuined.draw(this, sp.x / 16, sp.y / 16);
+								break;
+							case 2:
+								Structure.mobDungeonCenter2.draw(this, sp.x / 16, sp.y / 16);
+								break;
+							case 3:
+								Structure.mobDungeonCenter2Ruined.draw(this, sp.x / 16, sp.y / 16);
+								break;
+							case 4:
+								Structure.mobDungeonCenter2Ruined2.draw(this, sp.x / 16, sp.y / 16);
+								break;
+							case 5:
+								Structure.mobDungeonCenterRuined2.draw(this, sp.x / 16, sp.y / 16);
+								break;
+							case 6:
+								Structure.mobDungeonCenterRuined2.draw(this, sp.x / 16, sp.y / 16);
+								break;
+						}
+						if (getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("dirt")) {
+							type = random.nextInt(3);
+							switch (type) {
+								case 0:
+									Structure.mobDungeonNorth.draw(this, sp.x / 16, sp.y / 16 - 5);
+									break;
+								case 1:
+									Structure.mobDungeonNorthRuined.draw(this, sp.x / 16, sp.y / 16 - 5);
+									break;
+								case 2:
+									Structure.mobDungeonNorthRuined2.draw(this, sp.x / 16, sp.y / 16 - 5);
+									break;
+							}
+						}
+						if (getTile(sp.x / 16, sp.y / 16 + 4) == Tiles.get("dirt")) {
+							type = random.nextInt(3);
+							switch (type) {
+								case 0:
+									Structure.mobDungeonSouth.draw(this, sp.x / 16, sp.y / 16 + 5);
+									break;
+								case 1:
+									Structure.mobDungeonSouthRuined.draw(this, sp.x / 16, sp.y / 16 + 5);
+									break;
+								case 2:
+									Structure.mobDungeonSouthRuined2.draw(this, sp.x / 16, sp.y / 16 + 5);
+									break;
+							}
+						}
+						if (getTile(sp.x / 16 + 4, sp.y / 16) == Tiles.get("dirt")) {
+							type = random.nextInt(3);
+							switch (type) {
+								case 0:
+									Structure.mobDungeonEast.draw(this, sp.x / 16 + 5, sp.y / 16);
+									break;
+								case 1:
+									Structure.mobDungeonEastRuined.draw(this, sp.x / 16 + 5, sp.y / 16);
+									break;
+								case 2:
+									Structure.mobDungeonEastRuined2.draw(this, sp.x / 16 + 5, sp.y / 16);
+									break;
+							}
+						}
+						if (getTile(sp.x / 16 - 4, sp.y / 16) == Tiles.get("dirt")) {
+							type = random.nextInt(3);
+							switch (type) {
+								case 0:
+									Structure.mobDungeonWest.draw(this, sp.x / 16 - 5, sp.y / 16);
+									break;
+								case 1:
+									Structure.mobDungeonWestRuined.draw(this, sp.x / 16 - 5, sp.y / 16);
+									break;
+								case 2:
+									Structure.mobDungeonWestRuined2.draw(this, sp.x / 16 - 5, sp.y / 16);
+									break;
+							}
 						}
 					}
-					if (getTile(sp.x / 16, sp.y / 16 + 4) == Tiles.get("dirt") || getTile(sp.x / 16, sp.y / 16 + 4) == Tiles.get("coarse dirt")) {
-						type=random.nextInt(3);
-						switch(type){
-							case 0:Structure.mobDungeonSouth3.draw(this, sp.x / 16, sp.y / 16 + 6);break;
-							case 1:Structure.mobDungeonSouth3Ruined.draw(this, sp.x / 16, sp.y / 16 + 6);break;
-							case 2:Structure.mobDungeonSouth3Ruined2.draw(this, sp.x / 16, sp.y / 16 + 6);break;
+
+					add(sp);
+					for (int rpt = 0; rpt < 2; rpt++) {
+						if (random.nextInt(2) != 0) continue;
+						Chest c = new Chest();
+						int chance = -depth;
+						switch (depth) {
+							case -3:
+								c.populateInvRandom("minidungeonFloor2", chance);
+								break;
+							default:
+								c.populateInvRandom("minidungeon", chance);
+								break;
 						}
+						;
+						add(c, sp.x - 16 + rpt * 32, sp.y - 16 - (0 - random.nextInt(3) * 16));
 					}
-					if (getTile(sp.x / 16 + 4, sp.y / 16) == Tiles.get("dirt") || getTile(sp.x / 16 + 4, sp.y / 16) == Tiles.get("coarse dirt")) {
-						type=random.nextInt(3);
-						switch(type){
-							case 0:Structure.mobDungeonEast3.draw(this, sp.x / 16 + 6, sp.y / 16);break;
-							case 1:Structure.mobDungeonEast3Ruined.draw(this, sp.x / 16 + 6, sp.y / 16);break;
-							case 2:Structure.mobDungeonEast3Ruined2.draw(this, sp.x / 16 + 6, sp.y / 16);break;
-						}
-					}
-					if (getTile(sp.x / 16 - 4, sp.y / 16) == Tiles.get("dirt") || getTile(sp.x / 16 - 4, sp.y / 16) == Tiles.get("coarse dirt")) {
-						type=random.nextInt(3);
-						switch(type){
-							case 0:Structure.mobDungeonWest3.draw(this, sp.x / 16 - 6, sp.y / 16);break;
-							case 1:Structure.mobDungeonWest3Ruined.draw(this, sp.x / 16 - 6, sp.y / 16);break;
-							case 2:Structure.mobDungeonWest3Ruined2.draw(this, sp.x / 16 - 6, sp.y / 16);break;
-						}
-					}
-				}else{
-					int type=random.nextInt(7);
-					switch(type){
-						case 0:Structure.mobDungeonCenter.draw(this, sp.x / 16, sp.y / 16);break;
-						case 1:Structure.mobDungeonCenterRuined.draw(this, sp.x / 16, sp.y / 16);break;
-						case 2:Structure.mobDungeonCenter2.draw(this, sp.x / 16, sp.y / 16);break;
-						case 3:Structure.mobDungeonCenter2Ruined.draw(this, sp.x / 16, sp.y / 16);break;
-						case 4:Structure.mobDungeonCenter2Ruined2.draw(this, sp.x / 16, sp.y / 16);break;
-						case 5:Structure.mobDungeonCenterRuined2.draw(this, sp.x / 16, sp.y / 16);break;
-						case 6:Structure.mobDungeonCenterRuined2.draw(this, sp.x / 16, sp.y / 16);break;
-					}
-					if (getTile(sp.x / 16, sp.y / 16 - 4) == Tiles.get("dirt")) {
-						type=random.nextInt(3);
-						switch(type){
-							case 0:Structure.mobDungeonNorth.draw(this, sp.x / 16, sp.y / 16 - 5);break;
-							case 1:Structure.mobDungeonNorthRuined.draw(this, sp.x / 16, sp.y / 16 - 5);break;
-							case 2:Structure.mobDungeonNorthRuined2.draw(this, sp.x / 16, sp.y / 16 - 5);break;
-						}
-					}
-					if (getTile(sp.x / 16, sp.y / 16 + 4) == Tiles.get("dirt")) {
-						type=random.nextInt(3);
-						switch(type){
-							case 0:Structure.mobDungeonSouth.draw(this, sp.x / 16, sp.y / 16 + 5);break;
-							case 1:Structure.mobDungeonSouthRuined.draw(this, sp.x / 16, sp.y / 16 + 5);break;
-							case 2:Structure.mobDungeonSouthRuined2.draw(this, sp.x / 16, sp.y / 16 + 5);break;
-						}
-					}
-					if (getTile(sp.x / 16 + 4, sp.y / 16) == Tiles.get("dirt")) {
-						type=random.nextInt(3);
-						switch(type){
-							case 0:Structure.mobDungeonEast.draw(this, sp.x / 16 + 5, sp.y / 16);break;
-							case 1:Structure.mobDungeonEastRuined.draw(this, sp.x / 16  + 5, sp.y / 16);break;
-							case 2:Structure.mobDungeonEastRuined2.draw(this, sp.x / 16  + 5, sp.y / 16);break;
-						}
-					}
-					if (getTile(sp.x / 16 - 4, sp.y / 16) == Tiles.get("dirt")) {
-						type=random.nextInt(3);
-						switch(type){
-							case 0:Structure.mobDungeonWest.draw(this, sp.x / 16 - 5, sp.y / 16);break;
-							case 1:Structure.mobDungeonWestRuined.draw(this, sp.x / 16 - 5, sp.y / 16);break;
-							case 2:Structure.mobDungeonWestRuined2.draw(this, sp.x / 16 - 5, sp.y / 16);break;
-						}
-					}
-				}
-				
-				add(sp);
-				for (int rpt = 0; rpt < 2; rpt++) {
-					if (random.nextInt(2) != 0) continue;
-					Chest c = new Chest();
-					int chance = -depth;
-                    switch(depth) {
-                        case -3:  c.populateInvRandom("minidungeonFloor2", chance);break;
-                        default:  c.populateInvRandom("minidungeon", chance);break;
-                    };
-					add(c, sp.x - 16 + rpt * 32, sp.y - 16 - (0-random.nextInt(3)*16));
 				}
 			}
 		}
@@ -1321,26 +1464,31 @@ public class Level {
 	}
 	private void generateCastle() {
 		int castleType = random.nextInt(4);
-		int xCoord= (random.nextInt(75*(w/128<1 ? 1 : w/128))+15)*16;
-		int yCoord= (random.nextInt(75*(h/128<1 ? 1 : h/128))+15)*16;
+
+		int xCoord= (random.nextInt(w-20*(w/128))+(20*(w/128)));
+		int yCoord= (random.nextInt(h-20*(h/128))+(20*(h/128)));
+		while(!getTile(xCoord,yCoord).name.contains("GRASS")){
+			xCoord= (random.nextInt(w-20*(w/128))+(20*(w/128)));
+			yCoord= (random.nextInt(h-20*(h/128))+(20*(h/128)));
+		}
 		Chest c = new Chest();
 		c.populateInvRandom("castlechest", 1);
 			switch (castleType) {
 				case 0:
-					Structure.RuinedCastleOverlay1.draw(this, xCoord/16, yCoord/16);
-					add(c, xCoord, yCoord);
+					Structure.RuinedCastleOverlay1.draw(this, xCoord, yCoord);
+					add(c, xCoord*16, yCoord*16);
 					break;
 				case 1:
-					Structure.RuinedCastleOverlay2.draw(this, xCoord/16, yCoord/16);
-					add(c, xCoord, yCoord);
+					Structure.RuinedCastleOverlay2.draw(this, xCoord, yCoord);
+					add(c, xCoord*16, yCoord*16);
 					break;
 				case 2:
-					Structure.RuinedCastleOverlay3.draw(this, xCoord/16, yCoord/16);
-					add(c, xCoord, yCoord);
+					Structure.RuinedCastleOverlay3.draw(this, xCoord, yCoord);
+					add(c, xCoord*16, yCoord*16);
 					break;
 				case 3:
-					Structure.RuinedCastleOverlay4.draw(this, xCoord/16, yCoord/16);
-					add(c, xCoord, yCoord);
+					Structure.RuinedCastleOverlay4.draw(this, xCoord, yCoord);
+					add(c, xCoord*16, yCoord*16);
 					break;
 			}
 

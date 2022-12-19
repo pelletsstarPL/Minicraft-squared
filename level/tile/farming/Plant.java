@@ -23,8 +23,9 @@ public class Plant extends FarmTile {
     public void steppedOn(Level level, int xt, int yt, Entity entity) {
         if(!(entity instanceof Wraith) && !(entity instanceof WraithA) && !(entity instanceof Ghost)) {
             if (entity instanceof ItemEntity) return;
+
             super.steppedOn(level, xt, yt, entity);
-            harvest(level, xt, yt, entity);
+            if(random.nextInt(level.getTile(xt,yt).name.contains("REED") ? 1 : 30)==0) harvest(level, xt, yt, entity);
         }
     }
 
@@ -41,18 +42,20 @@ public class Plant extends FarmTile {
         int age = level.getData(xt, yt);
         if (age < maxAge) {
             if (!IfWater(level, xt, yt)) level.setData(xt, yt, age + 1);
-            else if (IfWater(level, xt, yt)) level.setData(xt, yt, age + 2);
+            else if (IfWater(level, xt, yt)) level.setData(xt, yt, age + (random.nextInt(12)==0 ? 3 : 2));
+            if(age > maxAge)age = maxAge;
             return true;
         }
 
         return false;
     }
 
-    protected boolean IfWater(Level level, int xs, int ys) {
+    public static boolean IfWater(Level level, int xs, int ys) {
         Tile[] areaTiles = level.getAreaTiles(xs, ys, 1);
-        for(Tile t: areaTiles)
-            if(t == Tiles.get("Water"))
+        for(Tile t: areaTiles) {
+            if (t.name.contains("WATER") ||  t.name.contains("REED"))
                 return true;
+        }
 
         return false;
     }
@@ -75,8 +78,7 @@ public class Plant extends FarmTile {
         if (age >= maxAge && entity instanceof Player) {
             ((Player)entity).addScore(random.nextInt(5) + 1);
         }
-
-        if(name=="Reed")level.setTile(x, y, Tiles.get("Water"));
+        if(name.contains("Reed"))level.setTile(x, y, Tiles.get("Water"));
         else level.setTile(x, y, Tiles.get("Dirt"));
     }
 }

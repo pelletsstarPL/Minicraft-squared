@@ -1,3 +1,4 @@
+
 package minicraft.level.tile;
 
 import minicraft.core.Game;
@@ -21,38 +22,45 @@ import minicraft.level.Level;
 import minicraft.entity.mob.NightWizard;
 
 // This is the normal stone you see underground and on the surface, that drops coal and stone.
-
-public class RockTile extends Tile {
-	private RockType type;
-	public enum RockType{
-		Rock(50,new ConnectorSprite(RockTile.class, new Sprite(18, 6, 3, 3, 1, 3), new Sprite(21, 8, 2, 2, 1, 3), new Sprite(21, 6, 2, 2, 1, 3))),
-		Deepslate(85,new ConnectorSprite(RockTile.class, new Sprite(24, 9, 3, 3, 1, 3), new Sprite(27, 11, 2, 2, 1, 3), new Sprite(27, 9, 2, 2, 1, 3)));
+//We will use this class as placeholder for many other rock types not just sky one
+public class OtherRockTile extends Tile {
+	private OtherRockType type;
+	public enum OtherRockType{
+		Sky(45,new ConnectorSprite(OtherRockTile.class, new Sprite(18, 6, 3, 3, 1, 3), new Sprite(21, 8, 2, 2, 1, 3), new Sprite(21, 6, 2, 2, 1, 3)),new String[] {"Stone"},new int[] {1},new int[]{3},"Cloud"),
+		Iced(32,new ConnectorSprite(OtherRockTile.class, new Sprite(47, 6, 3, 3, 1, 3), new Sprite(50, 8, 2, 2, 1, 3), new Sprite(50, 6, 2, 2, 1, 3)),new String[] {"Ice"},new int[] {2},new int[]{4},"Snow"),
+		IcedRock(55,new ConnectorSprite(OtherRockTile.class, new Sprite(54, 6, 3, 3, 1, 3), new Sprite(52, 8, 2, 2, 1, 3), new Sprite(52, 6, 2, 2, 1, 3)),new String[] {"Ice","Stone","Coal"},new int[] {1,1,0},new int[]{2,2,1},"Dirt");
 		private int health;
 		private ConnectorSprite sprite;
-		RockType(int health,ConnectorSprite sprite){
+		private int[] lootMi,lootMa;
+		private String[] loot;
+		private String baseTile;
+		public boolean connectsTo(Tile tile, boolean isSide) {
+			if (!isSide) return true;
+			return tile.connectsToGlacier;
+
+		};
+		OtherRockType(int health,ConnectorSprite sprite,String[] loot,int[] lootMi,int[] lootMa,String baseTile){
 			this.health = health;
 			this.sprite = sprite;
+			this.loot = loot;
+			this.lootMi = lootMi;
+			this.lootMa = lootMa;
+			this.baseTile = baseTile;
 		}
 	}
-	private boolean dropCoal = false;
 
 	private int damage;
 
-	protected RockTile(String name, RockType type) {
+	protected OtherRockTile(String name, OtherRockType type) {
 		super(name, type.sprite);
+		connectsToSnow = type==OtherRockType.Iced;
+		connectsToRock = type==OtherRockType.IcedRock;
 		this.type = type;
 	}
 
 	public void render(Screen screen, Level level, int x, int y) {
 
-		if(level.depth==-3){
-			RockType.Rock.sprite=new ConnectorSprite(RockTile.class, new Sprite(15, 6, 3, 3, 1, 3), new Sprite(21, 8, 2, 2, 1, 3), new Sprite(22, 6, 2, 2, 1, 3));
-		}
-		else{
-			RockType.Rock.sprite = new ConnectorSprite(RockTile.class, new Sprite(18, 6, 3, 3, 1, 3), new Sprite(21, 8, 2, 2, 1, 3), new Sprite(21, 6, 2, 2, 1, 3));
-		}
-		Tiles.get("Dirt").render(screen, level, x, y);
-		if((level.getTile(x-1, y)==Tiles.get("Coarse dirt") || level.getTile(x+1, y)==Tiles.get("Coarse dirt") || level.getTile(x, y-1)==Tiles.get("Coarse dirt") || level.getTile(x, y+1)==Tiles.get("Coarse dirt")))Tiles.get("coarse dirt").render(screen, level, x, y);
+		Tiles.get(type.baseTile).render(screen, level, x, y);
 		type.sprite.render(screen, level, x, y);
 	}
 
@@ -61,7 +69,7 @@ public class RockTile extends Tile {
 			return true;
 		else return false;
 	}
-	
+
 	public boolean hurt(Level level, int x, int y, Mob source, int dmg, Direction attackDir) {
 		hurt(level, x, y, dmg);
 		return true;
@@ -74,7 +82,6 @@ public class RockTile extends Tile {
 			int dmg = random.nextInt(10) + tool.damage;
 			if (tool.level!=6 && tool.type == ToolType.Pickaxe && player.payStamina(staminaPay) && tool.payDurability(dmg)) {
 				// Drop coal since we use a pickaxe.
-				dropCoal = true;
 				hurt(level, xt, yt, tool.getDamage());
 				return true;
 			}else if (tool.level==6 && tool.type == ToolType.Pickaxe && player.payStamina(staminaPay) && tool.payDurability(dmg)) {
@@ -84,14 +91,18 @@ public class RockTile extends Tile {
 		}
 		return false;
 	}
-
+	private void loot(Level level, int x, int y){
+		for(int j=0;j <= type.loot.length;j++){
+			System.out.println(j + " " + type.loot.length + " " + type.loot[j]);
+			level.dropItem(x * 16 + 8, y * 16 + 8, type.lootMi[j], type.lootMa[j], Items.get(type.loot[j]));break;
+		}
+	}
 	public void hurt(Level level, int x, int y, int dmg) {
 		int maxHealth = type.health;
 		damage = level.getData(x, y) + dmg;
 
 		if (Game.isMode("Creative")) {
 			dmg = damage = maxHealth;
-			dropCoal = true;
 		}
 
 		level.add(new SmashParticle(x * 16, y * 16));
@@ -99,17 +110,8 @@ public class RockTile extends Tile {
 
 		level.add(new TextParticle("" + dmg, x * 16 + 8, y * 16 + 8, Color.RED));
 		if (damage >= maxHealth) {
-				if (dropCoal) {
-					level.dropItem(x * 16 + 8, y * 16 + 8, 1, 3, Items.get("Stone"));
-					int coal = 0;
-					if (!Settings.get("diff").equals("Hard")) {
-						coal++;
-					}
-					level.dropItem(x * 16 + 8, y * 16 + 8, coal, coal + 1, Items.get("Coal"));
-				} else {
-					level.dropItem(x * 16 + 8, y * 16 + 8, 2, 4, Items.get("Stone"));
-				}
-				level.setTile(x, y, Tiles.get("dirt"));
+			loot(level,x,y);
+			level.setTile(x,y,type.baseTile);
 		} else {
 			level.setData(x, y, damage);
 		}
