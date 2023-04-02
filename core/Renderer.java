@@ -29,6 +29,7 @@ import minicraft.item.Items;
 import minicraft.item.ToolItem;
 import minicraft.item.ToolType;
 import minicraft.level.Level;
+import minicraft.level.tile.Tiles;
 import minicraft.saveload.Load;
 import minicraft.screen.LoadingDisplay;
 import minicraft.screen.TitleDisplay;
@@ -123,7 +124,9 @@ public class Renderer extends Game {
 				renderDebugInfo();
 			}
 			else {
-				renderLevel();
+				if(currentLevel==5)renderLevel(currentLevel-1,true);
+				renderLevel(currentLevel,false); //we want to fully see it
+
 				renderGui();
 			}
 		}
@@ -157,8 +160,8 @@ public class Renderer extends Game {
 	}
 
 
-	private static void renderLevel() {
-		Level level = levels[currentLevel];
+	private static void renderLevel(int lvlId,boolean visualOnly) {
+		Level level = levels[lvlId];
 		if (level == null) return;
 		int xScroll = player.x - Screen.w / 2; // Scrolls the screen in the x axis.
 		int yScroll = player.y - (Screen.h - 8) / 2; // Scrolls the screen in the y axis.
@@ -168,21 +171,8 @@ public class Renderer extends Game {
 		if (yScroll < 0) yScroll = 0; // ...Top border.
 		if (xScroll > level.w * 16 - Screen.w) xScroll = level.w * 16 - Screen.w; // ...Right border.
 		if (yScroll > level.h * 16 - Screen.h) yScroll = level.h * 16 - Screen.h; // ...Bottom border.
-		if (currentLevel == 5) { // If the current level is sky one
-			for (int y = 0; y < 28; y++)
-				for (int x = 0; x < 48; x++) {
-					screen.render(x * 8 - ((xScroll / 4) & 7), y * 8 - ((yScroll / 4) & 7), 2 + 25 * 32, 0, 1);
-				}
-		}
-		if (currentLevel == 6) { // If the current level is second floor of obsidian dungeon - 1.7
-			for (int y = 0; y < 28; y++)
-				for (int x = 0; x < 48; x++) {
-					// Creates the void bg for dungeon level - 1.7
-					screen.render(x * 8 - ((xScroll / 4) & 7), y * 8 - ((yScroll / 4) & 7), 1 + 25 * 32, 0, 1);
-				}
-		}
 		level.renderBackground(screen, xScroll, yScroll); // Renders current level background
-		level.renderSprites(screen, xScroll, yScroll); // Renders level sprites on screen
+		level.renderSprites(screen, xScroll, yScroll,visualOnly); // Renders level sprites on screen
 
 		// This creates the darkness in the caves and blindness
 		//if (((Updater.tickCount < Updater.dayLength/4 || Updater.tickCount > Updater.dayLength/2) /*&& !isMode("creative")*/) || player.potionEffects.containsKey(PotionType.Blind) && (!Game.isMode("creative"))) {
@@ -195,12 +185,12 @@ public class Renderer extends Game {
 
 			if(!isMode("creative") || player.toggleLight ){
 
-					screen.overlay(lightScreen, currentLevel, xScroll, yScroll); // Overlays the light screen over the main screen. on creative you see everything in caves
+					screen.overlay(lightScreen, lvlId, visualOnly ? player.x : xScroll, yScroll); // Overlays the light screen over the main screen. on creative you see everything in caves
 			}else{
 				if (currentLevel > 3 && currentLevel<=5)
-				screen.overlay(lightScreen, currentLevel, xScroll, yScroll); // Overlays the light screen over the main screen.
+				screen.overlay(lightScreen, lvlId, xScroll, yScroll); // Overlays the light screen over the main screen.
 			}
-
+			if(visualOnly)screen.darken(screen,lvlId,xScroll,yScroll);
 			//level.renderLight(lightScreen, xScroll, yScroll, brightnessMultiplier); // Finds (and renders) all the light from objects (like the player, lanterns, and lava).
 		//}
 	}
@@ -260,7 +250,7 @@ public class Renderer extends Game {
 			if (player.activeItem instanceof ToolItem) {
 				// Draws the text
 				ToolItem tool = (ToolItem) player.activeItem;
-				int dura = tool.dur * 100 / tool.maxDur;
+				int dura = (tool.dur * 100) / tool.maxDur;
 				int green = (int) (dura * 2.55f);
 				String Dura = dura + "%";
 				int w = Dura.length(); // Length of message in characters.
