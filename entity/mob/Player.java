@@ -53,27 +53,27 @@ import minicraft.screen.WorldSelectDisplay;
 public class Player extends Mob implements ItemHolder, ClientTickable {
 	public static Integer[] boxAnim={0,0};
 	protected InputHandler input;
-	
+
 	private static final int playerHurtTime = 30;
 	public static final int INTERACT_DIST = 12;
 	private static final int ATTACK_DIST = 20;
 	public static boolean crit= false;
 	private static final int mtm = 300; // Time given to increase multiplier before it goes back to 1.
 	public static final int MAX_MULTIPLIER = 50; // Maximum score multiplier.
-	
+
 	public double moveSpeed = 1; // The number of coordinate squares to move; each tile is 16x16.
 	private int score; // The player's score
 	private boolean isSprinting=false;
 	public  static int isBurning = 0; //in fact we will define duration of burning so that's why integer
 	private int multipliertime = mtm; // Time left on the current multiplier.
 	private int multiplier = 1; // Score multiplier
-	
+
 	// These 2 ints are ints saved from the first spawn - this way the spawn pos is always saved.
 	public int spawnx = 0, spawny = 0; // These are stored as tile coordinates, not entity coordinates.
 	//public boolean bedSpawn = false;
 
 	public boolean suitOn;
-	
+
 	// The maximum stats that the player can have.
 	public static final int maxStat = 10;
 	public static final int maxHealth = 20, maxStamina = maxStat, maxHunger = maxStat*2,maxThirst = maxStat*2;
@@ -85,21 +85,21 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 	public static MobSprite[][] suitSprites;
 
 	private Inventory inventory;
-	
+
 	public Item activeItem;
 	Item attackItem; // attackItem is useful again b/c of the power glove.
 	private Item prevItem; // Holds the item held before using the POW glove.
-	
+
 	int attackTime;
 	public Direction attackDir;
-	
+
 	private int onStairDelay; // The delay before changing levels.
 	private int onFallDelay; // The delay before falling b/c we're on an InfiniteFallTile
-	
+
 	public int hunger, stamina, armor, thirst; // The current stats
 	public int armorDamageBuffer;
 	@Nullable public ArmorItem curArmor; // The color/type of armor to be displayed.
-	
+
 	private int staminaRecharge; // The ticks before charging a bolt of the player's stamina
 	private static int maxStaminaRecharge = 10; // Cutoff value for staminaRecharge
 	public int staminaRechargeDelay; // The recharge delay ticks when the player uses up their stamina.
@@ -111,7 +111,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 	private static final int[] hungerStepCount = {8, 4, 3}; // Steps before decrementing stamHungerTicks.
 	private static final int[] minStarveHealth = {10, 6, 0}; // Min hearts required for hunger to hurt you.
 	private int stepCount; // Used to penalize hunger for movement.
-	
+
 	public int thirstStamCnt, stamThirstTicks; // Tiers of thirst penalties before losing a droplet.
 	private static final int maxThirstTicks = 260; // The cutoff value for stamThirstTicks
 	private static final int[] maxThirstStams = {10, 7, 6}; // ThirstStamCnt required to lose a drop.
@@ -120,8 +120,8 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 	private static final int[] minDehydrationHealth = {8, 4, 0}; // Min hearts required for thirst to hurt you.
 	private int stepCountT; // Used to penalize thirst for movement.
 	private int animtik=0;
-	
-	
+
+
 	private int hungerChargeDelay; // The delay between each time the hunger bar increases your health
 	private int hungerStarveDelay; // The delay between each time the hunger bar decreases your health
 	private int thirstChargeDelay; // The delay between each time the thirst bar increases your health
@@ -157,9 +157,9 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 	public int maxFishingTicks = 120;
 	public int fishingTicks = maxFishingTicks;
 	public int fishingLevel;
-	
+
 	// Note: the player's health & max health are inherited from Mob.java
-	
+
 	public String getDebugHunger() { return hungerStamCnt+"_"+stamHungerTicks; }
 	public String getDebugThirst() { return thirstStamCnt+"_"+stamThirstTicks; }
 
@@ -170,7 +170,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 		y = 24;
 		this.input = input;
 		inventory = new Inventory() {
-			
+
 			@Override
 			public void add(int idx, Item item) {
 				if (Game.isMode("creative")) {
@@ -181,7 +181,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 				}
 				super.add(idx, item);
 			}
-			
+
 			@Override
 			public Item remove(int idx) {
 				if (Game.isMode("creative")) {
@@ -197,13 +197,13 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 				return super.remove(idx);
 			}
 		};
-		
+
 		//if(previousInstance == null)
 		//	inventory.add(Items.arrowItem, acs);
-		
+
 		potionEffects = new HashMap<>();
 		showpotioneffects = true;
-		
+
 		cooldowninfo = 0;
 		sprintdelay = 0;
 		sprintstaminatakedelay=0;
@@ -217,15 +217,15 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 		stamina = maxStamina;
 		hunger = maxHunger;
 		thirst = maxThirst;
-		
+
 		hungerStamCnt = maxHungerStams[Settings.getIdx("diff")];
 		stamHungerTicks = maxHungerTicks;
 		thirstStamCnt = maxThirstStams[Settings.getIdx("diff")];
 		stamThirstTicks = maxThirstTicks;
-		
+
 		if (Game.isMode("creative"))
 			Items.fillCreativeInv(inventory);
-		
+
 		if (previousInstance != null) {
 			spawnx = previousInstance.spawnx;
 			spawny = previousInstance.spawny;
@@ -242,7 +242,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 		suitSprites = selectedSkin[2];
 		carrySuitSprites = selectedSkin[3];
 	}
-	
+
 	public int getMultiplier() { return Game.isMode("score") ? multiplier : 1; }
 
 
@@ -260,20 +260,20 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 		multiplier = 1;
 		multipliertime = mtm;
 	}
-	
+
 	public void addMultiplier(int value) {
 		if (!Game.isMode("score")) return;
 		multiplier = Math.min(MAX_MULTIPLIER, multiplier+value);
 		multipliertime = Math.max(multipliertime, mtm - 5);
 	}
-	
+
 	public void tickMultiplier() {
 		if ((Game.ISONLINE || !Updater.paused) && multiplier > 1) {
 			if (multipliertime != 0) multipliertime--;
 			if (multipliertime <= 0) resetMultiplier();
 		}
 	}
-	
+
 	public int getScore() { return score; }
 	public void setScore(int score) { this.score = score; }
 	public void addScore(int points) {
@@ -325,7 +325,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 	 * @return all potion effects on the player.
 	 */
 	public HashMap<PotionType, Integer> getPotionEffects() { return potionEffects; }
-	
+
 	@Override
 	public void tick() {
 
@@ -339,14 +339,14 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 		if(potionEffects.containsKey(PotionType.Thirst) && potionEffects.containsKey(PotionType.WellHydrated))PotionItem.applyPotion(this, PotionType.WellHydrated, false);
 		if(potionEffects.containsKey(PotionType.Time) && potionEffects.containsKey(PotionType.AntiTime))PotionItem.applyPotion(this, PotionType.Time, false);
 		if (level == null || isRemoved()) return;
-		
+
 		if (Game.getMenu() != null && !Game.ISONLINE) return; // Don't tick player when menu is open
-		
+
 		super.tick(); // Ticks Mob.java
-		
+
 		if (!Game.isValidClient())
 			tickMultiplier();
-		
+
 		if (potionEffects.size() > 0 && !Bed.inBed(this)) {
 			int randX = random.nextInt(10);
 			int randY = random.nextInt(9);
@@ -355,7 +355,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 				level.add(new PotionParticle(x - 1, y - 23 + randY));
 			}
 			for (PotionType potionType: potionEffects.keySet().toArray(new PotionType[0])) {
-			//	if (potionEffects.get(potionType).getDuration() <= 1) { // If time is zero (going to be set to 0 in a moment)...
+				//	if (potionEffects.get(potionType).getDuration() <= 1) { // If time is zero (going to be set to 0 in a moment)...
 				if (potionEffects.get(potionType) <= 1){
 					PotionItem.applyPotion(this, potionType, false); // Automatically removes this potion effect.
 
@@ -368,7 +368,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 					if (potionType == PotionType.Energy && isSprinting == true){
 						potionEffects.put(potionType, potionEffects.get(potionType) - 2);
 					}
-					}
+				}
 				/*if (potionType == PotionType.Energy && isSprinting == 1)
 					potioneffects.put(potionType, (potioneffects.get(potionType) < 3 ? potioneffects.get(potionType) - 0 : potioneffects.get(potionType) - 3));*/
 			}
@@ -377,6 +377,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 		if (isFishing) {
 			if (!Bed.inBed(this) && !isSwimming()) {
 				fishingTicks--;
+				if(!activeItem.getName().toLowerCase().contains("fishing rod"))isFishing = false;
 				if (fishingTicks <= 0) {
 					// Checks to make sure that the client doesn't drop a "fake" item
 					if (!Game.isConnectedClient()) {
@@ -388,7 +389,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 				fishingTicks = maxFishingTicks;
 			}
 		}
-		
+
 		if(cooldowninfo > 0) cooldowninfo--;
 		if(sprintdelay > 0) sprintdelay--;
 
@@ -396,15 +397,15 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 			cooldowninfo = 10;
 			showpotioneffects = !showpotioneffects;
 		}
-        if(input.getKey("toggleLight").clicked && cooldowninfo == 0) {
-            if(Game.isMode("creative")) {
-                cooldowninfo = 10;
-                toggleLight = !toggleLight;
-            }
-        }
-		if(input.getKey("toggleGui").clicked && cooldowninfo == 0) {
-				toggleGui = !toggleGui;
+		if(input.getKey("toggleLight").clicked && cooldowninfo == 0) {
+			if(Game.isMode("creative")) {
 				cooldowninfo = 10;
+				toggleLight = !toggleLight;
+			}
+		}
+		if(input.getKey("toggleGui").clicked && cooldowninfo == 0) {
+			toggleGui = !toggleGui;
+			cooldowninfo = 10;
 		}
 		if(input.getKey("sprint").clicked && sprintdelay == 0 && isSprinting == false && !isSwimming() && thirst>6 && hunger>6) {
 			sprintdelay = 10;
@@ -423,7 +424,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 				sprintstaminatakedelay++;
 			}
 		}else if(stamina==0) {isSprinting=false;sprintdelay = 400;}
-		
+
 		Tile onTile = level.getTile(x >> 4, y >> 4); // Gets the current tile the player is on
 		if (onTile == Tiles.get("Stairs Down") || onTile == Tiles.get("Stairs Up") || onTile == Tiles.get("Obsidian Stairs Down") || onTile == Tiles.get("Obsidian Stairs Up")) {
 			if (onStairDelay <= 0) { // When the delay time has passed...
@@ -441,7 +442,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 				onStairDelay = 10; // Resets delay, since the level has now been changed.
 				return; // SKIPS the rest of the tick() method.
 			}
-			
+
 			onStairDelay = 10; // Resets the delay, if on a stairs tile, but the delay is greater than 0. In other words, this prevents you from ever activating a level change on a stair tile, UNTIL you get off the tile for 10+ ticks.
 		} else if (onStairDelay > 0) onStairDelay--; // Decrements stairDelay if it's > 0, but not on stair tile... does the player get removed from the tile beforehand, or something?
 
@@ -459,62 +460,63 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 			hunger = maxHunger;
 			thirst = maxThirst;
 		}
-		
+
 		// Remember: staminaRechargeDelay is a penalty delay for when the player uses up all their stamina.
 		// staminaRecharge is the rate of stamina recharge, in some sort of unknown units.
 		if (stamina <= 0 && staminaRechargeDelay == 0 && staminaRecharge == 0) {
 			if(!potionEffects.containsKey(PotionType.Fatigue) && !potionEffects.containsKey(PotionType.Haste))
-			staminaRechargeDelay = 40-(potionEffects.containsKey(PotionType.Haste) ? 10 : 0); // Delay before resuming adding to stamina.
+				staminaRechargeDelay = 40-(potionEffects.containsKey(PotionType.Haste) ? 10 : 0); // Delay before resuming adding to stamina.
 			else if(potionEffects.containsKey(PotionType.Fatigue) && !potionEffects.containsKey(PotionType.Haste))staminaRechargeDelay = 220;
 			else if(potionEffects.containsKey(PotionType.Fatigue) && potionEffects.containsKey(PotionType.Haste))staminaRechargeDelay = 110; //bigger delay due to fatigue but nivelated a bit by haste
 
 		}
-		
+
 		if (staminaRechargeDelay > 0 && stamina < maxStamina) staminaRechargeDelay--;
-		
+
 		if (staminaRechargeDelay == 0) {
 			staminaRecharge++; // Ticks since last recharge, accounting for the time potion effect.
 			if(isSwimming() && isSprinting==true){isSprinting=false;sprintdelay = 400;}
-			if (isSwimming() && !potionEffects.containsKey(PotionType.Swim)) staminaRecharge = 0; // Don't recharge stamina while swimming.
+			if (isSwimming() && onTile!=Tiles.get("Aerocloud") && !potionEffects.containsKey(PotionType.Swim)) staminaRecharge = 0; // Don't recharge stamina while swimming.
 			if(potionEffects.containsKey(PotionType.Fatigue) && !potionEffects.containsKey(PotionType.Haste))maxStaminaRecharge=50;
 			if(potionEffects.containsKey(PotionType.Fatigue) && potionEffects.containsKey(PotionType.Haste))maxStaminaRecharge=30;
 			if(!potionEffects.containsKey(PotionType.Fatigue) && !potionEffects.containsKey(PotionType.Haste))maxStaminaRecharge=10;
+			if(onTile==Tiles.get("Aerocloud"))maxStaminaRecharge*=6; //make it recharge slower but recharge at last
 			// Recharge a bolt for each multiple of maxStaminaRecharge.
 			while (staminaRecharge > maxStaminaRecharge) {
-				   staminaRecharge -= maxStaminaRecharge;
+				staminaRecharge -= maxStaminaRecharge;
 				if (stamina < maxStamina) stamina++; // Recharge one stamina bolt per "charge".
 			}
 		}
-		
+
 		int diffIdx = Settings.getIdx("diff");
-		
+
 		if (hunger < 0) hunger = 0; // Error correction
-		
+
 		if (stamina < maxStamina) {
 			stamHungerTicks-=diffIdx; // Affect hunger if not at full stamina; this is 2 levels away from a hunger "burger".
 			if( stamina == 0) stamHungerTicks-=diffIdx; // Double effect if no stamina at all.
 		}
-		
+
 		// This if statement encapsulates the hunger&thirst system
 		if(!Bed.inBed(this)) {
 			if (hungerChargeDelay > 0) { // If the hunger is recharging health...
 				stamHungerTicks -= 2+diffIdx/(potionEffects.containsKey(PotionType.WellFed) ? 3 : 1); // Penalize the hunger
 				if (hunger == 0 && !potionEffects.containsKey(PotionType.WellFed))stamHungerTicks -= diffIdx; // Further penalty if at full hunger
 			}
-			
+
 			if (Updater.tickCount % Player.hungerTickCount[diffIdx] == 0) {
 				if(Updater.tickCount%(potionEffects.containsKey(PotionType.WellFed) ? 3 : 1)==0 )
-				stamHungerTicks-=1; // hunger due to time.
+					stamHungerTicks-=1; // hunger due to time.
 				if (potionEffects.containsKey(PotionType.Hunger)){
 					stamHungerTicks-=2;
 				}
 			}
-			
+
 			if (stepCount >= Player.hungerStepCount[diffIdx]) {
 				if(Updater.tickCount%(potionEffects.containsKey(PotionType.WellFed) ? 2 : 1)==0)
-				stamHungerTicks-=1; // hunger due to exercise.
+					stamHungerTicks-=1; // hunger due to exercise.
 				if(Updater.tickCount%(potionEffects.containsKey(PotionType.WellHydrated) ? 2 : 1)==0)
-				stamThirstTicks-=1; // thirst due to exercise.
+					stamThirstTicks-=1; // thirst due to exercise.
 				if (potionEffects.containsKey(PotionType.Hunger)){
 					stamHungerTicks-=1;
 				}if (potionEffects.containsKey(PotionType.Thirst)){
@@ -522,17 +524,17 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 				}
 				stepCount = 0; // reset.
 			}
-			
+
 			if (stamHungerTicks <= 0) {
 				stamHungerTicks += maxHungerTicks; // Reset stamHungerTicks
 				hungerStamCnt--; // Enter 1 level away from burger.
 			}
-			
+
 			while (hungerStamCnt <= 0) {
 				hunger--; // Reached burger level.
 				hungerStamCnt += maxHungerStams[diffIdx];
 			}
-			
+
 			/// System that heals you depending on your hunger
 			if (health < maxHealth && hunger >= 18) {
 				hungerChargeDelay++;
@@ -542,11 +544,11 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 				}
 			}
 			else hungerChargeDelay = 0;
-			
+
 			if (hungerStarveDelay == 0) {
 				hungerStarveDelay = 120;
 			}
-			
+
 			if (hunger == 0 && health > minStarveHealth[diffIdx]) {
 				if (hungerStarveDelay > 0) hungerStarveDelay--;
 				if (hungerStarveDelay == 0) {
@@ -556,24 +558,24 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 				}
 			}
 		}
-		
+
 		if (thirst < 0) thirst = 0; // Error correction
-		
+
 		if (stamina < maxStamina) {
 			stamThirstTicks-=diffIdx; // Affect thirst if not at full stamina; this is 2 levels away from a thirst "burger".
 			if( stamina == 0) stamThirstTicks-=diffIdx; // Double effect if no stamina at all.
 		}
-		
+
 		// This if statement encapsulates the thirst system
 		if(!Bed.inBed(this)) {
 			if (thirstChargeDelay > 0) { // If the thirst is recharging health...
 				stamThirstTicks -= 2+diffIdx/(potionEffects.containsKey(PotionType.WellHydrated) ? 2 : 1); // Penalize the thirst
 				if (thirst == 0) stamThirstTicks -= diffIdx; // Further penalty if at full thirst
 			}
-			
+
 			if (Updater.tickCount % Player.thirstTickCount[diffIdx] == 0) {
 				if(Updater.tickCount%(potionEffects.containsKey(PotionType.WellHydrated) ? 3 : 1)==0 )
-				stamThirstTicks-=1; // thirst due to time.
+					stamThirstTicks-=1; // thirst due to time.
 				if (potionEffects.containsKey(PotionType.Thirst)) {
 					stamThirstTicks -= 2;
 				} //don't drink dirty water. Filter it. That's a tip
@@ -581,21 +583,21 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 			if (stepCount >= Player.thirstStepCount[diffIdx]) {
 				stepCount = 0; // reset.
 			}
-			
+
 			if (stamThirstTicks <= 0) {
 				stamThirstTicks += maxThirstTicks; // Reset stamThirstTicks
 				thirstStamCnt--; // Enter 1 level away from droplet.
 			}
-			
+
 			while (thirstStamCnt <= 0) {
 				thirst--; // Reached droplet level.
 				thirstStamCnt += maxThirstStams[diffIdx];
 			}
-			
+
 			if (thirstStarveDelay == 0) {
 				thirstStarveDelay = 120;
 			}
-			
+
 			if (thirst == 0 && health > minDehydrationHealth[diffIdx]) {
 				if (thirstStarveDelay > 0) thirstStarveDelay--;
 				if (thirstStarveDelay == 0) {
@@ -605,8 +607,8 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 				}
 			}
 		}
-		
-		// regen health 
+
+		// regen health
 		if (potionEffects.containsKey(PotionType.Regen)) {
 			regentick++;
 			if (regentick > 60) {
@@ -627,10 +629,10 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 				}
 			}
 		}
-		
+
 		if (Updater.savecooldown > 0 && !Updater.saving)
 			Updater.savecooldown--;
-		
+
 
 		// Handle player input. Input is handled by the menu if we are in one.
 		if (Game.getMenu() == null && !Bed.inBed(this)) {
@@ -690,23 +692,28 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 				boolean moved = move(xd, yd); // THIS is where the player moves; part of Mob.java
 				if (moved) stepCount++;
 			}
-			
-			
+
+
 			if (isSwimming() && tickTime % 60 == 0 && !potionEffects.containsKey(PotionType.Swim) && !potionEffects.containsKey(PotionType.Fatigue)) { // If drowning... :P
+				if(level.getTile(x >> 4, y >> 4)!=Tiles.get("Aerocloud"))
 				if (stamina > 0) payStamina(1); // Take away stamina
-				else {Sound.playerHurt.play();
-				level.add(new TextParticle("1", x, y, Color.WHITE));
-				health--; }//it's the way to make damage be dealt through armor
+				else {
+
+						Sound.playerHurt.play();
+						level.add(new TextParticle("1", x, y, Color.WHITE));
+						health--;
+					}//it's the way to make damage be dealt through armor
 			}else if(isSwimming() && tickTime % 40 == 0 && !potionEffects.containsKey(PotionType.Swim) && potionEffects.containsKey(PotionType.Fatigue)){
 				if (stamina > 0) payStamina(1); // Take away stamina
 				else {Sound.playerHurt.play();
 					level.add(new TextParticle("1", x, y, Color.WHITE));
 					health--; }//it's the way to make damage be dealt through armor
 			}
-			
+
 			if (activeItem != null && (input.getKey("drop-one").clicked || input.getKey("drop-stack").clicked)) {
+
 				Item drop = activeItem.clone();
-				
+
 				if (input.getKey("drop-one").clicked && drop instanceof StackableItem && ((StackableItem)drop).count > 1) {
 					// Drop one from stack
 					((StackableItem)activeItem).count--;
@@ -714,23 +721,23 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 				} else if (!Game.isMode("creative")) {
 					activeItem = null; // Remove it from the "inventory"
 				}
-				
+
 				if (Game.isValidClient())
 					Game.client.dropItem(drop);
 				else
 					level.dropItem(x, y, drop);
 			}
-			
+
 			if ((activeItem == null || !activeItem.used_pending) && (input.getKey("attack").clicked) && stamina != 0 && onFallDelay <= 0) { // This only allows attacks when such action is possible.
 				if (!potionEffects.containsKey(PotionType.Energy)) stamina--;
 				staminaRecharge = 0;
 
 				attack();
-				
+
 				if (Game.ISONLINE && activeItem != null && activeItem.interactsWithWorld() && !(activeItem instanceof ToolItem))
 					activeItem.used_pending = true;
 			}
-			
+
 			if (input.getKey("menu").clicked && activeItem != null) {
 				inventory.add(0, activeItem);
 				activeItem = null;
@@ -770,7 +777,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 						resolveHeldItem();
 				}
 			}
-			
+
 			if (attackTime > 0) {
 				attackTime--;
 				if(attackTime == 0) attackItem = null; // null the attackItem once we are done attacking.
@@ -779,7 +786,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 
 		if (Game.isConnectedClient() && this == Game.player) Game.client.sendPlayerUpdate(this);
 	}
-	
+
 	/**
 	 * Removes an held item and places it back into the inventory.
 	 * Looks complicated to so it can handle the powerglove.
@@ -827,7 +834,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 			}
 			return;
 		}
-		
+
 		// If this is a multiplayer game, than the server will execute the full method instead.
 		if (Game.isConnectedClient()) {
 			attackDir = dir;
@@ -835,9 +842,9 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 				attackTime = 10;
 			else
 				attackTime = 5;
-			
+
 			attackItem = activeItem;
-			
+
 			Game.client.requestInteraction(this);
 			// We are going to use an arrow.
 			if((activeItem instanceof ToolItem) // Is the player currently holding a tool?
@@ -848,10 +855,10 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 			}
 			return;
 		}
-		
+
 		attackDir = dir; // Make the attack direction equal the current direction
 		attackItem = activeItem; // Make attackItem equal activeItem
-		
+
 		// If we are holding an item.
 		if (activeItem != null) {
 			attackTime = 10;
@@ -875,7 +882,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 
 			// If the interaction between you and an entity is successful, then return.
 			if (interact(getInteractionBox(INTERACT_DIST))) return;
-			
+
 			// Attempt to interact with the tile.
 			Point t = getInteractionTile();
 
@@ -893,17 +900,17 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 					if (activeItem.interactOn(tile, level, t.x, t.y, this, attackDir)) {
 						done = true;
 
-					// Returns true if the target tile successfully interacts with the item.
+						// Returns true if the target tile successfully interacts with the item.
 					} else if (tile.interact(level, t.x, t.y, this, activeItem, attackDir)){
 						done = true;
 					}
 				}
-				
+
 				if (Game.isValidServer() && this instanceof RemotePlayer) { // Only do this if no interaction was actually made; b/c a tile update packet will generally happen then anyway.
 					minicraft.network.MinicraftServerThread thread = Game.server.getAssociatedThread((RemotePlayer)this);
 					thread.sendTileUpdate(level, t.x, t.y); /// FIXME this part is as a semi-temporary fix for those odd tiles that don't update when they should; instead of having to make another system like the entity additions and removals (and it wouldn't quite work as well for this anyway), this will just update whatever tile the player interacts with (and fails, since a successful interaction changes the tile and therefore updates it anyway).
 				}
-				
+
 				if (!Game.isMode("creative") && activeItem.isDepleted()) {
 					// If the activeItem has 0 items left, then "destroy" it.
 					activeItem = null;
@@ -911,12 +918,12 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 			}
 			if (done) return; // Skip the rest if interaction was handled
 		}
-		
+
 		if (activeItem == null || activeItem.canAttack()) { // If there is no active item, OR if the item can be used to attack...
 			attackTime = 5;
 			// Attacks the enemy in the appropriate direction.
 			boolean used = hurt(getInteractionBox(ATTACK_DIST));
-			
+
 			// Attempts to hurt the tile in the appropriate direction.
 			Point t = getInteractionTile();
 
@@ -927,36 +934,36 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 				dmg = random.nextInt(3) + 1;
 				used = tile.hurt(level, t.x, t.y, this, dmg, attackDir) || used;
 			}
-			
+
 			if (used && activeItem instanceof ToolItem)
 				((ToolItem)activeItem).payDurability();
 		}
 	}
-	
+
 	private Rectangle getInteractionBox(int range) {
 		int x = this.x, y = this.y - 2;
-		
+
 		//noinspection UnnecessaryLocalVariable
 		int paraClose = 4, paraFar = range;
 		int perpClose = 0, perpFar = 8;
-		
+
 		int xClose = x + dir.getX()*paraClose + dir.getY()*perpClose;
 		int yClose = y + dir.getY()*paraClose + dir.getX()*perpClose;
 		int xFar = x + dir.getX()*paraFar + dir.getY()*perpFar;
 		int yFar = y + dir.getY()*paraFar + dir.getX()*perpFar;
-		
+
 		return new Rectangle(Math.min(xClose, xFar), Math.min(yClose, yFar), Math.max(xClose, xFar), Math.max(yClose, yFar), Rectangle.CORNERS);
 	}
 
 	private Point getInteractionTile() {
 		int x = this.x, y = this.y - 2;
-		
+
 		x += dir.getX()*INTERACT_DIST;
 		y += dir.getY()*INTERACT_DIST;
-		
+
 		return new Point(x >> 4, y >> 4);
 	}
-	
+
 	private void goFishing() {
 		int fcatch = random.nextInt(100);
 
@@ -976,11 +983,11 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 
 		if (data != null) { // If you've caught something
 			for (String line: data) {
-				
+
 				// Check all the entries in the data
 				// The number is a percent, if one fails, it moves down the list
 				// For entries with a "," it chooses between the options
-				
+
 				int chance = Integer.parseInt(line.split(":")[0]);
 				String itemData = line.split(":")[1];
 				if (random.nextInt(100) + 1 <= chance) {
@@ -1011,9 +1018,9 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 		}
 		fishingTicks = maxFishingTicks; // If you didn't catch anything, try again in 120 ticks
 	}
-	
+
 	private boolean use() { return use(getInteractionBox(INTERACT_DIST)); }
-	
+
 	/** called by other use method; this serves as a buffer in case there is no entity in front of the player. */
 	private boolean use(Rectangle area) {
 		List<Entity> entities = level.getEntitiesInRect(area); // Gets the entities within the 4 points
@@ -1022,7 +1029,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 		}
 		return false;
 	}
-	
+
 	/** same, but for interaction. */
 	private boolean interact(Rectangle area) {
 		List<Entity> entities = level.getEntitiesInRect(area);
@@ -1031,12 +1038,12 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 		}
 		return false;
 	}
-	
+
 	/** same, but for attacking. */
 	private boolean hurt(Rectangle area) {
 		//we can only crit with tools and without weak potion effect
 		if(activeItem instanceof ToolItem && !(potionEffects.containsKey(PotionType.Weak)))
-		crit= random.nextInt(22)>((((ToolItem) activeItem).type == ToolType.Axe) ? 16 : (((ToolItem) activeItem).type == ToolType.Claymore) ? 19 : 20);  //let axes have slightly bigger crit chance
+			crit= random.nextInt(22)>((((ToolItem) activeItem).type == ToolType.Axe) ? 16 : (((ToolItem) activeItem).type == ToolType.Claymore) ? 19 : 20);  //let axes have slightly bigger crit chance
 		List<Entity> entities = level.getEntitiesInRect(area);
 		int maxDmg = 0;
 		for (Entity e : entities) {
@@ -1051,7 +1058,13 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 		crit=false;
 		return maxDmg > 0;
 	}
-	
+	@Override
+	public boolean isSwimming() {
+		if (level == null) return false;
+		Tile tile = level.getTile(x >> 4, y >> 4); // Get the tile the mob is standing on (at x/16, y/16)
+		// Check if the tile is liquid, and return true if so
+		return tile == Tiles.get("water") || tile == Tiles.get("lava") || tile==Tiles.get("Reed") || tile==Tiles.get("Aerocloud");
+	}
 	/**
 	 * Calculates how much damage the player will do.
 	 * @param e Entity being attacked.
@@ -1068,11 +1081,11 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 	@Override
 	public void render(Screen screen) {
 		MobSprite[][] spriteSet;
-        if (activeItem instanceof FurnitureItem) {
-            spriteSet = suitOn ? carrySuitSprites : carrySprites;
-        } else {
-            spriteSet = suitOn ? suitSprites : sprites;
-        }
+		if (activeItem instanceof FurnitureItem) {
+			spriteSet = suitOn ? carrySuitSprites : carrySprites;
+		} else {
+			spriteSet = suitOn ? suitSprites : sprites;
+		}
 
 		/* Offset locations to start drawing the sprite relative to our position */
 		int xo = x - 8; // Horizontal
@@ -1081,6 +1094,10 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 
 		if (isSwimming()) {
 			yo += 4; // y offset is moved up by 4
+			if (level.getTile(x/16,y/16) == Tiles.get("aerocloud")) { // Don't render the bottom half if swimming.
+				if (!Updater.paused) Renderer.screen.render(x - 8, y - 4, 5 + (Updater.tickCount%11>6 ? 7 : 8) * 32, 0, 3);
+				if (!Updater.paused) Renderer.screen.render(x, y - 4, 5 + (Updater.tickCount%11>6 ? 7 : 8) * 32, 1, 3);
+			}
 			if (level.getTile(x / 16, y / 16) == Tiles.get("water") || level.getTile(x / 16, y / 16) == Tiles.get("Reed")) {
 				if(!Updater.paused)screen.render(xo + 0, yo + 3, 5 + (Updater.tickCount%16>8 ? 2 : 3) * 32, 0, 3); // Render the water graphic
 				if(!Updater.paused)screen.render(xo + 8, yo + 3, 5 + (Updater.tickCount%16>8 ? 2 : 3) * 32, 1, 3); // Render the mirrored water graphic to the right.
@@ -1105,13 +1122,13 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 		if(boxAnim[1]>0)boxAnim[1]--;
 		int redMod= boxAnim[1]> 0 ? 2 : 0;
 		if(activeItem!=null)
-		if (activeItem.displayBox()){
-			Point t = getInteractionTile();
-			screen.render(t.x * 16, t.y * 16, (10+redMod) + (2+mod) * 32, 0, 3);
-			screen.render(t.x * 16 + 8, t.y * 16 , (11+redMod) + (2+mod) * 32, 0, 3);
-			screen.render(t.x * 16, t.y * 16 + 8, (10+redMod) + (3+mod) * 32, 0, 3);
-			screen.render(t.x * 16 + 8, t.y * 16 + 8, (11+redMod) + (3+mod) * 32, 0, 3);
-		}
+			if (activeItem.displayBox()){
+				Point t = getInteractionTile();
+				screen.render(t.x * 16, t.y * 16, (10+redMod) + (2+mod) * 32, 0, 3);
+				screen.render(t.x * 16 + 8, t.y * 16 , (11+redMod) + (2+mod) * 32, 0, 3);
+				screen.render(t.x * 16, t.y * 16 + 8, (10+redMod) + (3+mod) * 32, 0, 3);
+				screen.render(t.x * 16 + 8, t.y * 16 + 8, (11+redMod) + (3+mod) * 32, 0, 3);
+			}
 
 		// Makes the player white if they have just gotten hurt
 		if (hurtTime > playerHurtTime - 10) {
@@ -1203,9 +1220,9 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 
 	/** What happens when the player interacts with a itemEntity */
 	public void pickupItem(ItemEntity itemEntity) {
-		
+
 		Sound.pickup.play();
-		
+
 		itemEntity.remove();
 		addScore(1);
 		if (Game.isMode("creative")) return; // We shall not bother the inventory on creative mode.
@@ -1340,7 +1357,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 
 		super.die(); // Calls the die() method in Mob.java
 		if(Game.isMode("Hardcore"))
-		new Save(WorldSelectDisplay.getWorldName());
+			new Save(WorldSelectDisplay.getWorldName());
 	}
 
 	@Override
@@ -1442,16 +1459,16 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 	protected String getUpdateString() {
 		String updates = super.getUpdateString() + ";";
 		updates += "skinon," + suitOn +
-		";shirtColor," + shirtColor +
-		";armor," + armor +
-		";stamina," + stamina +
-		";health," + health +
-		";hunger," + hunger +
-		";thirst," + thirst +
-		";attackTime," + attackTime +
-		";attackDir," + attackDir.ordinal() +
-		";activeItem," + (activeItem == null ? "null" : activeItem.getData()) +
-		";isFishing," + (isFishing ? "1" : "0");
+				";shirtColor," + shirtColor +
+				";armor," + armor +
+				";stamina," + stamina +
+				";health," + health +
+				";hunger," + hunger +
+				";thirst," + thirst +
+				";attackTime," + attackTime +
+				";attackDir," + attackDir.ordinal() +
+				";activeItem," + (activeItem == null ? "null" : activeItem.getData()) +
+				";isFishing," + (isFishing ? "1" : "0");
 
 		return updates;
 	}
