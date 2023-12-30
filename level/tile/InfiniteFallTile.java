@@ -3,6 +3,7 @@ package minicraft.level.tile;
 import minicraft.core.Game;
 import minicraft.entity.Arrow;
 import minicraft.entity.Entity;
+import minicraft.entity.FireSpark;
 import minicraft.entity.mob.*;
 import minicraft.gfx.Screen;
 import minicraft.gfx.Sprite;
@@ -12,6 +13,7 @@ public class InfiniteFallTile extends Tile {
 	
 	protected InfiniteFallTile(String name) {
 		super(name, (Sprite)null);
+		isSurface =false;
 	}
 
 	public void render(Screen screen, Level level, int x, int y) {}
@@ -19,6 +21,6 @@ public class InfiniteFallTile extends Tile {
 	public boolean tick(Level level, int xt, int yt) { return false; }
 
 	public boolean mayPass(Level level, int x, int y, Entity e) {
-		return e instanceof WraithA || e instanceof Wraith || e instanceof AirWizard  || e instanceof Clallay || e instanceof Arrow || e instanceof Ghost|| e instanceof Player && ( ((Player) e).suitOn || Game.isMode("creative") );
+		return e.canFly()  || (e instanceof Player && (Game.isMode("Creative") ||  (((Player) e).suitOn)));
 	}
 }

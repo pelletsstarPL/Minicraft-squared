@@ -29,26 +29,25 @@ public class StackableItem extends Item {
 		items.add(new StackableItem("Leather", new Sprite(8, 0, 0)));
 		items.add(new StackableItem("Wheat", new Sprite(6, 0, 0)));
 		items.add(new StackableItem("Key", new Sprite(0, 4, 0)));
-		items.add(new StackableItem("arrow", new Sprite(0, 2, 0)));
-		items.add(new StackableItem("string", new Sprite(1, 4, 0)));
+		items.add(new StackableItem("Arrow", new Sprite(0, 2, 0)));
+		items.add(new StackableItem("String", new Sprite(1, 4, 0)));
 		items.add(new StackableItem("Coal", new Sprite(2, 4, 0)));
 		items.add(new StackableItem("Charcoal", new Sprite(21, 4, 0)));
-		items.add(new StackableItem("Iron Ore", new Sprite(3, 4, 0)));
+		items.add(new StackableItem("Iron ore", new Sprite(3, 4, 0)));
 		items.add(new StackableItem("Lapis", new Sprite(4, 4, 0)));
-		items.add(new StackableItem("Gold Ore", new Sprite(5, 4, 0)));
+		items.add(new StackableItem("Gold ore", new Sprite(5, 4, 0)));
 		items.add(new StackableItem("Iron", new Sprite(6, 4, 0)));
 		items.add(new StackableItem("Gold", new Sprite(7, 4, 0)));
 		items.add(new StackableItem("Rose", new Sprite(5, 0, 0)));
-		items.add(new StackableItem("GunPowder", new Sprite(8, 4, 0)));
+		items.add(new StackableItem("Gunpowder", new Sprite(8, 4, 0)));
 		items.add(new StackableItem("Slime", new Sprite(9, 4, 0)));
-		items.add(new StackableItem("glass", new Sprite(10, 4, 0)));
-		items.add(new StackableItem("cloth", new Sprite(11, 4, 0)));
-		items.add(new StackableItem("bone", new Sprite(9, 3, 0)));
-		items.add(new StackableItem("gem", new Sprite(12, 4, 0)));
+		items.add(new StackableItem("Glass", new Sprite(10, 4, 0)));
+		items.add(new StackableItem("Cloth", new Sprite(11, 4, 0)));
+		items.add(new StackableItem("Bone", new Sprite(9, 3, 0)));
+		items.add(new StackableItem("Gem", new Sprite(12, 4, 0)));
 		items.add(new StackableItem("Scale", new Sprite(13, 4, 0)));
-		items.add(new StackableItem("Shard", new Sprite(14, 4, 0)));
-		items.add(new StackableItem("Blood Shard", new Sprite(22, 4, 0)));
-		items.add(new StackableItem("Cloud Shard", new Sprite(20, 4, 0)));
+		items.add(new StackableItem("Blood shard", new Sprite(22, 4, 0)));
+		items.add(new StackableItem("Cloud shard", new Sprite(20, 4, 0)));
 		items.add(new StackableItem("Stick", new Sprite(14, 3, 0)));
 		items.add(new StackableItem("Sugar", new Sprite(15, 4, 0)));
 		items.add(new StackableItem("Obsidian", new Sprite(16, 4, 0)));
@@ -59,7 +58,9 @@ public class StackableItem extends Item {
 		items.add(new StackableItem("Snow", new Sprite(18, 3, 0)));
 		items.add(new StackableItem("Fungus", new Sprite(17, 4, 0)));
 		items.add(new StackableItem("Beetroot", new Sprite(22, 0, 0)));
-		items.add(new StackableItem("Plant Fiber", new Sprite(10, 1, 0)));
+		items.add(new StackableItem("Plant fiber", new Sprite(10, 1, 0)));
+		items.add(new StackableItem("Obsidium ore", new Sprite(24, 4, 0)));
+		items.add(new StackableItem("Obsidium", new Sprite(25, 4, 0)));
 		return items;
 	}
 	

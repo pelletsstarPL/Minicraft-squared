@@ -13,7 +13,7 @@ public class DrinkItem extends StackableItem {
 		ArrayList<Item> items = new ArrayList<>();
 
 		items.add(new DrinkItem("Milk", new Sprite(0, 7, 0), 3));
-		items.add(new DrinkItem("Milk Bucket", new Sprite(3, 6, 0), 12));
+		items.add(new DrinkItem("Milk bucket", new Sprite(3, 6, 0), 12));
 		items.add(new DrinkItem("Beetroot juice", new Sprite(10, 7, 0), 4));
 		items.add(new DrinkItem("Apple juice", new Sprite(1, 7, 0), 4));
 		items.add(new DrinkItem("Cactus juice", new Sprite(2, 7, 0), 5));
@@ -43,7 +43,7 @@ public class DrinkItem extends StackableItem {
 	public boolean interactOn(Tile tile, Level level, int xt, int yt, Player player, Direction attackDir) {
 		int onTile = level.getTile(player.x >> 4, player.y >> 4).id;
 		boolean success = false;
-		if(getName()=="Milk Bucket") {
+		if(getName()=="Milk bucket") {
 			if(player.stamina>8 && count > 0 && player.thirst < Player.maxThirst && player.payStamina(staminaCost)){
 				for (PotionType potionType : player.potionEffects.keySet().toArray(new PotionType[0])) {
 					if (!potionType.nat) { //if effect is a superopower like speed or lava for instance

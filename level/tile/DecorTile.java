@@ -3,7 +3,9 @@ package minicraft.level.tile;
 import minicraft.core.io.Sound;
 import minicraft.entity.Direction;
 import minicraft.entity.Entity;
+import minicraft.entity.mob.ObsidianKnight;
 import minicraft.entity.mob.Player;
+import minicraft.gfx.Screen;
 import minicraft.gfx.Sprite;
 import minicraft.item.Item;
 import minicraft.item.Items;
@@ -15,14 +17,15 @@ public class DecorTile extends Tile {
     private Sprite sprite;
 
     protected DecorTile(Material type) {
-        super((type == Material.ObsidianD ? "Decorated obsidian" : type == Material.Obsidian ? "Ornate Obsidian" : type == Material.Stone ? "Ornate Stone" : type == Material.Stone2  ? "Rocky stone" : "Decorated" + type.name()), (Sprite) null);
+        super((type == Material.ObsidianD ? "Decorated obsidian" : type == Material.Obsidian ? "Ornate Obsidian" : type == Material.Stone ? "Ornate Stone" : type == Material.Stone2  ? "Rocky stone" : "Decorated " + type.name()), (Sprite) null);
         this.type = type;
         maySpawn = true;
         switch (type) {
             case Stone: sprite = new Sprite(17,16,2,2,1,0); break;
             case Stone2: sprite = new Sprite(17,14,2,2,1,0); break;
-            case Obsidian: sprite = new Sprite(29,16,2,2,1,0); break;
-            case ObsidianD: sprite = new Sprite(29,14,2,2,1,0); break;
+            case Obsidian: sprite = new Sprite(39,16,2,2,1,0); break;
+            case ObsidianD: sprite = new Sprite(39,14,2,2,1,0); break;
+            case Unbreakable: sprite = new Sprite(39,14,2,2,1,0); break;
         }
         super.sprite = sprite;
     }
@@ -30,10 +33,12 @@ public class DecorTile extends Tile {
     public boolean interact(Level level, int xt, int yt, Player player, Item item, Direction attackDir) {
         if (item instanceof ToolItem) {
             ToolItem tool = (ToolItem) item;
-            if (tool.type == type.getRequiredTool()) {
+            if (tool.type == type.getRequiredTool() && !ObsidianKnight.active) {
                 if (player.payStamina(4 - tool.level) && tool.payDurability()) {
-                    if (level.depth == 1) {
+                    if (level.depth == 1 &&  level.realm.contains("overworld")) {
                         level.setTile(xt, yt, Tiles.get("Cloud"));
+                    } else if(level.depth == 1 &&  level.realm.contains("dungeon realm")) {
+                        level.setTile(xt, yt, Tiles.get("Obsidian Bridge Support"));
                     } else {
                         level.setTile(xt, yt, Tiles.get("Hole"));
                     }
@@ -41,8 +46,8 @@ public class DecorTile extends Tile {
                     switch (type) {
                         case Stone: drop = Items.get("Ornate Stone"); break;
                         case Stone2: drop = Items.get("Rocky stone"); break;
-                        case Obsidian: drop = Items.get("Ornate Obsidian"); break;
-                        case ObsidianD: drop = Items.get("Cross obsidian"); break;
+                        case Obsidian: drop = Items.get("Ornate  obsidian"); break;
+                        case ObsidianD:case Unbreakable: drop = Items.get("Cross obsidian"); break;
                         default: throw new IllegalStateException("Unexpected value: " + type);
                     }
                     Sound.monsterHurt.play();
@@ -53,6 +58,7 @@ public class DecorTile extends Tile {
         }
         return false;
     }
+
 
     public boolean mayPass(Level level, int x, int y, Entity e) {
         return true;

@@ -93,7 +93,7 @@ public class OtherRockTile extends Tile {
 	}
 	private void loot(Level level, int x, int y){
 		for(int j=0;j <= type.loot.length;j++){
-			System.out.println(j + " " + type.loot.length + " " + type.loot[j]);
+			//System.out.println(j + " " + type.loot.length + " " + type.loot[j]);
 			level.dropItem(x * 16 + 8, y * 16 + 8, type.lootMi[j], type.lootMa[j], Items.get(type.loot[j]));break;
 		}
 	}

@@ -109,7 +109,7 @@ public class LockedStairsTile extends Tile {
 	}
 
 	public boolean mayPass(Level level, int x, int y, Entity e){
-		if((e instanceof NightWizard || e instanceof Wraith || e instanceof WraithA) && level.depth>=0)
+		if((e instanceof NightWizard || e instanceof Wraith) && level.depth>=0)
 			return true;
 		else return false;
 	}

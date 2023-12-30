@@ -21,8 +21,8 @@ import minicraft.level.Level;
 public class DeadTreeTile extends Tile {
 	private DeadTreeType type;
 	public enum DeadTreeType{
-		Sand(2,4,"Sand"),
-		Coarse(2,4,"Coarse dirt"),
+		Sand(8,11,"Sand"),
+		Coarse(8,11,"Coarse dirt"),
 		Snow(2,11,"Snow");
 
 		private int spriteX,spriteY;
@@ -71,9 +71,12 @@ public class DeadTreeTile extends Tile {
 			return false; // Go directly to hurt method
 		if (item instanceof ToolItem) {
 			ToolItem tool = (ToolItem) item;
-			if (tool.type == ToolType.Axe) {
+			if (tool.type == ToolType.Axe || tool.type == ToolType.Hammer) {
+
 				int staminaPay=(4-tool.level < 2 ? 2 : 4-tool.level);
+
 				if(4-tool.level<2)staminaPay=2;
+				if(tool.type == ToolType.Hammer )staminaPay++;
 				int dmg=random.nextInt(10) + tool.damage;
 				if (player.payStamina(staminaPay) && tool.payDurability() && tool.level!=6) {
 					hurt(level, xt, yt, dmg);
@@ -105,7 +108,7 @@ public class DeadTreeTile extends Tile {
 	}
 
 	public boolean mayPass(Level level, int x, int y, Entity e){
-		if((e instanceof NightWizard || e instanceof Wraith || e instanceof WraithA) && level.depth>=0)
+		if((e instanceof NightWizard || e instanceof Wraith ) && level.depth>=0)
 			return true;
 		else return false;
 	}

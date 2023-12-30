@@ -1,9 +1,11 @@
 package minicraft.level.tile;
 
+import minicraft.core.Game;
 import minicraft.core.io.Sound;
 import minicraft.entity.Direction;
 import minicraft.entity.Entity;
 import minicraft.entity.mob.Mob;
+import minicraft.entity.mob.ObsidianKnight;
 import minicraft.entity.mob.Player;
 import minicraft.gfx.Screen;
 import minicraft.gfx.Sprite;
@@ -32,18 +34,18 @@ public class DoorTile extends Tile {
 				break;
 			}
 			case Obsidian: {
-				closedSprite = new Sprite(25, 16, 2, 2, 1);
-				openSprite = new Sprite(23, 16, 2, 2, 1);
+				closedSprite = new Sprite(35, 16, 2, 2, 1);
+				openSprite = new Sprite(33, 16, 2, 2, 1);
 				break;
 			}
 			case ObsidianD: {
-				closedSprite = new Sprite(25, 16, 2, 2, 1);
-				openSprite = new Sprite(23, 16, 2, 2, 1);
+				closedSprite = new Sprite(47, 16, 2, 2, 1);
+				openSprite = new Sprite(47, 14, 2, 2, 1);
 				break;
 			}
 			case Dungeon: {
-				closedSprite = new Sprite(38, 16, 2, 2, 1);
-				openSprite = new Sprite(36, 16, 2, 2, 1);
+				closedSprite = new Sprite(26, 16, 2, 2, 1);
+				openSprite = new Sprite(24, 16, 2, 2, 1);
 				break;
 			}
 		}
@@ -59,7 +61,7 @@ public class DoorTile extends Tile {
 	public boolean interact(Level level, int xt, int yt, Player player, Item item, Direction attackDir) {
 		if (item instanceof ToolItem) {
 			ToolItem tool = (ToolItem) item;
-			if (tool.type == type.getRequiredTool()) {
+			if (tool.type == type.getRequiredTool() && !type.equals(Material.ObsidianD)) {
 				if (player.payStamina(4 - tool.level) && tool.payDurability()) {
 					level.setTile(xt, yt, Tiles.get(id + 3)); // Will get the corresponding floor tile.
 					Sound.monsterHurt.play();
@@ -74,6 +76,8 @@ public class DoorTile extends Tile {
 	public boolean hurt(Level level, int x, int y, Mob source, int dmg, Direction attackDir) {
 		if (source instanceof Player) {
 			boolean closed = level.getData(x, y) == 0;
+			if(type.equals(Material.ObsidianD) && ObsidianKnight.active){
+				Game.notifications.add("Locked by boss");return false;}; //lock doors by boss
 			level.setData(x, y, closed ? 1 : 0);
 		}
 		return false;

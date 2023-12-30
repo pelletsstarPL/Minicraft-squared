@@ -17,7 +17,8 @@ import minicraft.level.Level;
 import javax.swing.*;
 
 public class BrambleTile extends Tile {
-	private static Sprite sprite = new Sprite(2, 2, 2, 2, 1);
+	private static Sprite sprite = new Sprite(4, 11, 2, 2, 1);
+	private static Sprite spriteO = new Sprite(47, 18, 2, 2, 1); //obsidian dungeon sprite
 
 	protected BrambleTile(String name) {
 		super(name, sprite);
@@ -25,7 +26,7 @@ public class BrambleTile extends Tile {
 	}
 	
 	public boolean mayPass(Level level, int x, int y, Entity e) {
-		return e instanceof AirWizard|| e instanceof WraithA || e instanceof Wraith || e instanceof Clallay;
+		return e instanceof AirWizard || e instanceof Wraith || e instanceof Clallay;
 	}
 
 	public boolean hurt(Level level, int x, int y, Mob source, int dmg, Direction attackDir) {
@@ -36,23 +37,20 @@ public class BrambleTile extends Tile {
 		if((level.getTile(x-1, y)==Tiles.get("Coarse dirt") || level.getTile(x+1, y)==Tiles.get("Coarse dirt") || level.getTile(x, y-1)==Tiles.get("Coarse dirt") || level.getTile(x, y+1)==Tiles.get("Coarse dirt")))Tiles.get("coarse dirt").render(screen, level, x, y);
 		else if(level.depth==-3)Tiles.get("moss").render(screen, level, x, y);
 		else Tiles.get("dirt").render(screen, level, x, y);
-
-
-		screen.render(x * 16 + 0, y * 16 + 0, 2 + 2 * 32, 0, 1);
-		screen.render(x * 16 + 8, y * 16 + 0, 3 + 2 * 32, 0, 1);
-		screen.render(x * 16 + 0, y * 16 + 8, 2 + 3 * 32, 0, 1);
-		screen.render(x * 16 + 8, y * 16 + 8, 3 + 3 * 32, 0, 1);
+		if(level.depth==-6 || level.realm.contains("dungeon"))spriteO.render(screen, x * 16, y * 16);
+		else sprite.render(screen, x * 16, y * 16);
 	}
 	public boolean interact(Level level, int xt, int yt, Player player, Item item, Direction attackDir) {
 		if(Game.isMode("Creative"))
 			return false; // Go directly to hurt method
 		if (item instanceof ToolItem) {
 			ToolItem tool = (ToolItem) item;
-			if (tool.type == ToolType.Axe) {
+			if (tool.type == ToolType.Axe || tool.type == ToolType.Hammer) {
 				int staminaPay=(4-tool.level < 2 ? 2 : 4-tool.level);
 				if(4-tool.level<2)staminaPay=2;
+				int dmg= (int)(random.nextInt(10) + tool.damage * (tool.type == ToolType.Hammer ? 1.2 : 1));
 				if (player.payStamina(staminaPay) && tool.payDurability() && tool.level!=6) {
-					hurt(level, xt, yt, random.nextInt(10) + (tool.level) * 5 + 10);
+					hurt(level, xt, yt, dmg);
 					return true;
 				}else if(player.payStamina(staminaPay) && tool.payDurability() && tool.level==6){
 					hurt(level, xt, yt, random.nextInt(2) + 3 * 2 + 1);
@@ -83,7 +81,7 @@ public class BrambleTile extends Tile {
 	}
 
 	public void bumpedInto(Level level, int x, int y, Entity entity) {
-		if (entity instanceof AirWizard || entity instanceof Wraith || entity instanceof WraithA || entity instanceof Ghost ||  entity instanceof Clallay) return;
+		if (entity instanceof AirWizard || entity instanceof Wraith || entity instanceof Ghost ||  entity instanceof Clallay    ||  entity instanceof Knight  ||  entity instanceof Snake) return;
 		
 		if(entity instanceof Mob)
 			((Mob)entity).hurt(this, x, y, 1 + Settings.getIdx("diff"));

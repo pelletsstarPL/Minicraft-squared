@@ -23,16 +23,26 @@ public class OreBlockTile extends Tile {
 
 	public enum OreType { //8,10,12 are reserved for snow
         Iron (Items.get("Iron Block"), 0,0,80),
-		Lapis (Items.get("Lapis Block"), 2,0,60),
-		Gold (Items.get("Gold Block"), 0,2,90),
-		Gem (Items.get("Gem Block"), 0,4,105);
+		Lapis (Items.get("Lapis Block"), 2,0,60,1.0625),
+		Gold (Items.get("Gold Block"), 0,2,90,0.91),
+		Gem (Items.get("Gem Block"), 0,4,105,0.87),
+		Coal (Items.get("Coal Block"), 2,4,70),
+		Obsidium (Items.get("Obsidium Block"), 2,2,140,0.66);
 
 		private Item drop;
 		public final int color;
 		public final int yaxis;
 		public final int health;
+		double dmgMult = 1;
 
 
+		OreType(Item drop, int color,int y,int hp,double dmgMult) {
+			this.drop = drop;
+			this.color = color;
+			this.yaxis = y;
+			this.health = hp;
+			this.dmgMult = dmgMult;
+		}
 		OreType(Item drop, int color,int y,int hp) {
 			this.drop = drop;
 			this.color = color;
@@ -52,7 +62,7 @@ public class OreBlockTile extends Tile {
 	}
 
 	public void render(Screen screen, Level level, int x, int y) {
-		sprite.color = DirtTile.dCol(level.depth);
+		Tiles.get("Dirt").render(screen,level,x , y);
 		sprite.render(screen, x * 16, y * 16);
 	}
 
@@ -72,7 +82,7 @@ public class OreBlockTile extends Tile {
 			ToolItem tool = (ToolItem) item;
 			if (tool.type == ToolType.Pickaxe) {
 				if (player.payStamina(6 - tool.level) && tool.payDurability()) {
-					hurt(level, xt, yt, random.nextInt(10)+5+tool.level);
+					hurt(level, xt, yt, (int) ((random.nextInt(10)+5+tool.level)*type.dmgMult));
 					return true;
 				}
 			}

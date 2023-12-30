@@ -31,7 +31,7 @@ public class GrassTile extends Tile {
 
 	public boolean tick(Level level, int xt, int yt) {
 		// TODO revise this method.
-		if (random.nextInt(40) != 0) return false;
+		if (random.nextInt(40) != 0 || level.realm!="overworld") return false;
 		
 		int xn = xt;
 		int yn = yt;

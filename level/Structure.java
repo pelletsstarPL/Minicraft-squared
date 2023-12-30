@@ -1,7 +1,10 @@
 package minicraft.level;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+
+import minicraft.core.World;
 import minicraft.level.Level;
 import minicraft.entity.furniture.*;
 import minicraft.entity.mob.*;
@@ -13,7 +16,7 @@ import minicraft.level.tile.Tiles;
 
 // this stores structures that can be drawn at any location.
 public class Structure {
-	
+
 	private HashSet<TilePoint> tiles;
 	private HashMap<Point, Furniture> furniture;
 	
@@ -32,13 +35,16 @@ public class Structure {
 	public void addFurniture(int x, int y, Furniture furniture) {
 		this.furniture.put(new Point(x, y), furniture);
 	}
-	
+	public String[] blacklist={"hard rock","obsidiand wall","obsidian stairs down","obsidian bridge support","obsidian void portal frame","obsidian stairs down","stairs down","stairs up","decorated unbreakable"};
 	public void draw(Level level, int xt, int yt) {
-		for (TilePoint p: tiles)
-			 level.setTile(xt+p.x, yt+p.y, p.t);
+		for (TilePoint p: tiles){
+			if(Arrays.asList(blacklist).indexOf(level.getTile(xt+p.x,yt+p.y).name.toLowerCase())==-1) //if tile is not restricted
+			level.setTile(xt+p.x, yt+p.y, p.t);
+		}
+
 
 		for (Point p: furniture.keySet())
-			 level.add(furniture.get(p).clone(), xt+p.x, yt+p.y, true);
+			 level.add(furniture.get(p).clone(), xt+p.x, yt+p.y, true,Arrays.binarySearch(World.realms,level.realm));
 	}
 
 	public void draw(short[] map, int xt, int yt, int mapWidth) {
@@ -93,11 +99,16 @@ public class Structure {
 			return x + y * 51 + t.id * 131;
 		}
 	}
-	
+	static final Structure portalOBV;
+	static final Structure portalOBVR;
 	static final Structure dungeonGate;
+	static final Structure dungeonOBVGate;
 	static final Structure dungeonLock;
+	static final Structure dungeonLockInside;
+
+	static final Structure dungeonLockOBV;
 	static final Structure lavaPool;
-	static final Structure lavaFountain;
+	static final Structure obsidianFountainClassic;
 
 
 	// All the "mobDungeon" structures are for the spawner structures
@@ -162,11 +173,6 @@ public class Structure {
 	static final Structure mobDungeonWest3Ruined2;
 
 	static final Structure airWizardHouse;
-	static final Structure skyrock;
-	static final Structure skyrock2;
-	static final Structure skyrock3;
-	static final Structure skyrock4;
-	static final Structure skyrock5;
 
 	// Used for random villages
 	static final Structure villageHouseNormal;
@@ -205,9 +211,38 @@ public class Structure {
 	static final Structure stairsRuinsDown;
 	static final Structure stairsRuinsUp;
 
+	static final Structure dungeonTowerEntrance;
+	static final Structure dungeonTowerTop;
+	static final Structure dungeonBigTowerRoom;
+
+	static final Structure snakeLairDungeon;
+
+	static final Structure obsidianKnightRoom;
+	static final Structure villageRuinedOverlayObs1;
+	static final Structure villageRuinedOverlayObs2;
+	static final Structure obsidianFountain;
+	static final Structure obsidianFountainRuined;
+	static final Structure villageRuinedOverlayObs3;
+
 	// Ok, because of the way the system works, these structures are rotated 90 degrees clockwise when placed
 	// Then it's flipped on the vertical
 	static {
+
+		portalOBV = new Structure();
+		portalOBV.setData("P:Obsidian void portal frame,I:Obsidian Bridge Support",
+				"*PP*\n"+
+				"PIIP\n"+
+				"PIIP\n"+
+				"*PP*"
+		);
+		portalOBVR = new Structure();
+		portalOBVR.setData("P:Obsidian void portal frame,I:Obsidian void portal,O:Obsidian wall",
+				"OPPO\n"+
+						"PIIP\n"+
+						"PIIP\n"+
+						"OPPO"
+		);
+
 		dungeonGate = new Structure();
 		dungeonGate.setData("O:Obsidian,D:Obsidian Door,W:Obsidian Wall",
 					"WWDWW\n" +
@@ -218,13 +253,103 @@ public class Structure {
 		);
 		dungeonGate.addFurniture(-1, -1, new Lantern(Lantern.Type.IRON));
 
+		dungeonOBVGate = new Structure();
+		dungeonOBVGate.setData("O:Ornate Obsidian,D:Obsidian Door,W:Obsidian Wall,P:Decorated Obsidian,Q:Purple Wool",
+				"WWWDWWW\n" +
+						"WOOQOOW\n" +
+						"WOPQPOW\n" +
+						"DQQPQQD\n" +
+						"WOPQPOW\n" +
+						"WOOQOOW\n" +
+						"WWWDWWW"
+		);
+
 		dungeonLock = new Structure();
-		dungeonLock.setData("O:Obsidian,W:ObsidianD Wall",
-					"WWWWW\n" +
-					"WOOOW\n" +
-					"WOOOW\n" +
-					"WOOOW\n" +
-					"WWWWW"
+		dungeonLock.setData("O:Obsidian,W:ObsidianD Wall,G:Ground rock,L:Lava,w:Obsidian wall",
+					"ww**O**wO\n"+
+						"ww******w\n"+
+						"**WWWWW**\n" +
+						"*LWOOOWL*\n" +
+						"OOWOOOWGO\n" +
+						"G*WOOOW*L\n" +
+						"G*WWWWW**\n"+
+							"OO**O**ww\n"+
+							"wO**LL*ww"
+		);
+
+		dungeonLockInside = new Structure();
+		dungeonLockInside.setData("O:Obsidian,W:ObsidianD Wall,B:Bramble,P:Purple Wool",
+						"WWWWW\n" +
+						"WBPBW\n" +
+						"WPPPW\n" +
+						"WBPBW\n" +
+						"WWWWW"
+		);
+		dungeonLockOBV = new Structure();
+		dungeonLockOBV.setData("O:Obsidian,W:ObsidianD Wall,G:Ground rock,L:Lava,w:Obsidian wall,D:Obsidian door",
+				"ww**O**wO\n"+
+						"ww******w\n"+
+						"**WWDWW**\n" +
+						"*LWOOOWL*\n" +
+						"OODOOODGO\n" +
+						"G*WOOOW*L\n" +
+						"G*WWDWW**\n"+
+						"OO**O**ww\n"+
+						"wO**LL*ww"
+		);
+		dungeonTowerTop = new Structure();
+		dungeonTowerTop.setData("O:Obsidian,D:Obsidian Door,W:Obsidian Wall,B:Obsidian bridge support",
+				"*****BBB*****\n"+
+						"*****BBB*****\n"+
+						"*****BBB*****\n"+
+				"***WWWDWWW***\n" +
+						"***WOOOOOW***\n" +
+						"BBBWOOOOOWBBB\n" +
+						"BBBDOOOOODBBB\n" +
+						"BBBWOOOOOWBBB\n" +
+						"***WOOOOOW***\n" +
+						"***WWWDWWW***\n"+
+						"*****BBB*****\n"+
+						"*****BBB*****\n"+
+						"*****BBB*****"
+
+		);
+		dungeonBigTowerRoom = new Structure();
+		dungeonBigTowerRoom.setData("O:Obsidian,D:Obsidian Door,W:Obsidian Wall,R:Ornate Obsidian,S:Decorated Obsidian",
+				"WWWWWWWDWWWWWWW\n" +
+						"WRRRROOROORRRRW\n" +
+						"WRRROORSROORRRW\n" +
+						"WRROOROSOROORRW\n" +
+						"WROORSOSOOROORW\n" +
+						"WOORSSSSOOOROOW\n" +
+						"WOROOSRSROOOROW\n" +
+						"DRSSSSSSSSSSSRD\n" +
+						"WOROOORSRSOOROW\n" +
+						"WOOROOOSSSSROOW\n" +
+						"WROOROOSOSROORW\n" +
+						"WRROOROSOROORRW\n" +
+						"WRRROORSROORRRW\n" +
+						"WRRRROOROORRRRW\n" +
+						"WWWWWWWDWWWWWWW"
+		);
+
+		dungeonTowerEntrance = new Structure();
+		dungeonTowerEntrance .setData("O:Decorated Obsidian,W:ObsidianD Wall,G:Ground rock,L:Lava,w:Obsidian wall,R:Obsidian Door,C:Red Wool,D:Orange Wool",
+				"*****WWRWW*****\n"+
+						"*****WOCOW*****\n"+
+					"*****WODOW*****\n"+
+					"*****WODOW*****\n"+
+					"****WWODOWW****\n"+
+					"WWWWWOOCOOWWWWW\n"+
+					"WOOOOWOCOWOOOOW\n"+
+					"RCDDDCCCCCDDDCR\n"+
+					"WOOOOWOCOWOOOOW\n"+
+					"WWWWWOOCOOWWWWW\n"+
+					"****WWODOWW****\n"+
+					"*****WODOW*****\n"+
+					"*****WODOW*****\n"+
+					"*****WOCOW*****\n"+
+					"*****WWRWW*****"
 		);
 
 		lavaPool = new Structure();
@@ -232,8 +357,8 @@ public class Structure {
 					"LL\n" +
 					"LL"
 		);
-		lavaFountain = new Structure();
-		lavaFountain.setData("L:Lava,O:Obsidian,R:Raw Obsidian,W:Obsidian Wall",
+		obsidianFountainClassic = new Structure();
+		obsidianFountainClassic.setData("L:Lava,O:Obsidian,R:Raw Obsidian,W:Obsidian Wall",
 				"*OORRO*\n"+
 				"OLLLLLO\n"+
 				"OLLLLLO\n"+
@@ -242,6 +367,31 @@ public class Structure {
 				"OLLLLLO\n"+
 						"*OORRO*"
 		);
+		snakeLairDungeon = new Structure();
+		snakeLairDungeon.setData("D:Dirt,O:Obsidian,T:Dungeon Tallgrass",
+				"**D*O\n"+
+						"TTDDD\n"+
+						"TTTTT\n"+
+						"D*DTT\n"+
+						"*TDOT"
+		);
+		obsidianKnightRoom = new Structure();
+		obsidianKnightRoom.setData("U:Spike wall,O:Obsidian,D:Decorated Unbreakable,R:ObsidianD Door,S:Spikes",
+				"****UURUU****\n"+
+							"**UUUUSUUUU**\n"+
+							"*UUUUSSSUUUU*\n"+
+							"*UUDDDDDDDUU*\n"+
+							"UUUDDDSDDDUUU\n"+
+							"UUSDDDDDDDSUU\n"+
+							"RSSDSDDDSDSSR\n"+
+							"UUSDDDDDDDSUU\n"+
+							"UUUDDDSDDDUUU\n"+
+							"*UUDDDDDDDUU*\n"+
+							"*UUUUSSSUUUU*\n"+
+							"**UUUUSUUUU**\n"+
+							"****UURUU****"
+		);
+
 
 		//Normal dungeon with variations
 		mobDungeonCenter = new Structure();
@@ -625,31 +775,7 @@ public class Structure {
 					"WFFFFFW\n" +
 					"WWWWWWW"
 		);
-		skyrock=new Structure();
-		skyrock.setData("H:Sky rock",
-				"HH\n"+
-						"HH"
-		);
-		skyrock2=new Structure();
-		skyrock2.setData("H:Sky rock,C:Cloud Cactus",
-				"HC\n"+
-						"CCH"
-		);
-		skyrock3=new Structure();
-		skyrock3.setData("H:Sky rock,C:Cloud Cactus",
-				"H*\n"+
-						"*H"
-		);
-		skyrock4=new Structure();
-		skyrock4.setData("H:Sky rock,C:Cloud Cactus",
-				"HH\n"+
-						"CC"
-		);
-		skyrock5=new Structure();
-		skyrock5.setData("H:Sky rock,C:Cloud Cactus",
-				"HC\n"+
-						"HH"
-		);
+
 		airWizardHouse.addFurniture(-2, 0, new Lantern(Lantern.Type.GOLD));
 		airWizardHouse.addFurniture(0, 0, new Crafter(Crafter.Type.Enchanter));
 
@@ -658,7 +784,7 @@ public class Structure {
 					"WWWWW\n" +
 					"WFFFW\n" +
 					"WFFFD\n" +
-					"WFFF*\n" +
+					"WFFFW\n" +
 					"WWWWW"
 		);
 
@@ -687,17 +813,17 @@ public class Structure {
 						"WWDWW***"
 		);
 		villageStonehouseNormal = new Structure();
-		villageStonehouseNormal.setData("W:Wood Wall,D:Wood Door,R:Rock,H:Hole,E:Dirt",
+		villageStonehouseNormal.setData("W:Stone Wall,D:Stone Door,R:Rock,H:Hole,E:Dirt",
 				"*R***\n" +
 					"****R\n" +
-						"WWW*W\n" +
+						"WWWWW\n" +
 						"WEEHW\n" +
 						"DEEEW\n" +
 						"WRRRW\n" +
 						"WWWW*"
 		);
 		villageStonehouseTwoDoor = new Structure();
-		villageStonehouseTwoDoor.setData("W:Wood Wall,D:Wood Door,R:Rock,H:Hole,E:Dirt",
+		villageStonehouseTwoDoor.setData("W:Stone Wall,D:Stone Door,R:Rock,H:Hole,E:Dirt",
 				"****R\n" +
 						"RR**R\n" +
 						"WWW*W\n" +
@@ -723,6 +849,50 @@ public class Structure {
 					"*FF*B\n" +
 					"FFFFF\n" +
 					"*F***"
+		);
+		villageRuinedOverlayObs1 = new Structure();
+		villageRuinedOverlayObs1.setData("F:Decorated obsidian,B:Bramble,W:Obsidian Wall",
+				"**W**\n" +
+						"F*FFW\n" +
+						"*F**F\n" +
+						"**F*B\n" +
+						"B***W"
+		);
+		obsidianFountain= new Structure();
+		obsidianFountain.setData("L:Lava,O:Ornate obsidian,U:Obsidian wall",
+				"*OOOOO*\n" +
+						"OLLLLLO\n" +
+						"OLLULLO\n" +
+						"OLUUULO\n" +
+						"OLLULLO\n"+
+						"OLLLLLO\n"+
+						"*OOOOO*"
+		);
+		obsidianFountainRuined= new Structure();
+		obsidianFountainRuined.setData("L:Lava,D:Ornate obsidian,S:Obsidian,U:Obsidian wall,T:Fungus,E:Dirt",
+				"**D**E*\n" +
+						"**LLLLT\n" +
+						"*LLDD**\n" +
+						"DLUUULD\n" +
+						"DLLDL**\n"+
+						"EL*****\n"+
+						"*TSS***"
+		);
+		villageRuinedOverlayObs2 = new Structure();
+		villageRuinedOverlayObs2.setData("F:Obsidian,B:Bramble,W:Obsidian wall",
+				"WW***\n" +
+						"**FF*\n" +
+						"*FF*B\n" +
+						"FBFFF\n" +
+						"*FWWW"
+		);
+		villageRuinedOverlayObs3 = new Structure();
+		villageRuinedOverlayObs3.setData("F:Decorated Obsidian,B:Bramble,W:Obsidian wall",
+				"BW*FF\n" +
+						"W*F**\n" +
+						"***FB\n" +
+						"FBFF*\n" +
+						"*FWW*"
 		);
 		stoneRuinHouseNormal = new Structure();
 		stoneRuinHouseNormal.setData("F:Stone Bricks,W:Stone Wall,D:Stone Door,E:Dungeon Bricks,X:Dungeon Wall,O:Ornate stone",

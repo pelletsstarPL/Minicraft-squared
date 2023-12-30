@@ -15,10 +15,11 @@ import minicraft.level.tile.Tile;
 import minicraft.level.tile.Tiles;
 
 public class FarmTile extends Tile {
-    private static Sprite sprite = new Sprite(12, 0, 2, 2, 1, true, new int[][] {{1, 0}, {0, 1}});
+
+   private  int pick; //picks a farmland texture
 
     public FarmTile(String name) {
-        super(name, sprite);
+        super(name, new Sprite(0,32,1,1,1));
     }
     protected FarmTile(String name, Sprite sprite) {
         super(name, sprite);
@@ -26,18 +27,14 @@ public class FarmTile extends Tile {
 
     @Override
     public void render(Screen screen, Level level, int x, int y) {
+        if(level.realm.contains("dungeon") || level.depth<=-6)pick=2;
+        else if(level.depth < 0)pick=1;
+        else pick = 0;
+        new Sprite(pick,(32 + (Plant.IfWater(level,x,y) ? 1 : 0)),1,1,1).render(screen,x * 16, y * 16);
+          new Sprite(pick,(32 + (Plant.IfWater(level,x,y) ? 1 : 0)),1,1,1).render(screen,x * 16 + 8, y * 16 + 0);
+          new Sprite(pick,(32 + (Plant.IfWater(level,x,y) ? 1 : 0)),1,1,1).render(screen,x * 16 + 0, y * 16 + 8);
+          new Sprite(pick,(32 + (Plant.IfWater(level,x,y) ? 1 : 0)),1,1,1).render(screen,x * 16 + 8, y * 16 + 8 );
 
-        if(Plant.IfWater(level,x,y)){
-            screen.render(x * 16 + 0, y * 16 + 0, 23 + 5 * 32 , 0, 1);
-            screen.render(x * 16 + 8, y * 16 + 0, 23 + 5 * 32 , 0, 1);
-            screen.render(x * 16 + 0, y * 16 + 8, 23 + 5 * 32 , 1, 1);
-            screen.render(x * 16 + 8, y * 16 + 8, 23 + 5 * 32, 1, 1);
-        }else{
-            screen.render(x * 16 + 0, y * 16 + 0, 12 + 0 * 32 , 0, 1);
-            screen.render(x * 16 + 8, y * 16 + 0, 12 + 0 * 32 , 0, 1);
-            screen.render(x * 16 + 0, y * 16 + 8, 12 + 0 * 32 , 1, 1);
-            screen.render(x * 16 + 8, y * 16 + 8, 12 + 0 * 32, 1, 1);
-        }
     }
     @Override
     public boolean interact(Level level, int xt, int yt, Player player, Item item, Direction attackDir) {

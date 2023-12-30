@@ -20,6 +20,7 @@ public class LavaTile extends Tile {
 	protected LavaTile(String name) {
 		super(name, (ConnectorSprite)null);
 		super.csprite = sprite;
+		isSurface =false;
 		connectsToSand = true;
 		connectsToFluid = true;
 	}
@@ -27,12 +28,12 @@ public class LavaTile extends Tile {
 	public void render(Screen screen, Level level, int x, int y) {
 		long seed = (tickCount + (x / 2 - y) * 4311) / 10 * 54687121l + x * 3271612l + y * 3412987161l;
 		sprite.full = Sprite.randomDots(seed, 1);
-		sprite.sparse.color = DirtTile.dCol(level.depth);
+		Tiles.get("Dirt").render(screen, level, x, y);
 		sprite.render(screen, level, x, y);
 	}
 	
 	public boolean mayPass(Level level, int x, int y, Entity e) {
-		return e.canSwim();
+		return e.canSwim()||e.canFly();
 	}
 
 	public boolean tick(Level level, int xt, int yt) {

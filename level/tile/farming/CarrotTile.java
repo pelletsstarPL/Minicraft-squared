@@ -45,8 +45,8 @@ public class CarrotTile extends Plant {
         } else if (age >= maxAge - maxAge / 5) {
             count = random.nextInt(2);
         }
-
-        level.dropItem(x * 16 + 8, y * 16 + 8, 1,count, Items.get("Carrot"));
+        if (age >= maxAge - maxAge / 5)
+        level.dropItem(x * 16 + 8, y * 16 + 8, age >= maxAge ? 1 : 0,count, Items.get("Carrot"));
 
         if (age >= maxAge && entity instanceof Player) {
             ((Player)entity).addScore(random.nextInt(4) + 1);

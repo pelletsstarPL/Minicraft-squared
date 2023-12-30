@@ -26,7 +26,8 @@ public class RockTile extends Tile {
 	private RockType type;
 	public enum RockType{
 		Rock(50,new ConnectorSprite(RockTile.class, new Sprite(18, 6, 3, 3, 1, 3), new Sprite(21, 8, 2, 2, 1, 3), new Sprite(21, 6, 2, 2, 1, 3))),
-		Deepslate(85,new ConnectorSprite(RockTile.class, new Sprite(24, 9, 3, 3, 1, 3), new Sprite(27, 11, 2, 2, 1, 3), new Sprite(27, 9, 2, 2, 1, 3)));
+		Deepslate(70,new ConnectorSprite(RockTile.class, new Sprite(24, 9, 3, 3, 1, 3), new Sprite(27, 11, 2, 2, 1, 3), new Sprite(27, 9, 2, 2, 1, 3))),
+		Obsidian(110,new ConnectorSprite(RockTile.class, new Sprite(57, 6, 3, 3, 1, 3), new Sprite(60, 8, 2, 2, 1, 3), new Sprite(60, 6, 2, 2, 1, 3)));;
 		private int health;
 		private ConnectorSprite sprite;
 		RockType(int health,ConnectorSprite sprite){
@@ -63,7 +64,7 @@ public class RockTile extends Tile {
 	}
 	
 	public boolean hurt(Level level, int x, int y, Mob source, int dmg, Direction attackDir) {
-		hurt(level, x, y, dmg);
+		hurt(level, x, y, type == RockType.Obsidian ? 0 : dmg);
 		return true;
 	}
 
@@ -71,11 +72,27 @@ public class RockTile extends Tile {
 		if (item instanceof ToolItem) {
 			ToolItem tool = (ToolItem) item;
 			int staminaPay=(4-tool.level < 2 ? 2 : 4-tool.level);
-			int dmg = random.nextInt(10) + tool.damage;
-			if (tool.level!=6 && tool.type == ToolType.Pickaxe && player.payStamina(staminaPay) && tool.payDurability(dmg)) {
-				// Drop coal since we use a pickaxe.
+			if(tool.type==ToolType.Hammer)staminaPay++;
+			int dmg = (int)(random.nextInt(10) + tool.damage * (tool.type == ToolType.Hammer ? 1.2 : 1));
+			if(type == RockType.Obsidian){
+				if (tool.level>=2 && tool.level!=6 && (tool.type == ToolType.Pickaxe || tool.type == ToolType.Hammer) && player.payStamina(staminaPay) && tool.payDurability(dmg)) {
+					// Drop coal since we use a pickaxe or hammer
+					dropCoal = true;
+					if(type == RockType.Obsidian)dmg *= 0.85;
+					hurt(level, xt, yt, dmg);
+					return true;
+				}else if ((tool.level==6 || tool.level<2) && tool.type == ToolType.Pickaxe && player.payStamina(staminaPay) && tool.payDurability(dmg)) {
+					dmg=random.nextInt(8)+2;
+					Game.notifications.add(ToolItem.LEVEL_NAMES[2] + " pickaxe or stronger Required.");
+					hurt(level, xt, yt, 0);
+					return false;
+				}
+			}else
+			if (tool.level!=6 && (tool.type == ToolType.Pickaxe || tool.type == ToolType.Hammer) && player.payStamina(staminaPay) && tool.payDurability(dmg)) {
+				// Drop coal since we use a pickaxe or hammer
 				dropCoal = true;
-				hurt(level, xt, yt, tool.getDamage());
+				if(type == RockType.Obsidian)dmg *= 0.85;
+				hurt(level, xt, yt, dmg);
 				return true;
 			}else if (tool.level==6 && tool.type == ToolType.Pickaxe && player.payStamina(staminaPay) && tool.payDurability(dmg)) {
 				dmg=random.nextInt(8)+2;
@@ -100,14 +117,17 @@ public class RockTile extends Tile {
 		level.add(new TextParticle("" + dmg, x * 16 + 8, y * 16 + 8, Color.RED));
 		if (damage >= maxHealth) {
 				if (dropCoal) {
-					level.dropItem(x * 16 + 8, y * 16 + 8, 1, 3, Items.get("Stone"));
+					if(type==RockType.Obsidian)level.dropItem(x * 16 + 8, y * 16 + 8, 1, 2, Items.get("Obsidian"));
+					else level.dropItem(x * 16 + 8, y * 16 + 8, 1, 3, Items.get("Stone"));
 					int coal = 0;
 					if (!Settings.get("diff").equals("Hard")) {
 						coal++;
 					}
+					if(Math.random()<0.8)
 					level.dropItem(x * 16 + 8, y * 16 + 8, coal, coal + 1, Items.get("Coal"));
 				} else {
-					level.dropItem(x * 16 + 8, y * 16 + 8, 2, 4, Items.get("Stone"));
+					if(type==RockType.Obsidian)level.dropItem(x * 16 + 8, y * 16 + 8, 2, 4, Items.get("Obsidian"));
+					else level.dropItem(x * 16 + 8, y * 16 + 8, 2, 4, Items.get("Stone"));
 				}
 				level.setTile(x, y, Tiles.get("dirt"));
 		} else {
@@ -115,13 +135,5 @@ public class RockTile extends Tile {
 		}
 	}
 
-	public boolean tick(Level level, int xt, int yt) {
-		damage = level.getData(xt, yt);
-		if (damage > 0) {
-			level.setData(xt, yt, damage);
-			return true;
-		}
-		return false;
-	}
 
 }

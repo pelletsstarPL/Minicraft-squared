@@ -15,12 +15,20 @@ public class PotionEffect {
 	private PotionType type;
 	private int duration;
 	private boolean natural;
+	private Sprite icon; //icon of the potion
 
 	public PotionEffect(PotionType type, int duration,boolean natural) {
 		//super(type,duration);
 		this.type = type;
 		this.duration = duration;
 		this.natural = natural;
+	}
+	public PotionEffect(PotionType type, int duration,boolean natural,Sprite icon) {
+		//super(type,duration);
+		this.type = type;
+		this.duration = duration;
+		this.natural = natural;
+		this.icon = icon;
 	}
 
 	public PotionType getPotionType() {

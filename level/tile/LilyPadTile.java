@@ -64,7 +64,7 @@ public class LilyPadTile extends Tile {
 	}
 	public void steppedOn(Level level, int x, int y, Entity entity) {
 		int chance=random.nextInt(80);
-		if (entity instanceof Mob && (!(entity instanceof AirWizard)  && !(entity instanceof Ghost) && !(entity instanceof Wraith) && !(entity instanceof WraithA) && !(entity instanceof Clallay))) {
+		if (entity instanceof Mob && (!(entity instanceof AirWizard)  && !(entity instanceof Ghost) && !(entity instanceof Wraith)  && !(entity instanceof Clallay))) {
 			//lily is collapsing under you
 			if(chance==40) {
 				level.dropItem(x * 16 + 8, y * 16 + 8, Items.get("lily pad"));

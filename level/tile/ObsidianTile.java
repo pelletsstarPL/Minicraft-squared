@@ -13,7 +13,7 @@ import minicraft.item.ToolType;
 import minicraft.level.Level;
 
 public class ObsidianTile extends Tile {
-    private static Sprite sprite = new Sprite(27, 14, 2, 2, 1);
+    private static Sprite sprite = new Sprite(37, 14, 2, 2, 1);
 
     public ObsidianTile(String name) {
         super(name, sprite);

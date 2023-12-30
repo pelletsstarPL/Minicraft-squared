@@ -8,7 +8,6 @@ import minicraft.entity.Entity;
 import minicraft.entity.mob.Ghost;
 import minicraft.entity.mob.Mob;
 import minicraft.entity.mob.Wraith;
-import minicraft.entity.mob.WraithA;
 import minicraft.entity.particle.SmashParticle;
 import minicraft.entity.particle.TextParticle;
 import minicraft.gfx.Color;
@@ -55,7 +54,7 @@ public class CactusTile extends Tile {
 	}
 
 	public void bumpedInto(Level level, int x, int y, Entity entity) {
-		if(!(entity instanceof Mob) && !(entity instanceof WraithA) && !(entity instanceof Wraith) && !(entity instanceof Ghost)) return;
+		if(!(entity instanceof Mob)  && !(entity instanceof Wraith) && !(entity instanceof Ghost)) return;
 		Mob m = (Mob) entity;
 		if (Settings.get("diff").equals("Easy")) {
 			m.hurt(this, x, y, 1);

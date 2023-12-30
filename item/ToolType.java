@@ -1,17 +1,20 @@
 package minicraft.item;
 
 public enum ToolType {
-	Shovel (0, 24), // If there's a second number, it specifies durability.
-	Hoe (1, 20),
+	Shovel (0, 25), // If there's a second number, it specifies durability.
+	Hoe (1, 21),
+	FishingRod(1, 20),
 	Sword (2, 42),
-	Pickaxe (3, 28),
-	Axe (4, 24),
-	Bow (5, 20),
-	Claymore (6, 34),
-	Shears (0, 42, true,12);
+	Pickaxe (3, 29),
+	Axe (4, 25),
+	Bow (5, 21),
+	Claymore (6, 36),
+	Hammer (8, 51,new Integer[]{0,6}),
+	Shears (7, 28,new Integer[]{0,1,6});
 
 	public final int xPos; // X Position of origin
 	public final int yPos; // Y position of origin
+	public Integer[] skipLvls;
 	public final int durability;
 	public final boolean noLevel;
 
@@ -22,9 +25,17 @@ public enum ToolType {
 	 * @param xPos X position of the starting sprite in the spritesheet.
 	 * @param dur Durabiltity of the tool.
 	 */
+	ToolType(int xPos, int dur,Integer[] skiplvls) {
+		this.xPos = xPos;
+		yPos = 13;
+		skipLvls = skiplvls;
+		durability = dur;
+		noLevel = false;
+	}
 	ToolType(int xPos, int dur) {
 		this.xPos = xPos;
 		yPos = 13;
+		skipLvls = new Integer[0]; //don't skip any lvl
 		durability = dur;
 		noLevel = false;
 	}

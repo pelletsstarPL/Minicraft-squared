@@ -23,30 +23,57 @@ public class OreTile extends Tile {
 	private OreType type;
 	
 	public enum OreType { //8,10,12 are reserved for wool
-        Iron (Items.get("Iron Ore"), 0,0,20),
-		Lapis (Items.get("Lapis"), 2,0,15),
-		Obsidian (Items.get("Obsidian"), 2,4,90),
-		Gold (Items.get("Gold Ore"), 4,0,40),
-		Gem (Items.get("Gem"), 6,0,70),
-		GemG (Items.get("Gem"), 6,2,70),
-		GemB (Items.get("Gem"), 6,4,70),
+        Iron (Items.get("Iron Ore"), 0,0,20,2),
+
+		Lapis (Items.get("Lapis"), 2,0,15,1,1.1),
+
+		Obsidian (Items.get("Obsidian"), 2,4,90,4,0.8),
+		Obsidium (Items.get("Obsidium ore"), 15,18,100,5,0.6),
+		Gold (Items.get("Gold Ore"), 4,0,40,3),
+		Gem (Items.get("Gem"), 6,0,70,3,0.95),
+		GemG (Items.get("Gem"), 6,2,70,3,0.95),
+		GemB (Items.get("Gem"), 6,4,70,3,0.95),
+		Coal (Items.get("Coal"), 0,2,15,1,1.1),
+
 		//"not full ores". Those will drop less
 		IronNF (Items.get("Iron Ore"), 0,4,10),
-		GoldNF (Items.get("Gold Ore"), 4,2,20),
-		GemNF (Items.get("Gem"), 6,6,35),
-		GemGNF (Items.get("Gem"), 6,8,35),
-		GemBNF (Items.get("Gem"), 6,10,35);
+		LapisNF (Items.get("Lapis"), 2,2,8,1,1.2),
+		GoldNF (Items.get("Gold Ore"), 4,2,20,3),
+		GemNF (Items.get("Gem"), 6,6,35,3),
+		GemGNF (Items.get("Gem"), 6,8,35,3),
+		GemBNF (Items.get("Gem"), 6,10,35,3),
+		ObsidiumNF (Items.get("Obsidium ore"), 15,18,105,5,0.75);
 
 		private Item drop;
 		public final int color;
 		public final int yaxis;
 		public final int hpModifier;
+		public final int reqTier; //you can mine obviously with low-level tools high-level ores but you will not do much damage to them
+		public final double dmgMult;
 
+		OreType(Item drop, int color,int y,int hpMod,int rqTier,double dmMult) {
+			this.drop = drop;
+			this.color = color;
+			this.yaxis = y;
+			this.hpModifier = hpMod;
+			this.reqTier = rqTier;
+			this.dmgMult = dmMult;
+		}
+		OreType(Item drop, int color,int y,int hpMod,int rqTier) {
+			this.drop = drop;
+			this.color = color;
+			this.yaxis = y;
+			this.hpModifier = hpMod;
+			this.reqTier = rqTier;
+			this.dmgMult = 1;
+		}
 		OreType(Item drop, int color,int y,int hpMod) {
 			this.drop = drop;
 			this.color = color;
 			this.yaxis = y;
 			this.hpModifier = hpMod;
+			this.reqTier = 1;
+			this.dmgMult = 1;
 		}
 		
 		protected Item getOre() {
@@ -54,7 +81,7 @@ public class OreTile extends Tile {
 		}
     }
 	public boolean hurt(Level level, int x, int y, Mob source, int dmg, Direction attackDir) {
-		hurt(level, x, y, 0);
+		hurt(level, x, y, 0,1);
 		return true;
 	}
 	protected OreTile(OreType o) {
@@ -64,7 +91,7 @@ public class OreTile extends Tile {
 	}
 
 	public void render(Screen screen, Level level, int x, int y) {
-		sprite.color = DirtTile.dCol(level.depth);
+		Tiles.get("Dirt").render(screen,level,x , y );
 		sprite.render(screen, x * 16, y * 16);
 	}
 
@@ -80,7 +107,7 @@ public class OreTile extends Tile {
 			ToolItem tool = (ToolItem) item;
 			if (tool.type == ToolType.Pickaxe) {
 				if (player.payStamina(6 - tool.level < 2 ? 2 : 6 - tool.level) && tool.payDurability()) {
-					hurt(level, xt, yt, tool.getDamage());
+					hurt(level, xt, yt, tool.getDamage()/(type.reqTier - tool.level < 1 ? 1 : type.reqTier - tool.level),1/(type.reqTier - tool.level < 1 ? 1 : type.reqTier - tool.level));
 					return true;
 				}
 			}
@@ -92,7 +119,7 @@ public class OreTile extends Tile {
         return type.getOre();
     }
     
-	public void hurt(Level level, int x, int y, int dmg) {
+	public void hurt(Level level, int x, int y, int dmg,int dropProb) {
 		int damage = level.getData(x, y) + dmg;
 		int oreH = random.nextInt(10) * 4 + type.hpModifier;
 		if(type==OreType.IronNF || type==OreType.GoldNF || type==OreType.GemNF || type==OreType.GemGNF || type==OreType.GemBNF)oreH/=1.6;
@@ -115,9 +142,10 @@ public class OreTile extends Tile {
 		level.add(new SmashParticle(x * 16, y * 16));
 		Sound.monsterHurt.play();
 
-			if(type==OreType.IronNF || type==OreType.GoldNF || type==OreType.GemNF || type==OreType.GemGNF || type==OreType.GemBNF)
-				level.dropItem(x * 16 + 8, y * 16 + 8, count/2, type.getOre()); //drop less
-			else level.dropItem(x * 16 + 8, y * 16 + 8, count, type.getOre());
+			if(type.name().contains("NF")) {
+				if (Math.random() < dropProb/2)
+					level.dropItem(x * 16 + 8, y * 16 + 8, count / 2, type.getOre()); //drop less
+			}else{ if(Math.random()<dropProb)level.dropItem(x * 16 + 8, y * 16 + 8, count, type.getOre());}
 		}
 	}
 

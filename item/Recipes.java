@@ -12,7 +12,8 @@ public class Recipes {
 	public static final ArrayList<Recipe> enchantRecipes = new ArrayList<>();
 	public static final ArrayList<Recipe> craftRecipes = new ArrayList<>();
 	public static final ArrayList<Recipe> loomRecipes = new ArrayList<>();
-	
+	public static ArrayList<Recipe> shardForgeRecipes = new ArrayList<>();
+
 	static {
 		stonecutterRecipes.add(new Recipe("Stone Brick_2", "Stone_2"));
 		stonecutterRecipes.add(new Recipe("Stone Door_1", "Stone Brick_5"));
@@ -21,7 +22,7 @@ public class Recipes {
 		stonecutterRecipes.add(new Recipe("Obsidian Door_1", "Obsidian Brick_5"));
 		stonecutterRecipes.add(new Recipe("Ornate stone_1", "Stone_2"));
 		stonecutterRecipes.add(new Recipe("Rocky stone_1","Stone_2"));
-		stonecutterRecipes.add(new Recipe("Tile obsidian_1", "Obsidian_6"));
+		stonecutterRecipes.add(new Recipe("Ornate obsidian_1", "Obsidian_6"));
 		stonecutterRecipes.add(new Recipe("Cross obsidian_1", "Obsidian_6"));
 
 		craftRecipes.add(new Recipe("Workbench_1", "Wood_10"));
@@ -142,36 +143,50 @@ public class Recipes {
 		anvilRecipes.add(new Recipe("Gold Lantern_1", "gold_10", "slime_5", "glass_4"));
 		anvilRecipes.add(new Recipe("Gem Lantern_1", "gold lantern_1", "gold_1", "gem_40"));
 		anvilRecipes.add(new Recipe("Iron Sword_1", "iron_5","Stick_6"));
-		anvilRecipes.add(new Recipe("Iron Claymore_1", "Iron Sword_1", "shard_15"));
-		anvilRecipes.add(new Recipe("Iron Claymore_1", "Iron Sword_1", "blood shard_20"));
+
 		anvilRecipes.add(new Recipe("Iron Axe_1", "Stick_6", "iron_5"));
 		anvilRecipes.add(new Recipe("Iron Hoe_1", "Stick_6", "iron_5"));
 		anvilRecipes.add(new Recipe("Iron Pickaxe_1", "Stick_6", "iron_5"));
 		anvilRecipes.add(new Recipe("Iron Shovel_1", "Stick_6", "iron_5"));
-		anvilRecipes.add(new Recipe("Iron Bow_1", "Stick_6", "iron_5", "string_2"));
+		anvilRecipes.add(new Recipe("Iron Bow_1",  "iron_5", "string_2"));
 		anvilRecipes.add(new Recipe("Gold Sword_1", "Stick_6", "gold_5"));
-		anvilRecipes.add(new Recipe("Gold Claymore_1", "Gold Sword_1", "shard_15"));
-		anvilRecipes.add(new Recipe("Gold Claymore_1", "Gold Sword_1", "blood shard_35"));
+
 		anvilRecipes.add(new Recipe("Gold Axe_1", "Stick_6", "gold_5"));
 		anvilRecipes.add(new Recipe("Gold Hoe_1", "Stick_6", "gold_5"));
 		anvilRecipes.add(new Recipe("Gold Pickaxe_1", "Stick_6", "gold_5"));
 		anvilRecipes.add(new Recipe("Gold Shovel_1", "Stick_6", "gold_5"));
-		anvilRecipes.add(new Recipe("Gold Bow_1", "Stick_6", "gold_5", "string_2"));
+		anvilRecipes.add(new Recipe("Gold Bow_1",  "gold_5", "string_2"));
 		anvilRecipes.add(new Recipe("Gem Sword_1", "Stick_6", "gem_50"));
-		anvilRecipes.add(new Recipe("Gem Claymore_1", "Gem Sword_1", "shard_15"));
+
 		anvilRecipes.add(new Recipe("Gem Axe_1", "Stick_6", "gem_50"));
 		anvilRecipes.add(new Recipe("Gem Hoe_1", "Stick_6", "gem_50"));
 		anvilRecipes.add(new Recipe("Gem Pickaxe_1", "Stick_6", "gem_50"));
 		anvilRecipes.add(new Recipe("Gem Shovel_1", "Stick_6", "gem_50"));
-		anvilRecipes.add(new Recipe("Gem Bow_1", "Stick_6", "gem_50", "string_2"));
-		anvilRecipes.add(new Recipe("Shears_1", "Iron_4"));
+		anvilRecipes.add(new Recipe("Gem Bow_1",  "gem_50", "string_2"));
+		anvilRecipes.add(new Recipe("Obsidium Sword_1", "Stick_6", "obsidium_6"));
+
+		anvilRecipes.add(new Recipe("Obsidium Axe_1", "Stick_6", "obsidium_6"));
+		anvilRecipes.add(new Recipe("Obsidium Hoe_1", "Stick_6", "obsidium_6"));
+		anvilRecipes.add(new Recipe("Obsidium Pickaxe_1", "Stick_6", "obsidium_6"));
+		anvilRecipes.add(new Recipe("Obsidium Shovel_1", "Stick_6", "obsidium_6"));
+		anvilRecipes.add(new Recipe("Obsidium Bow_1", "Stick_6", "obsidium_6", "string_2"));
+		anvilRecipes.add(new Recipe("Iron Shears_1", "Iron_4"));
+		anvilRecipes.add(new Recipe("Gold Shears_1", "Iron_1","Gold_3"));
+		anvilRecipes.add(new Recipe("Gem Shears_1", "Iron_1","gem_20"));
+		anvilRecipes.add(new Recipe("Obsidium Shears_1", "Iron_1","Obsidium_3"));
 		anvilRecipes.add(new Recipe("Lapis Block_1", "Lapis_25"));
 		anvilRecipes.add(new Recipe("Iron Block_1", "Iron_15"));
 		anvilRecipes.add(new Recipe("Gold Block_1", "Gold_15"));
 		anvilRecipes.add(new Recipe("Gem Block_1", "Gem_75"));
+		anvilRecipes.add(new Recipe("Obsidium Block_1", "Obsidium_15"));
+		anvilRecipes.add(new Recipe("Coal Block_1", "Coal_35"));
 		anvilRecipes.add(new Recipe("Lapis_24", "Lapis Block_1"));
 		anvilRecipes.add(new Recipe("Iron_14", "Iron Block_1"));
 		anvilRecipes.add(new Recipe("Gem_74", "Gem Block_1"));
+		anvilRecipes.add(new Recipe("Obsidium_15", "Obsidium Block_1"));
+		anvilRecipes.add(new Recipe("Coal_34", "Coal Block_1"));
+
+		anvilRecipes.add(new Recipe("Shardforge_1", "Obsidium_10","anvil_1","furnace_1","shard_10"));
 
 		furnaceRecipes.add(new Recipe("iron_1", "iron Ore_4", "coal_1"));
 		furnaceRecipes.add(new Recipe("iron_1", "iron Ore_4", "charcoal_1"));
@@ -180,6 +195,8 @@ public class Recipes {
 		furnaceRecipes.add(new Recipe("glass_1", "sand_4", "coal_1"));
 		furnaceRecipes.add(new Recipe("glass_1", "sand_4", "charcoal_1"));
 		furnaceRecipes.add(new Recipe("charcoal_1", "wood_2"));
+		furnaceRecipes.add(new Recipe("obsidium_1", "iron_1","obsidium ore_6", "coal_4"));
+		furnaceRecipes.add(new Recipe("obsidium_1", "iron_1","obsidium ore_6", "charcoal_4"));
 
 		ovenRecipes.add(new Recipe("cooked pork_1", "raw pork_1", "coal_1"));
 		ovenRecipes.add(new Recipe("cooked pork_1", "raw pork_1", "charcoal_1"));
@@ -208,6 +225,19 @@ public class Recipes {
 		enchantRecipes.add(new Recipe("Air Totem_1", "gold_10", "cloud shard_30", "gem_1","Lapis_3","Demonicolon_1","Cloud cactus_3"));
 		enchantRecipes.add(new Recipe("Moonlight Totem_1", "gold_5", "Gold apple_1","Lapis_30","Demonicolon_1"));
 		enchantRecipes.add(new Recipe("Time Totem_1", "time potion_1","iron_3","lapis_2","cloud shard_1"));
+
+		shardForgeRecipes.add(new Recipe("Iron Claymore_1", "Iron Sword_1", "shard_15","lava bucket_1"));
+		shardForgeRecipes.add(new Recipe("Iron Claymore_1", "Iron Sword_1", "blood shard_20","lava bucket_1"));
+		shardForgeRecipes.add(new Recipe("Iron Hammer_1", "Iron pickaxe_1","Iron axe_1", "shard_15","lava bucket_1"));
+		shardForgeRecipes.add(new Recipe("Iron Hammer_1", "Iron pickaxe_1","Iron axe_1", "blood shard_25","lava bucket_1"));
+		shardForgeRecipes.add(new Recipe("Gold Claymore_1", "Gold Sword_1", "shard_15","lava bucket_1"));
+		shardForgeRecipes.add(new Recipe("Gold Claymore_1", "Gold Sword_1", "blood shard_35","lava bucket_1"));
+		shardForgeRecipes.add(new Recipe("Gold Hammer_1", "Gold pickaxe_1","Gold axe_1", "blood shard_40","lava bucket_1"));
+		shardForgeRecipes.add(new Recipe("Gold Hammer_1", "Gold pickaxe_1","Gold axe_1", "shard_15","lava bucket_1"));
+		shardForgeRecipes.add(new Recipe("Gem Claymore_1", "Gem Sword_1", "shard_15","lava bucket_1"));
+		shardForgeRecipes.add(new Recipe("Gem Hammer_1", "Gold Pickaxe_1","Gem axe_1", "shard_15","lava bucket_1"));
+		shardForgeRecipes.add(new Recipe("Obsidium Claymore_1", "Obsidium Sword_1", "shard_15","lava bucket_1"));
+		shardForgeRecipes.add(new Recipe("Obsidium Hammer_1", "Obsidium Pickaxe_1","Obsidium Axe_1", "shard_15","lava bucket_1"));
 	}
 
 }

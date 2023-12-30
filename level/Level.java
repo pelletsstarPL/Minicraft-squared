@@ -11,18 +11,13 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 
-import minicraft.core.Game;
-import minicraft.core.Network;
-import minicraft.core.Updater;
-import minicraft.core.World;
+import minicraft.core.*;
 import minicraft.core.io.Settings;
 import minicraft.entity.ClientTickable;
 import minicraft.entity.Entity;
 import minicraft.entity.ItemEntity;
 import minicraft.entity.Spark;
-import minicraft.entity.furniture.Chest;
-import minicraft.entity.furniture.DungeonChest;
-import minicraft.entity.furniture.Spawner;
+import minicraft.entity.furniture.*;
 import minicraft.entity.mob.*;
 import minicraft.entity.particle.Particle;
 import minicraft.gfx.Point;
@@ -33,14 +28,25 @@ import minicraft.level.tile.StairsTile;
 import minicraft.level.tile.Tile;
 import minicraft.level.tile.Tiles;
 import minicraft.level.tile.TorchTile;
+import org.jetbrains.annotations.Nullable;
 import sun.tools.jconsole.JConsole;
+
 
 public class Level {
 	private Random random = new Random();
 	//private static final String[] levelNames = {"Sky", "Surface", "Iron","Transit-Iron/Gold" "Gold","Transit-Gold/Lava", "Lava", "Dungeon"}; upcoming
-	private static final String[] levelNames = {"Sky", "Surface", "Iron","Iron/Gold","Gold", "Lava", "Dungeon"};
-	public static String getLevelName(int depth) { return levelNames[-1 * depth + 1]; }
-	public static String getDepthString(int depth) { return "Level " + (depth < 0 ? "B" + (-depth) : depth); }
+	private static final String[] levelNames = {"Sky", "Surface", "Iron","Iron/Gold","Gold", "Gold/Lava ","Lava", "Dungeon"};
+	private static final String[] obvLevelNames = {"Dungeon Bridges","Surface","Dungeon F1","Dungeon F2",};
+
+	private static String nameMatrix[][] = {levelNames, obvLevelNames};
+
+	public static String getLevelName(int depth) { return getLevelName(depth, 0); }
+	public static String getLevelName(int depth,int realm) { return nameMatrix[realm][-1 * depth + 1]; }
+
+	
+	public static String getDepthString(int depth,String realm) { return "Level("+realm+") " + (depth < 0 ? "B" + (-depth) : depth); }
+
+	public static String getDepthString(int depth) { return  getDepthString(depth,"Overworld"); } //OVERWORLD by default
 	
 	private static final int MOB_SPAWN_FACTOR = 100; // The chance of a mob actually trying to spawn when trySpawn is called equals: mobCount / maxMobCount * MOB_SPAWN_FACTOR. so, it basically equals the chance, 1/number, of a mob spawning when the mob cap is reached. I hope that makes sense...
 
@@ -53,7 +59,10 @@ public class Level {
 	public final int depth; // Depth level of the level
 	public int monsterDensity = 16; // Affects the number of monsters that are on the level, bigger the number the less monsters spawn.
 	public int maxMobCount;
+
+	public String realm; //realm determines to which floor list we assign a level
 	public int chestCount;
+	public int mimicCount;
 	public int mobCount = 0;
 	int stairStructCoordx =0;
 	int stairStructCoordy =0;
@@ -112,21 +121,30 @@ public class Level {
 	}
 	
 	public void updateMobCap() {
-		maxMobCount = 150 + 150 * Settings.getIdx("diff");
-		if (depth == 1){  maxMobCount  /= 2  ;maxMobCount+=(Updater.isbloody ? 100 : 0);};
-		if (depth == 0) maxMobCount = (maxMobCount + (Updater.isbloody ? 100 : 0)) * 2 / 3;
-		if (depth == -5) maxMobCount = maxMobCount * 2 / 3;
+		if(realm=="overworld") {
+			maxMobCount = 150 + 150 * Settings.getIdx("diff");
+			if (depth == 1) {
+				maxMobCount /= 2;
+				maxMobCount += (Updater.isbloody ? 100 : 0);
+			}
+			if (depth == 0) maxMobCount = (maxMobCount + (Updater.isbloody ? 100 : 0)) * 2 / 3;
+		}else maxMobCount = 240;
 	}
 
-	public Level(int w, int h, long seed, int level, Level parentLevel, boolean makeWorld) {
+	public Level(int w, int h, long seed, int level, Level parentLevel, boolean makeWorld,String realm) {
+		this.realm=realm;
 		depth = level;
 		this.w = w;
 		this.h = h;
 		this.seed = seed;
 		short[][] maps; // Multidimensional array (an array within a array), used for the map
-		
-		if (level != -5 && level != 0)
-			monsterDensity = 8;
+
+		if ( realm=="overworld" &&  level != -6 && level != 0)
+			monsterDensity =  8;
+
+
+		if (realm=="dungeon realm")
+			monsterDensity = 10;
 	
 		updateMobCap();
 		
@@ -137,9 +155,11 @@ public class Level {
 			return;
 		}
 		
-		if (Game.debug) System.out.println("Making level " + level + "...");
-		
-		maps = LevelGen.createAndValidateMap(w, h, level);
+		if (Game.debug) System.out.println("Making level " + level + "... for realm:" + realm);
+		switch(realm) {
+			default:maps = LevelGen.createAndValidateMap(w, h, level);break;
+			case "dungeon realm":maps = LevelGenObV.createAndValidateMap(w,h ,level);break;
+		}
 		if (maps == null) {
 			System.err.println("Level Gen ERROR: Returned maps array is null");
 			return;
@@ -147,123 +167,36 @@ public class Level {
 		
 		tiles = maps[0]; // Assigns the tiles in the map
 		data = maps[1]; // Assigns the data of the tiles
-		if(level<=-1 && level>=-3)generateMines();
-		if (level < 0)
-			generateSpawnerStructures();
 
-		if( level == -3)
-			generateFountains();
-		if( level >=-2 && level<=-1)
-			generateStairStructures();
-		if (level == 0){
-			generateVillages();
-			generateCastle();
-			}
-		System.out.println(stairStructCoordx + " " + stairStructCoordy);
+		switch(realm) {
+			case "overworld":	if (level <= -1 && level >= -3) generateMines();
+			if (level < 0)
+				generateSpawnerStructures();
 
-		
-		if (parentLevel != null) { // If the level above this one is not null (aka, if this isn't the sky level)
-			for (int y = 0; y < h; y++) { // Loop through height
-				for (int x = 0; x < w; x++) { // Loop through width
-					if (parentLevel.getTile(x, y) == Tiles.get("Stairs Down")) { // If the tile in the level above the current one is a stairs down then...
-						if (level == -5) /// Make the obsidian wall formation around the stair in the dungeon level
-							Structure.dungeonGate.draw(this, x, y);
-
-						else if (level == 0) { // Surface
-							if (Game.debug) System.out.println("Setting tiles around " + x + "," + y + " to hard rock");
-							setAreaTiles(x, y, 1, Tiles.get("Hard Rock"), 0); // surround the sky stairs with hard rock
-						}
-						else // Any other level, the up-stairs should have dirt on all sides.
-						if(level==-1) setAreaTiles(x, y, (Math.random()<0.04 ? 2 : 1), Tiles.get("Small stones"), 0);
-						else if(level==-3)
-							if(getTile(x,y)==Tiles.get("moss"))setAreaTiles(x, y, (Math.random()<0.04 ? 2 : 1), Tiles.get("Moss"), 0);
-							else setAreaTiles(x, y, (Math.random()<0.04 ? 2 : 1), Tiles.get("Dirt"), 0);
-						else setAreaTiles(x, y, (Math.random()<0.034 ? 2 : 1), Tiles.get("dirt"), 0);
-						if(parentLevel.getTile(x, y).name.contains("STAIRS DOWN")){
-							if((x%9>6 || y%9<2) && depth<0){
-								Structure.stairsRuinsUp.draw(this,x,y);
-							}
-							else
-								setTile(x, y, Tiles.get("Stairs Up"));
-								if ((x % 12 == 0 || y % 12 == 0) && depth < -1)
-									setData(x, y, 30); //blocked upstairs will start appearing at -2 to let player enter the caverns for iron at last
-
-						}
-					}else if(parentLevel.getTile(x, y) == Tiles.get("Obsidian Stairs Down")){
-						Structure.dungeonGate.draw(this, x, y);
-						setTile(x, y, Tiles.get("Obsidian Stairs Up"));
-					}
-				}
-			}
-		} else { // This is the sky level
-			int spawnedS=0;
-			while(spawnedS<Math.round(this.w/3.5)){
-				int x = random.nextInt(this.w - 7);
-				int y = random.nextInt(this.h - 5);
-				int type=random.nextInt(4);
-				if ((this.getTile(x, y) == Tiles.get("Cloud") || this.getTile(x , y) == Tiles.get("Skygrass") || this.getTile(x, y) == Tiles.get("Cloud tallgrass")) || this.getTile(x, y) == Tiles.get("sky tree") || this.getTile(x, y) == Tiles.get("Conifer")) { //Skyrocks that generate on skyfloor. Contains cloud cacti and skystone
-					switch (type) {
-						case 0:
-							Structure.skyrock.draw(this, x, y);
-							break;
-						case 1:
-							Structure.skyrock2.draw(this, x, y);
-							break;
-						case 2:
-							Structure.skyrock3.draw(this, x, y);
-							break;
-						case 3:
-							Structure.skyrock4.draw(this, x, y);
-							break;
-						case 4:
-							Structure.skyrock5.draw(this, x, y);
-							break;
-					}
-				}
-				spawnedS++;
-			}
-			boolean placedHouse = false;
-			while (!placedHouse) {
-				
-				int x = random.nextInt(this.w - 7);
-				int y = random.nextInt(this.h - 5);
-
-				if ((this.getTile(x - 3, y - 2) == Tiles.get("Cloud") || this.getTile(x - 3, y - 2) == Tiles.get("Skygrass")) && (this.getTile(x + 3, y - 2) == Tiles.get("Cloud") || this.getTile(x + 3, y - 2) == Tiles.get("Skygrass") || this.getTile(x + 3, y + 2) == Tiles.get("cloud tallgrass")) ) {
-					if ((this.getTile(x - 3, y + 2) == Tiles.get("Cloud") || this.getTile(x - 3, y + 2) == Tiles.get("Skygrass")) && (this.getTile(x + 3, y + 2) == Tiles.get("Cloud") || this.getTile(x + 3, y + 2) == Tiles.get("Skygrass") || this.getTile(x + 3, y + 2) == Tiles.get("cloud tallgrass")) ) {
-						Structure.airWizardHouse.draw(this, x, y);
-						
-						placedHouse = true;
-					}
-				}
-			}
-			boolean placedUpstairs = false;
-			while (!placedUpstairs) {
-
-				int x = random.nextInt(this.w - 7);
-				int y = random.nextInt(this.h - 5);
-
-				String[] allowed=new String[]{"cloud","skygrass","cloud flower","cloud tallgrass","cloud cactus","sky tree","sky conifer"};
-				if (Arrays.asList(allowed).contains(this.getTile(x - 1, y - 1).name.toLowerCase()) && Arrays.asList(allowed).contains(this.getTile(x + 1, y - 1).name.toLowerCase())) {
-					if (Arrays.asList(allowed).contains(this.getTile(x - 1, y + 1).name.toLowerCase()) && Arrays.asList(allowed).contains(this.getTile(x + 1, y + 1).name.toLowerCase())) {
-						if (Game.debug) System.out.println("Setting tiles around " + x + "," + y + " to hard rock II");
-							setAreaTiles(x, y, 1, Tiles.get("Hard Rock II"), 1); // surround the sky stairs with hard rock
-
-						placedUpstairs = true;
-					}
-				}
-			}
-
+			if (level == -3 || level == -4)
+				//actually fountains
+				generateVillages(null,new String[]{"azalea","bramble","deepslate","deepslateg","fungus spores","fungus tree","fungus","ground rock","lily pad","moss","reed","small fungus tree","stone ore","water"},new Structure[]{Structure.stoneFountain,Structure.stoneRuinHouseTwoDoor,Structure.stoneFountain,Structure.stoneFountain2,Structure.stoneFountain3,Structure.stoneFountain4,Structure.stoneRuinHouseNormal},5,5,1.75f); //we can even generate old fountain ruins and do even more
+			if (level >= -4 && level <= -1)
+				generateStairStructures();
+			if (level == 0) {
+				generateVillages(new String[]{"water","lava"},new String[]{"coarse dirt","dirt","fern","flower","grass","reed","small flower","small rose","small stones","sunflower","tallgrass","tree"}, new Structure[]{Structure.stoneRuinHouseNormal,Structure.stoneRuinHouseTwoDoor,Structure.stoneFountainDry,Structure.villageFarmhouseTwoDoor,Structure.villageFarmhouseNormal,Structure.villageHouseNormal,Structure.villageHouseTwoDoor},5,"villagehouse");
+				generateCastle();
+			}break;
+			case "dungeon realm":break;
 		}
-		
-		checkChestCount(false);
-		
-		checkAirWizard();
-		
-		if (Game.debug) printTileLocs(Tiles.get("Stairs Down"));
+
+		switch(realm) {
+			case "overworld":overworld(level, parentLevel);break;
+			case "dungeon realm":obv(level, parentLevel);break;
+		}
 	}
 
 	public Level(int w, int h, int level, Level parentLevel, boolean makeWorld) {
-		this(w, h, 0, level, parentLevel, makeWorld);
+		this(w, h, 0, level, parentLevel, makeWorld,"overworld"); //Overworld by default
+	}
+
+	public Level(int w, int h, int level, Level parentLevel, boolean makeWorld,String realm) {
+		this(w, h, 0, level, parentLevel, makeWorld,realm); //Support other realms
 	}
 
 	/** Level which the world is contained in */
@@ -297,44 +230,71 @@ public class Level {
 			}
 		}
 	}
+
+	private void checkMimics(int min,int max) {
+		if(this.mimicCount<10 * (w/128)) {
+			if ((depth <= -1 && this.realm == "dungeon realm") || (depth == -6 && this.realm == "overworld")) { // Basically if this is dungeon floor
+				int numChests = 0;
+				for (int i = numChests; i < 10 * (w / 128) / 2; i++) {
+					MimicChest d = new MimicChest(random.nextInt(max - min + 1) + min);
+					boolean addedchest = false;
+					while (!addedchest) { // Keep running until we successfully add a Mimic
+
+						// Pick a random tile:
+						int x2 = random.nextInt(w - ((w / 128) * 12)) + ((w / 128) * 12);
+						int y2 = random.nextInt(h - ((h / 128) * 12)) + ((h / 128) * 12);
+						if (getTile(x2, y2) == Tiles.get("Obsidian") || getTile(x2, y2) == Tiles.get("dirt") || getTile(x2, y2) == Tiles.get("raw Obsidian") || getTile(x2, y2) == Tiles.get("Dungeon tallgrass")) {
+							add(d, (x2 * 16) + 8, (y2 * 16) + 8, Arrays.asList(World.realms).indexOf(this.realm));
+							this.mimicCount++;
+							addedchest = true;
+						}
+					}
+				}
+			}
+		}
+	}
 	
 	public void checkChestCount() {
 		checkChestCount(true);
 	}
+
 	private void checkChestCount(boolean check) {
+		// If the level is the dungeon, and we're not just loading the world...
+		if (depth != -6 && realm == "overworld") return;
+		if (depth<0 && realm == "dungeon realm") return;
 
-			// If the level is the dungeon, and we're not just loading the world...
-			if (depth != -5) return;
+		int numChests = 0;
 
-			int numChests = 0;
+		if (check) {
+			for (Entity e : entitiesToAdd)
+				if (e instanceof DungeonChest)
+					numChests++;
+			for (Entity e : entities)
+				if (e instanceof DungeonChest)
+					numChests++;
+		}
+		String[] allowed = {"DIRT","DUNGEON TALLGRASS","FUNGUS","OBSIDIAN","ORNATE OBSIDIAN","RAW OBSIDIAN"};
+		/// Make DungeonChests!
+		for (int i = numChests; i < 10 * (w / 128); i++) {
+			DungeonChest d = new DungeonChest(true);
+			if(i%10==0)d = new DungeonChest(true,false,true);
+			d.setRealmId(Arrays.binarySearch(World.realms,this.realm));
+			boolean addedchest = false;
 
-			if (check) {
-				for (Entity e : entitiesToAdd)
-					if (e instanceof DungeonChest)
-						numChests++;
-				for (Entity e : entities)
-					if (e instanceof DungeonChest)
-						numChests++;
-				if (Game.debug) System.out.println("Found " + numChests + " chests.");
-			}
+			while (!addedchest) { // Keep running until we successfully add a DungeonChest
 
-			if(!AirWizard.beaten) {
-			/// Make DungeonChests!
-			for (int i = numChests; i < 10 * (w / 128); i++) {
-				DungeonChest d = new DungeonChest(true);
-				boolean addedchest = false;
-				while (!addedchest) { // Keep running until we successfully add a DungeonChest
-
-					// Pick a random tile:
-					int x2 = random.nextInt(w-((w/128)*12)) + ((w/128)*12);
-					int y2 = random.nextInt(h-((h/128)*12)) + ((h/128)*12);
-					if (getTile(x2, y2) != Tiles.get("Obsidian Wall") && getTile(x2,y2) != Tiles.get("Obsidian door") && getTile(x2,y2) != Tiles.get("Obsidian stairs up")) {
-						add(d,(x2 * 16) + 8, (y2 * 16) + 8);
-						chestCount++;
-						addedchest = true;
-					}
+				// Pick a random tile:
+				int x2 = random.nextInt(16 * w) / 16;
+				int y2 = random.nextInt(16 * h) / 16;
+				if(Arrays.binarySearch(allowed,getTile(x2,y2).name)>-1) {
+					d.x = x2 * 16 + 8;
+					d.y = y2 * 16 + 8;
+					d.setRealmId(Arrays.asList(World.realms).indexOf(this.realm));
+					add(d, Arrays.asList(World.realms).indexOf(this.realm));
+					this.chestCount++;
+					addedchest = true;
 				}
-			}
+				}
 		}
 	}
 
@@ -377,7 +337,8 @@ public class Level {
 
 	public void tick(boolean fullTick) {
 		int count = 0;
-		if(depth==-5)checkChestCount(true);
+		if(depth==-6 && realm=="overworld"){checkChestCount(true);if(random.nextInt(300)==0)checkMimics(1,2);}
+		if(depth<0 && realm=="dungeon realm"){if(random.nextInt(300)==0)checkMimics(0 + (-depth),2 + (-depth));checkChestCount(true);}
 		if(Updater.tickCount%100==0)updateMobCap();
 		while (entitiesToAdd.size() > 0) {
 			Entity entity = entitiesToAdd.get(0);
@@ -470,6 +431,7 @@ public class Level {
 			entitiesToRemove.remove(entity);
 		}
 		
+
 		mobCount = count;
 		
 		if (Game.isValidServer() && players.size() == 0)
@@ -505,9 +467,10 @@ public class Level {
 	}
 	public void dropItem(int x, int y, Item... items) {
 		for (Item i: items)
-			 dropItem(x, y, i);
+			 dropItem(x, y, i, Renderer.player.getRealmId());
 	}
-	public ItemEntity dropItem(int x, int y, Item i) {
+	public ItemEntity dropItem(int x, int y, Item i,int realm) {
+
 		if (Game.isValidClient())
 			System.out.println("Dropping item on client: " + i);
 		
@@ -518,6 +481,7 @@ public class Level {
 			rany = y + random.nextInt(11) - 5;
 		} while (ranx >> 4 != x >> 4 || rany >> 4 != y >> 4);
 		ItemEntity ie = new ItemEntity(i, ranx, rany);
+		ie.setRealmId(realm);
 		add(ie);
 		return ie;
 	}
@@ -536,14 +500,14 @@ public class Level {
 		screen.setOffset(0, 0);
 	}
 	
-	public void renderSprites(Screen screen, int xScroll, int yScroll) {
+	public void renderSprites(Screen screen, int xScroll, int yScroll,boolean justVisual) {
 		int xo = xScroll >> 4; // Latches to the nearest tile coordinate
 		int yo = yScroll >> 4;
 		int w = (Screen.w + 15) >> 4;
 		int h = (Screen.h + 15) >> 4;
 		
 		screen.setOffset(xScroll, yScroll);
-		sortAndRender(screen, getEntitiesInTiles(xo, yo, xo + w, yo + h));
+		sortAndRender(screen, getEntitiesInTiles(xo, yo, xo + w, yo + h),justVisual);
 		
 		screen.setOffset(0, 0);
 	}
@@ -574,13 +538,18 @@ public class Level {
 		screen.setOffset(0, 0);
 	}
 	
-	private void sortAndRender(Screen screen, List<Entity> list) {
+	private void sortAndRender(Screen screen, List<Entity> list,boolean visualOnly) {
 		list.sort(spriteSorter);
 		for (Entity e : list) {
-			if (e.getLevel() == this && !e.isRemoved())
-				e.render(screen);
-			else
-				remove(e);
+            if(visualOnly) {
+                if (e instanceof Furniture)
+                    e.render(screen); //we can freely render furnitures without any problems
+            }else{
+                if (e.getLevel() == this && !e.isRemoved())
+                    e.render(screen);
+                else
+                    remove(e);
+            }
 		}
 	}
 	
@@ -624,22 +593,34 @@ public class Level {
 		//return data[x + y * w] & 0xff //why so? We only limit ourself with that;
 		return data[x + y * w]; //allows for negative data
 	}
-	
+	/*public int[] getDataA(int x,int y){
+		if (x < 0 || y < 0 || x >= w || y >= h) return new int[]{0};
+		//return data[x + y * w] & 0xff //why so? We only limit ourself with that;
+		return new int[] {data[x + y * w]};
+	}*/
+
 	public void setData(int x, int y, int val) {
 		if (x < 0 || y < 0 || x >= w || y >= h) return;
 		data[x + y * w] = (short) val;
 	}
 	
 	public void add(Entity e) { if(e==null) return; add(e, e.x, e.y); }
+	public void add(Entity e,int realm) { if(e==null) return; add(e, e.x, e.y,realm); }
 	public void add(Entity entity, int x, int y) { add(entity, x, y, false); }
 	public void add(Entity entity, int x, int y, boolean tileCoords) {
+		add(entity, x, y, tileCoords,0); //Overworld by default
+	}
+	public void add(Entity entity, int x, int y,int realm) {
+		add(entity, x, y, false,realm); //Nontile coords by default
+	}
+	public void add(Entity entity, int x, int y, boolean tileCoords,int realm) {
 		if(entity == null) return;
 		if(tileCoords) {
 			x = x * 16 + 8;
 			y = y * 16 + 8;
 		}
 		entity.setLevel(this, x, y);
-		
+		entity.setRealmId(realm);
 		entitiesToRemove.remove(entity); // To make sure the most recent request is satisfied.
 		if (!entitiesToAdd.contains(entity))
 			entitiesToAdd.add(entity);
@@ -658,7 +639,7 @@ public class Level {
 			return; // Hopefully will make mobs spawn a lot slower.
 		
 		boolean spawned = false;
-		for (int i = 0; i < (Updater.isbloody && depth>=0 ? 80 : 30) && !spawned; i++) { //more spawn attempts during bloodmoon. Bloodmoon affects surface and above
+		for (int i = 0; i < (Updater.isbloody && depth==0 ? 82 : (depth==-1 || depth == 0 ? 40 : 80)) && !spawned; i++) { //more spawn attempts during bloodmoon. Bloodmoon affects surface and above
 			int minLevel = 1, maxLevel = 1;
 			switch(depth){
 				case 1:minLevel=3+(Updater.isbloody ? 1 : 0);maxLevel=4;break;
@@ -666,9 +647,9 @@ public class Level {
 				case -1:minLevel=1;maxLevel=2;break;
 				case -2:minLevel=2;maxLevel=2;break;
 				case -3:minLevel=1;maxLevel=3;break;
-				case -4:minLevel=2;maxLevel=4;break;
-				case -5:minLevel=1;maxLevel=4;break;
-				case 5:minLevel=1;maxLevel=4;break;
+				case -4:minLevel=2;maxLevel=3;break;
+				case -5:minLevel=2;maxLevel=4;break;
+				case -6:minLevel=1;maxLevel=4;break;
 			}
 			
 			
@@ -679,47 +660,79 @@ public class Level {
 			//System.out.println("trySpawn on level " + depth + " of lvl " + lvl + " mob w/ rand " + rnd + " at tile " + nx + "," + ny);
 
 			// Spawns the enemy mobs; first part prevents enemy mob spawn on surface on first day, more or less.
-			if ((Updater.tickCount >= (Updater.isbloody ? 40800 : 42800) && !Updater.pastDay1 || depth != 0) && EnemyMob.checkStartPos(this, nx, ny)) { // if night or underground, with a valid tile, spawn an enemy mob.
-				double chance=Math.random();
+			if (realm.contains("overworld")) {
+			if ((Updater.tickCount >= (Updater.isbloody ? 39600 : 42800) && !Updater.pastDay1 || depth != 0) && EnemyMob.checkStartPos(this, nx, ny)) { // if night or underground, with a valid tile, spawn an enemy mob.
+				double chance = Math.random();
 
-				if (depth != -5) { // Normal mobs
+				if (depth != -6) { // Normal mobs
 
-					if (rnd < 2) add((new Wraith(Math.random()<0.05*(Game.isMode("hardcore") ? 2 : 1) && Updater.isbloody && depth>=0 && Updater.tickCount>=40800 ? 5 : lvl)), nx, ny);
-					else if (rnd >= 2 && rnd <= 40) add((new Slime(Math.random()<0.05*(Game.isMode("hardcore") ? 2 : 1) && Updater.isbloody && depth>=0  && Updater.tickCount>=40800 ? 5 : lvl)), nx, ny);
-					else if (rnd <= 75) add((new Zombie(Math.random()<0.05*(Game.isMode("hardcore") ? 2 : 1) && Updater.isbloody && depth>=0 && Updater.tickCount>=40800 ? 5 : lvl)), nx, ny);
-					else if (rnd >= 85 && chance > 0.012) add((new Skeleton(Math.random()<0.05*(Game.isMode("hardcore") ? 2 : 1) && Updater.isbloody && depth>=0  && Updater.tickCount>=40800 ? 5 : lvl)), nx, ny);
+					if (rnd < 2)
+						add((new Wraith(Math.random() < 0.05 * (Game.isMode("hardcore") ? 2 : 1) && Updater.isbloody && depth >= 0 && Updater.tickCount >= 40800 ? 5 : lvl, 0)), nx, ny);
+					else if (rnd >= 2 && rnd <= 40)
+						add((new Slime(Math.random() < 0.05 * (Game.isMode("hardcore") ? 2 : 1) && Updater.isbloody && depth >= 0 && Updater.tickCount >= 40800 ? 5 : lvl)), nx, ny);
+					else if (rnd <= 75)
+						add((new Zombie(Math.random() < 0.05 * (Game.isMode("hardcore") ? 2 : 1) && Updater.isbloody && depth >= 0 && Updater.tickCount >= 40800 ? 5 : lvl)), nx, ny);
+					else if (rnd >= 85 && chance > 0.012)
+						add((new Skeleton(Math.random() < 0.05 * (Game.isMode("hardcore") ? 2 : 1) && Updater.isbloody && depth >= 0 && Updater.tickCount >= 40800 ? 5 : lvl)), nx, ny);
 					else if (rnd >= 85 && chance <= 0.012 && depth == -3) add((new AncSkeleton(lvl)), nx, ny);
-					else
-						if(depth<1)
-						add((new Creeper(Math.random()<0.05*(Game.isMode("hardcore") ? 2 : 1) && Updater.isbloody && depth>=0 ? 5 : lvl)), nx, ny);
+					else if (depth < 1)
+						add((new Creeper(Math.random() < 0.05 * (Game.isMode("hardcore") ? 2 : 1) && Updater.isbloody && depth >= 0 ? 5 : lvl)), nx, ny);
 					if (depth < 0 && chance < 0.04) add((new Ghost()), nx, ny);
 					else if (depth >= 0 && chance < 0.09 && Updater.getTime() == Updater.Time.Night)
 						add((new Ghost()), nx, ny);
 				} else { // Special dungeon mobs
-					if (rnd <= 40) add((new Snake(lvl)), nx, ny);
+					if (Updater.tickCount % 16000 == 0 && this.mimicCount < 5 * (w / 128)) {
+						this.mimicCount++;
+						add((new MimicChest(-(depth + 1) + 1 + random.nextInt(2),Math.random()<0.05)), nx, ny, 0);
+					}
+					if (rnd <= 30) add((new FireSage(lvl)), nx, ny);
+					else if (rnd >= 30 && rnd <= 40) add((new Snake(lvl, false)), nx, ny);
 					else if (rnd <= 75) add((new Knight(lvl)), nx, ny);
-					else if (rnd <=80) add((new Wraith(4)), nx, ny);
-					else if (rnd >= 85) add((new Snake(lvl)), nx, ny);
+					else if (rnd <= 80) add((new Wraith(4, 0)), nx, ny);
+					else if (rnd >= 85) add((new Snake(lvl, false)), nx, ny);
 					else add((new Knight(lvl)), nx, ny);
-					if(chance<0.04) add((new Ghost()), nx, ny);
+					if (chance < 0.04) add((new Ghost()), nx, ny);
+
 				}
 				//if(depth==1)if (rnd <= 75) add((new Zombie(lvl)), nx, ny);
 				spawned = true;
 			}
-			
-			if (depth == 0 && PassiveMob.checkStartPos(this, nx, ny) && i<31) {
-				// Spawns the friendly mobs.
-				if (rnd <= (Updater.getTime() == Updater.Time.Night ? 22 : 33)) add((new Cow()), nx, ny);
-				else if (rnd >= 68) add((new Pig()), nx, ny);
-				else add((new Sheep()), nx, ny);
-				
-				spawned = true;
-			}
-			if(depth==1) {
-				int ran=random.nextInt(200);
-				if(mobCount<75 && ran==14)	add((new Clallay()),nx,ny);
-				spawned=true;
 
+				if (depth == 0 && PassiveMob.checkStartPos(this, nx, ny) && i < 31) {
+					// Spawns the friendly mobs.
+					if (rnd <= (Updater.getTime() == Updater.Time.Night ? 22 : 33)) add((new Cow()), nx, ny);
+					else if (rnd >= 68) add((new Pig()), nx, ny);
+					else add((new Sheep()), nx, ny);
+
+					spawned = true;
+				}
+				if (depth == 1) {
+					int ran = random.nextInt(200);
+					if (mobCount < 75 && ran == 14) add((new Clallay()), nx, ny);
+					spawned = true;
+
+				}
+			}else  if (realm.contains( "dungeon")){
+				switch(depth){
+					case 1:minLevel=2;maxLevel=5;break;
+					case 0:minLevel=1;maxLevel=4;break;
+					case -1:minLevel=2;maxLevel=4;break;
+					case -2:minLevel=3;maxLevel=5;break;
+				}
+				lvl = random.nextInt(maxLevel - minLevel + 1) + minLevel;
+				 rnd = random.nextInt(310);
+				 nx = random.nextInt(w) * 16 + 8;ny = random.nextInt(h) * 16 + 8;
+				 if( EnemyMob.checkStartPos(this, nx, ny)){
+					 if(rnd <=20)add((new AncSkeleton(2)),nx,ny,1);
+			else if (rnd < 50)add((new FireSage(lvl)),nx,ny,1);
+				else if (rnd >= 50 && rnd <= 80) add((new Snake(lvl,false)), nx, ny,1);
+				else if(rnd > 80 & rnd<= 210) add((new Knight(  lvl)), nx, ny,1);
+				//here for obv
+				if(Updater.tickCount%16000==0 && this.mimicCount < 5 * (w/128)  && depth < 0) {
+					this.mimicCount++;
+					add((new MimicChest(-(depth + 1) + 1 + random.nextInt(2))), nx, ny, 1);
+				}
+				}
 			}
 		}
 	}
@@ -949,7 +962,7 @@ public class Level {
 	private void generateStairStructures() {
 		int xx = random.nextInt(w - 20) + 10;
 		int yy = random.nextInt(h - 20) + 10;
-		for (int i = 0; i < w / 128 - (w > 255 ? 1 : 0);i++) {
+		for (int i = 0; i < w / 128;i++) {
 			while ((getTile(xx, yy).name.contains("ROCK") || getTile(xx, yy).name.contains("ORE"))) {
 				xx = random.nextInt(w - 20) + 10;
 				yy = random.nextInt(h - 20) + 10;
@@ -958,7 +971,7 @@ public class Level {
 
 			Structure.stairsRuinsDown.draw(this, xx, yy);
 
-		}//1 for 128 and 256 and 2 for 512
+		}
 	}
 
 	private void generateSpawnerStructures() {
@@ -969,16 +982,16 @@ public class Level {
 				int r = random.nextInt(5);
 
 				if (r == 1) {
-					if (depth == -4)
+					if (depth <= -4)
 						m = new Skeleton(3);
 					else if (depth != -3) m = new Skeleton(-depth);
 					else m = new AncSkeleton(1);
 				} else if (r == 2 || r == 0) {
-					if (depth == -4) m = new Slime(3);
+					if (depth <= -4) m = new Slime(3);
 					else if (depth == -3) m = new Slime(2);
 					else m = new Slime(-depth);
 				} else {
-					if (depth == -4) m = new Zombie(3);
+					if (depth <= -4) m = new Zombie(3);
 					else if (depth == -3) m = new Zombie(2);
 					else m = new Zombie(-depth);
 				}
@@ -1107,7 +1120,7 @@ public class Level {
 									break;
 							}
 						}
-					} else if (depth == -4) {
+					} else if (depth <= -4 && depth>= -5) {
 						int type = random.nextInt(3);
 
 						switch (type) {
@@ -1298,150 +1311,95 @@ public class Level {
 		}
 	}
 	}
-	private void generateVillages() {
+
+
+	/**
+	 * VOID generateVillages
+	 * @param allowed is for tiles we can start settling village on
+	 * @param banned is for tiles we can't settle buildings on
+	 * @param structures is for list of structures we will use for worldgen. We will be rolling structure every time
+	 * @param proportion is for proportion of villages count and tries for each village
+	 *   @param lootTable defines table of loot that will be used to generate random items inside chests found in the village
+	 */
+	private void generateVillages(@Nullable String banned[],String[] allowed,Structure[] structures,int horizontalOffset,int verticalOffset,@Nullable String lootTable,float proportion) {
 		int lastVillageX = 0;
 		int lastVillageY = 0;
-		for (int i = 0; i < w / 128 * 2; i++) {
+
+		for (int i = 0; i <(int)(( w /128) * (proportion)); i++) {
 			// Makes 2-8 villages based on world size
 
-			for (int t = 0; t < 10; t++) {
+		for (int t = 0; t < 10 * proportion; t++) {
 				// Tries 10 times for each one
 
 				int x = random.nextInt(w);
 				int y = random.nextInt(h);
 
-				// Makes sure the village isn't to close to the previous village
-				if ((getTile(x, y) == Tiles.get("grass")) || (getTile(x, y) == Tiles.get("tall grass")) || (getTile(x, y) == Tiles.get("oak")) || (getTile(x, y) == Tiles.get("birch")) || (getTile(x, y) == Tiles.get("conifer")) || (getTile(x, y) == Tiles.get("flower") || (getTile(x, y) == Tiles.get("sunflower")) || (getTile(x, y) == Tiles.get("small flower")) || (getTile(x, y) == Tiles.get("rose")) || (getTile(x, y) == Tiles.get("small rose")) || (getTile(x, y) == Tiles.get("snow"))) && (Math.abs(x - lastVillageX) > 16 && Math.abs(y - lastVillageY) > 16)) {
+				// Makes sure the village isn't to close to the previous village and checks if tile can be used for setting up a village
+				if (Arrays.binarySearch(allowed, getTile(x, y).name.toLowerCase())>-1&&  (Math.abs(x - lastVillageX) > 16 && Math.abs(y - lastVillageY) > 16)) {
 					lastVillageX = x;
 					lastVillageY = y;
 
 					// A number between 2 and 5
 					int numHouses = random.nextInt(4) + 2;
-
 					// Loops for each house in the village
 					for (int hs = 0; hs < numHouses; hs++) {
 						boolean hasChest = random.nextBoolean();
-						boolean twoDoors = random.nextBoolean();
+
 						int overlay = random.nextInt(2) + 1;
-
 						// Basically just gets what offset this house should have from the center of the village
-						int xo = hs == 0 || hs == 3 ? -4 : 4;
-						int yo = hs < 2 ? -4 : 4;
-						xo += random.nextInt(5) - 2;
-						yo += random.nextInt(5) - 2;
-						double stonev=Math.random();
-						int houseType=random.nextInt(5);
-						if (stonev > 0.5) {
-							if (twoDoors) {
-								switch(houseType) {
-									case 0:Structure.villageHouseTwoDoor.draw(this, x + xo, y + yo);break;
-									case 1:Structure.villageFarmhouseTwoDoor.draw(this, x + xo, y + yo);break;
-									case 2:Structure.villageStonehouseTwoDoor.draw(this, x + xo, y + yo);break;
-									case 3: case 4:
-										if(Settings.get("Theme").equals("Hell") || Settings.get("Theme").equals("Desert")) {
-											int fountvar = random.nextInt(2);
-											switch(fountvar){
-												case 0:Structure.stoneFountainDry.draw(this, x + xo+(random.nextInt(7)-4), y + yo+(random.nextInt(7)-4));break;
-												case 1:Structure.stoneFountainDry2.draw(this, x + xo+(random.nextInt(7)-4), y + yo+(random.nextInt(7)-4));break;
-											}
-										}else if(Settings.get("Theme").equals("Tundra")){
-											int fountvar= random.nextInt(4);
-											switch(fountvar) {
-												case 0:Structure.stoneFountain.setData("W:Ice,D:Dungeon Bricks,S:Stone Bricks,U:Stone Wall,T:Torch Stone Bricks,E:Dirt,O:Ornate stone,R:Rocky stone",
-														"**DRRE*\n" +
-																"DWWWWWT\n" +
-																"SWWSWWD\n" +
-																"OWDUDWO\n" +
-																"OWWDWWD\n" +
-																"EWWWWWS\n" +
-																"*TSSSD*"
-												);Structure.stoneFountain.draw(this, x + xo+(random.nextInt(7)-4), y + yo+(random.nextInt(7)-4));break;
-												case 1:Structure.stoneFountain2.setData("W:Ice,D:Dungeon Bricks,S:Stone Bricks,U:Dungeon Wall,T:Torch Dungeon Bricks,E:Dirt,O:Ornate stone,R:Rocky stone",
-														"**SSSS*\n" +
-																"SWWWWWE\n" +
-																"EWWSWWE\n" +
-																"EWSUWWR\n" +
-																"RWWWWWO\n"+
-																"ODWWWWT\n"+
-																"*DSSST*"
-												);Structure.stoneFountain2.draw(this, x + xo+(random.nextInt(7)-4), y + yo+(random.nextInt(7)-4));break;
-												case 2:Structure.stoneFountain3.setData("W:Ice,D:Dungeon Bricks,S:Stone Bricks,U:Stone Wall,T:Torch Stone Bricks,E:Dirt",
-														"**EETS*\n" +
-																"SWWWWWD\n" +
-																"EWWSWWD\n" +
-																"DWESDWS\n" +
-																"SWWDWWD\n"+
-																"EWWWWWU\n"+
-																"*ESSTD*"
-												);Structure.stoneFountain3.draw(this, x + xo+(random.nextInt(7)-4), y + yo+(random.nextInt(7)-4));break;
-												case 3:Structure.stoneFountain4.setData("W:Ice,D:Dungeon Bricks,S:Stone Bricks,U:Stone Wall,T:Torch Stone Bricks,E:Dirt,B:Bramble",
-														"**SSSE*\n" +
-																"SWWWDDS\n" +
-																"DWWTWWS\n" +
-																"SWUUUWB\n" +
-																"DWWUWWB\n"+
-																"EWWWWWS\n"+
-																"*TSSSS*"
-												);Structure.stoneFountain4.draw(this, x + xo+(random.nextInt(7)-4), y + yo+(random.nextInt(7)-4));break;
-											}
-										}else{
-											int fountvar=random.nextInt(6);
-											switch(fountvar){
-												case 0:Structure.stoneFountain.draw(this, x + xo+(random.nextInt(7)-4), y + yo+(random.nextInt(7)-4));break;
-												case 1:Structure.stoneFountain2.draw(this, x + xo+(random.nextInt(7)-4), y + yo+(random.nextInt(7)-4));break;
-												case 2:Structure.stoneFountain3.draw(this, x + xo+(random.nextInt(7)-4), y + yo+(random.nextInt(7)-4));break;
-												case 3:Structure.stoneFountain4.draw(this, x + xo+(random.nextInt(7)-4), y + yo+(random.nextInt(7)-4));break;
-												case 4:Structure.stoneFountainDry.draw(this, x + xo+(random.nextInt(7)-4), y + yo+(random.nextInt(7)-4));break;
-												case 5:Structure.stoneFountainDry2.draw(this, x + xo+(random.nextInt(7)-4), y + yo+(random.nextInt(7)-4));break;
-											}
-										};break;
-								}
-								houseType=(int) Math.round(Math.random()*2);
-								stonev=Math.random();
-							} else {
-								switch(houseType) {
-									case 0:Structure.villageHouseNormal.draw(this, x + xo, y + yo);break;
-									case 1:Structure.villageFarmhouseNormal.draw(this, x + xo, y + yo);break;
-									case 2:Structure.villageStonehouseNormal.draw(this, x + xo, y + yo);break;
-								}
-								houseType=(int) Math.round(Math.random()*2);
-							}
-							// Make the village look ruined
-							if (overlay == 1) {
-								Structure.villageRuinedOverlay1.draw(this, x + xo, y + yo);
-								stonev=Math.random();
-							} else if (overlay == 2) {
-								Structure.villageRuinedOverlay2.draw(this, x + xo, y + yo);
-								stonev=Math.random();
-							}
-						}else {
-							if (twoDoors) {
-								Structure.stoneRuinHouseTwoDoor.draw(this, x + xo, y + yo);
-								stonev=Math.random();
-							} else {
-								Structure.stoneRuinHouseNormal.draw(this, x + xo, y + yo);stonev=Math.random();
-							}
-
-							// Make the village look ruined
-							if (overlay == 1) {
-								Structure.stoneRuinRuinedOverlay1.draw(this, x + xo, y + yo);stonev=Math.random();
-							} else if (overlay == 2) {
-								Structure.stoneRuinRuinedOverlay2.draw(this, x + xo, y + yo);stonev=Math.random();
-							}
+						int xo = (hs == 0 || hs == horizontalOffset - 1) ? -horizontalOffset : horizontalOffset;
+						int yo = (hs < verticalOffset / 2) ? -verticalOffset : verticalOffset;
+						for(int k=0;k<10;k++){ //try 10 times for each house
+							if(Arrays.binarySearch(allowed, getTile(x + xo, y + yo).name.toLowerCase())>-1)break;
+							xo += random.nextInt(horizontalOffset + 1) - horizontalOffset / 2;
+							yo += random.nextInt(verticalOffset + 1) - verticalOffset / 2;
 						}
-						// Add a chest to some of the houses
-						if (hasChest) {
-							Chest c = new Chest();
-							c.populateInvRandom("villagehouse", 1);
-							add(c, (x + random.nextInt(2) + xo) << 4, (y + random.nextInt(2) + yo) << 4);
+
+						boolean canBuild = banned == null || Arrays.binarySearch(banned, getTile(x + xo, y + yo).name.toLowerCase())<=-1;
+						int houseType = random.nextInt(structures.length);
+							if(canBuild  ){
+						//	System.out.println(x+ " " + y + " " + Arrays.binarySearch(allowed, getTile(x + xo, y + yo).name.toLowerCase()) + getTile(x + xo, y + yo).name + " GLEBOKOSC: " + this.depth + " " + this.realm);
+							structures[houseType].draw(this, x + xo, y + yo);
+							hs++;
+							// Add a chest to some of the houses/ruins or whatever
+							if (hasChest && lootTable != null) { //if there is no loot table why should we generate chests in first place then?
+								Chest c = new Chest();
+								c.populateInvRandom(lootTable, 1);
+								add(c, (x + random.nextInt(2) + xo) << 4, (y + random.nextInt(2) + yo) << 4, lootTable == "obvruins" ? 1 : 0);
+							}
 						}
 					}
 
-					break;
+
 				}
+
 			}
 		}
 	}
+
+	/**
+	 *Alternative versions of generateVillages void
+	 */
+	private void generateVillages(String[] allowed,Structure[] structures,int offset){
+		generateVillages(null,allowed, structures, offset, offset, null,2);
+	};
+
+	private void generateVillages(String banned[],String[] allowed,Structure[] structures,int offset){
+		generateVillages(banned,allowed, structures, offset, offset, null,2);
+	};
+	private void generateVillages(String banned[],String[] allowed,Structure[] structures,int offset,float proportion){
+		generateVillages(banned,allowed, structures, offset, offset, null,proportion);
+	};
+	private void generateVillages(String banned[],String[] allowed,Structure[] structures,int horizontalOffset,int verticalOffset){
+		generateVillages(banned,allowed, structures, horizontalOffset, verticalOffset, null,2);
+	};
+	private void generateVillages(String banned[],String[] allowed,Structure[] structures,int horizontalOffset,int verticalOffset, float proportion){
+		generateVillages(banned,allowed, structures, horizontalOffset, verticalOffset, null,proportion);
+	};
+
+	private void generateVillages(String banned[],String[] allowed,Structure[] structures,int offset,@Nullable String lootTable){
+		generateVillages(banned,allowed, structures, offset, offset, lootTable,2);
+	};
 	private void generateCastle() {
 		int castleType = random.nextInt(4);
 
@@ -1473,55 +1431,151 @@ public class Level {
 			}
 
 		};
-	private void generateFountains() {
-		int lastFountainX = 0;
-		int lastFountainY = 0;
 
-		for (int i = 0; i < w / 128 * 2; i++) {
-		// Makes 2-8 villages based on world size
-
-		for (int t = 0; t < 10; t++) {
-			// Tries 10 times for each one
-
-			int x = random.nextInt(w);
-			int y = random.nextInt(h);
-
-			// Makes sure the fountain isn't to close to the previous fountain
-			if ((getTile(x, y) == Tiles.get("dirt") || getTile(x, y) == Tiles.get("Water")) && (Math.abs(x - lastFountainX) > 32 && Math.abs(y - lastFountainY) > 32)) {
-				lastFountainX = x;
-				lastFountainY = y;
-
-				// A number between 2 and 4
-				int numHouses = random.nextInt(3) + 2;
-
-				// Loops for each fountain ruin in the underground
-				for (int hs = 0; hs < numHouses; hs++) {
-					boolean hasChest = random.nextBoolean();
-					boolean twoDoors = random.nextBoolean();
-					int overlay = random.nextInt(2) + 1;
-
-					// Basically just gets what offset this house should have from the center of the village
-					int xo = hs == 0 || hs == 3 ? -4 : 4;
-					int yo = hs < 2 ? -4 : 4;
-
-					xo += random.nextInt(5) - 2;
-					yo += random.nextInt(5) - 2;
-					int fountainType=(int) Math.round(Math.random()*3);
-					switch(fountainType) {
-						case 0:Structure.stoneFountain.draw(this, x + xo, y + yo);fountainType=(int) Math.round(Math.random()*3);break;
-						case 1:Structure.stoneFountain2.draw(this, x + xo, y + yo);fountainType=(int) Math.round(Math.random()*3);break;
-						case 2:Structure.stoneFountain3.draw(this, x + xo, y + yo);fountainType=(int) Math.round(Math.random()*3);break;
-						case 3:Structure.stoneFountain4.draw(this, x + xo, y + yo);fountainType=(int) Math.round(Math.random()*3);break;
-					}
-				}
-
-				break;
-			}
-		}
-	}
-}
-	
+	//Simple void converting toString
 	public String toString() {
 		return "Level(depth=" + depth + ")";
 	}
+
+	//Simply a function for generating stuff  in overworld
+	void overworld(int level,Level parentLevel){
+		if (level == -6) {
+		int lairs=0; //to count how many snake lairs are there
+		int xl=0;int yl=0;
+		while(lairs < (w/128) * 3) {
+
+			while(getTile(xl,yl)!=Tiles.get("Dirt")) {
+				xl = random.nextInt(w);
+				yl = random.nextInt(h);
+			}
+
+					Structure.snakeLairDungeon.draw(this, xl,yl);
+							lairs++;
+							Spawner sp = new Spawner(new Snake(lairs%3 + 1,false));
+							add(sp,xl * 16 +8,yl * 16 + 8);
+
+			}
+			boolean spawned=false;
+			while(!spawned){
+				int xx = random.nextInt(w -(20 * (w/128)) * 2) + (20 * (w/128));
+				int yy = random.nextInt(h -(20 * (h/128)) * 2)+ (20 * (h/128));
+				String[] allowedTiles = {"dirt","coarse dirt","lava brick","dungeon tallgrass","fungus"}; //just to make finding it easier
+				if(Arrays.binarySearch(allowedTiles,getTile(xx,yy).name.toLowerCase())>-1){
+					Structure.portalOBV.draw(this,xx,yy);
+					setData(xx -1,yy -2 ,3);
+					setData(xx ,yy -2 ,3);
+					setData(xx - 1,yy + 1,3);
+					setData(xx ,yy + 1,3);
+					spawned = true;
+				}
+			}
+		}
+		if (parentLevel != null) { // If the level above this one is not null (aka, if this isn't the sky level)
+			for (int y = 0; y < h; y++) { // Loop through height
+				for (int x = 0; x < w; x++) { // Loop through width
+					if (parentLevel.getTile(x, y) == Tiles.get("Stairs Down")) { // If the tile in the level above the current one is a stairs down then...
+						if (level == -6) { /// Make the obsidian wall formation around the stair in the dungeon level
+							Structure.dungeonGate.draw(this, x, y);
+
+						}
+
+						else if (level == 0) { // Surface
+							if (Game.debug) System.out.println("Setting tiles around " + x + "," + y + " to hard rock");
+							setAreaTiles(x, y, 1, Tiles.get("Hard Rock"), 0); // surround the sky stairs with hard rock
+						}
+						else // Any other level, the up-stairs should have dirt on all sides.
+							if(level==-1) setAreaTiles(x, y, (Math.random()<0.04 ? 2 : 1), Tiles.get("Small stones"), 0);
+							else if(level==-3)
+								if(getTile(x,y)==Tiles.get("moss"))setAreaTiles(x, y, (Math.random()<0.04 ? 2 : 1), Tiles.get("Moss"), 0);
+								else setAreaTiles(x, y, (Math.random()<0.04 ? 2 : 1), Tiles.get("Dirt"), 0);
+							else setAreaTiles(x, y, (Math.random()<0.034 ? 2 : 1), Tiles.get("dirt"), 0);
+						if(parentLevel.getTile(x, y).name.contains("STAIRS DOWN")){
+							if((x%9>6 || y%9<2) && depth<0){
+								Structure.stairsRuinsUp.draw(this,x,y);
+							}
+							else
+								setTile(x, y, Tiles.get("Stairs Up"));
+							if ((x % 12 == 0 || y % 12 == 0) && depth < -1)
+								setData(x, y, 30); //blocked upstairs will start appearing at -2 to let player enter the caverns for iron at last
+
+						}
+					}else if(parentLevel.getTile(x, y) == Tiles.get("Obsidian Stairs Down")){
+						Structure.dungeonGate.draw(this, x, y);
+						setTile(x, y, Tiles.get("Obsidian Stairs Up"));
+					}
+				}
+			}
+		} else { // This is the sky level
+			boolean placedHouse = false;
+			while (!placedHouse) {
+
+				int x = random.nextInt(this.w - 7);
+				int y = random.nextInt(this.h - 5);
+
+				if ((this.getTile(x - 3, y - 2) == Tiles.get("Cloud") || this.getTile(x - 3, y - 2) == Tiles.get("Skygrass")) && (this.getTile(x + 3, y - 2) == Tiles.get("Cloud") || this.getTile(x + 3, y - 2) == Tiles.get("Skygrass") || this.getTile(x + 3, y + 2) == Tiles.get("cloud tallgrass")) ) {
+					if ((this.getTile(x - 3, y + 2) == Tiles.get("Cloud") || this.getTile(x - 3, y + 2) == Tiles.get("Skygrass")) && (this.getTile(x + 3, y + 2) == Tiles.get("Cloud") || this.getTile(x + 3, y + 2) == Tiles.get("Skygrass") || this.getTile(x + 3, y + 2) == Tiles.get("cloud tallgrass")) ) {
+						Structure.airWizardHouse.draw(this, x, y);
+
+						placedHouse = true;
+					}
+				}
+			}
+
+		}
+			checkChestCount(false);
+			checkMimics(1, 2);
+
+		checkAirWizard();
+
+		if (Game.debug) printTileLocs(Tiles.get("Stairs Down"));
+	}
+
+	void obv(int level,Level parentLevel) {
+		if (parentLevel != null) { // If the level above this one is not null (aka, if this isn't the sky level)
+			for (int y = 0; y < h; y++) { // Loop through height
+				for (int x = 0; x < w; x++) { // Loop through width
+					if (parentLevel.getTile(x, y) == Tiles.get("Obsidian Stairs Down"))
+						if (depth == 0) {
+							Structure.dungeonTowerEntrance.draw(this, x, y);
+							setTile(x, y, Tiles.get("Obsidian Stairs Up"));
+						} else if (depth < 0) {
+							Structure.dungeonOBVGate.draw(this, x, y);
+							setTile(x, y, Tiles.get("Obsidian Stairs Up"));
+							checkMimics(0 + (-depth), 2 + (-depth));
+							checkChestCount(false);
+						}
+
+				}
+			}
+			if (depth == 0) {
+				boolean spawned = false;
+				generateVillages(new String[]{"infinite void"},new String[]{"coarse dirt", "dirt", "dungeon tallgrass", "fungus", "lava brick", "lava", "obsidian"},new Structure[]{Structure.obsidianFountainClassic,Structure.villageRuinedOverlayObs1,Structure.villageRuinedOverlayObs2,Structure.villageRuinedOverlayObs3,Structure.obsidianFountain,Structure.obsidianFountainRuined},6,4,"obvruins",1);
+				while (!spawned) {
+					int xx = random.nextInt(w - (20 * (w / 128)) * 2) + (20 * (w / 128));
+					int yy = random.nextInt(h - (20 * (h / 128)) * 2) + (20 * (h / 128));
+					String[] allowedTiles = { "coarse dirt", "dungeon tallgrass", "fungus", "lava brick","dirt"}; //just to make finding it easier
+					if (Arrays.binarySearch(allowedTiles, getTile(xx, yy).name.toLowerCase()) != -1) {
+						Structure.portalOBVR.draw(this, xx, yy);
+						setData(xx - 1, yy - 2, 5);
+						setData(xx, yy - 2, 5);
+						setData(xx - 1, yy + 1, 5);
+						setData(xx, yy + 1, 5);
+						setData(xx + 1, yy - 1, 2);
+						setData(xx + 1, yy, 2);
+						setData(xx - 2, yy, 2);
+						setData(xx - 2, yy - 1, 2);
+						spawned = true;
+					}
+				}
+
+
+				}
+			if(depth == -2) {
+				int x = w/2 + ((random.nextInt(40) - 20) * w/128);
+				int y = h/2 + ((random.nextInt(40) - 20) * h/128);
+				Structure.obsidianKnightRoom.draw(this,x,y);
+				add(new KnightStatue(3300),  x << 4 ,y << 4,1);
+			}
+			}
+		}
 }

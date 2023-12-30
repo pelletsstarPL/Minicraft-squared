@@ -26,7 +26,7 @@ public class CloudCactusTile extends Tile {
 	}
 	
 	public boolean mayPass(Level level, int x, int y, Entity e) {
-		return e instanceof AirWizard || e instanceof WraithA || e instanceof Wraith || e instanceof Clallay;
+		return e instanceof AirWizard  || e instanceof Wraith || e instanceof Clallay;
 	}
 
 	public boolean hurt(Level level, int x, int y, Mob source, int dmg, Direction attackDir) {
@@ -72,7 +72,7 @@ public class CloudCactusTile extends Tile {
 	}
 
 	public void bumpedInto(Level level, int x, int y, Entity entity) {
-		if (entity instanceof AirWizard || entity instanceof Wraith || entity instanceof WraithA || entity instanceof Ghost ||  entity instanceof Clallay) return;
+		if (entity instanceof AirWizard || entity instanceof Wraith || entity instanceof Ghost ||  entity instanceof Clallay) return;
 		
 		if(entity instanceof Mob)
 			((Mob)entity).hurt(this, x, y, 1 + Settings.getIdx("diff"));

@@ -1,5 +1,6 @@
 package minicraft.level.tile;
 
+import minicraft.core.Renderer;
 import minicraft.core.io.Sound;
 import minicraft.entity.Direction;
 import minicraft.entity.mob.Player;
@@ -26,17 +27,19 @@ public class CoarseDirtTile extends Tile {
 	}
 
 	protected static int CdCol(int depth) {
-		switch (depth) {
-			case 0: return Color.get(1, 112, 91, 72); // Surface.
-			case -5: return Color.get(1, 76, 30, 100); // Dungeons.
-			default: return Color.get(1, 86); // Caves.
+		if(Renderer.player.getRealmId()==1)return Color.get(1, 76, 30, 100); // Dungeons.
+		switch (Level.getLevelName(depth)) {
+			case "Surface": return Color.get(1, 129, 105, 83); // Surface.
+			case "Dungeon": return Color.get(1, 76, 30, 100); // Dungeons.
+			default: return Color.get(1, 102); // Caves.
 		}
 	}
 
 	protected static int dIdx(int depth) {
-		switch (depth) {
-			case 0: return 0; // Surface
-			case -5: return 2; // Dungeons
+		if(Renderer.player.getRealmId()==1)return 2; // Dungeons.
+		switch (Level.getLevelName(depth)) {
+			case "Surface": return 0; // Surface
+			case "Dungeon": return 2; // Dungeons
 			default: return 1; // Caves
 		}
 	}

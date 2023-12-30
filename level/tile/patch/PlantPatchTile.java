@@ -101,13 +101,13 @@ public class PlantPatchTile extends Tile {
         return true;
     }
     public boolean mayPass(Level level, int x, int y, Entity e) {
-        return e instanceof AirWizard || e instanceof WraithA || e instanceof Wraith || e instanceof Clallay;
+        return e instanceof AirWizard || e instanceof Wraith || e instanceof Clallay;
     }
 
     //FOR CLOUD CACTUS
     public void bumpedInto(Level level, int x, int y, Entity entity) {
         if (name.contains("PATCH CLOUD CACTUS") || name.contains("PATCH CACTUS")) {
-            if (entity instanceof AirWizard || entity instanceof Wraith || entity instanceof WraithA || entity instanceof Ghost || entity instanceof Clallay)
+            if (entity instanceof AirWizard || entity instanceof Wraith || entity instanceof Ghost || entity instanceof Clallay)
                 return;
 
             if (entity instanceof Mob)

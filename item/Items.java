@@ -35,6 +35,7 @@ public class Items {
 		addAll(BucketItem.getAllInstances());
 		addAll(BottleItem.getAllInstances());
 		addAll(BookItem.getAllInstances());
+		addAll(BonemealItem.getAllInstances());
 		addAll(TileItem.getAllInstances());
 		addAll(ToolItem.getAllInstances());
 		addAll(FoodItem.getAllInstances());
@@ -45,6 +46,8 @@ public class Items {
 		addAll(PotionItem.getAllInstances());
 		addAll(FishingRodItem.getAllInstances());
 		addAll(SummonItem.getAllInstances());
+		addAll(ShardItem.getAllInstances());
+		addAll(HeartItem.getAllInstances());
 	}
 	
 	/** fetches an item from the list given its name. */
@@ -93,6 +96,7 @@ public class Items {
 		
 		Item i = null;
 		for (Item cur: items) {
+
 			if (cur.getName().compareToIgnoreCase(name) == 0) {
 				i = cur;
 				break;
@@ -105,6 +109,8 @@ public class Items {
 				((StackableItem)i).count = data;
 			if (i instanceof ToolItem && hadUnderscore)
 				((ToolItem)i).dur = data;
+			if (i instanceof FishingRodItem && hadUnderscore)
+				((FishingRodItem)i).dur = data;
 			return i;
 		} else {
 			System.out.println(Network.onlinePrefix() + "ITEMS GET: Invalid name requested: \"" + name + "\"");

@@ -40,7 +40,8 @@ public class PotatoTile extends Plant {
             count = random.nextInt(2);
         }
 
-        level.dropItem(x * 16 + 8, y * 16 + 8, count + 1, Items.get("Potato"));
+        if (age >= maxAge - maxAge / 5)
+            level.dropItem(x * 16 + 8, y * 16 + 8, age >= maxAge ? 1 : 0,count, Items.get("Potato"));
 
         if (age >= maxAge && entity instanceof Player) {
             ((Player)entity).addScore(random.nextInt(4) + 1);

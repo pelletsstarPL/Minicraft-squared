@@ -51,14 +51,16 @@ public class HardRockTile extends Tile {
 			return false; // Go directly to hurt method
 		if (item instanceof ToolItem) {
 			ToolItem tool = (ToolItem) item;
-			int dmg = random.nextInt(10) + tool.damage;
+			int staminaPay=(4-tool.level < 2 ? 2 : 4-tool.level);
+			if(tool.type==ToolType.Hammer)staminaPay++;
+			int dmg = (int)(random.nextInt(10) + tool.damage * (tool.type == ToolType.Hammer ? 1.2 : 1));
 			if (tool.type == ToolType.Pickaxe && (tool.level >= type.minLevel) && tool.level!=6) { //beyond req lvl and except candy tools
-				if (player.payStamina(3) && tool.payDurability()) {
+				if (player.payStamina(staminaPay) && tool.payDurability()) {
 					hurt(level, xt, yt, dmg);
 					return true;
 				}
 			} else {
-				Game.notifications.add(ToolItem.LEVEL_NAMES[type.minLevel] + " pickaxe or stronger Required.");
+				Game.notifications.add(ToolItem.LEVEL_NAMES[type.minLevel] + " tool or stronger Required.");
 			}
 		}
 		return false;

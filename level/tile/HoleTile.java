@@ -26,6 +26,6 @@ public class HoleTile extends Tile {
 	}
 
 	public boolean mayPass(Level level, int x, int y, Entity e) {
-		return e.canSwim();
+		return e.canSwim()||e.canFly();
 	}
 }

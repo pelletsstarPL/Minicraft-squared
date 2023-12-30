@@ -21,7 +21,7 @@ public class Plant extends FarmTile {
 
     @Override
     public void steppedOn(Level level, int xt, int yt, Entity entity) {
-        if(!(entity instanceof Wraith) && !(entity instanceof WraithA) && !(entity instanceof Ghost)) {
+        if(!(entity instanceof Wraith) && !(entity instanceof Ghost)) {
             if (entity instanceof ItemEntity) return;
 
             super.steppedOn(level, xt, yt, entity);
@@ -40,7 +40,7 @@ public class Plant extends FarmTile {
         if (random.nextInt(2) == 0) return false;
 
         int age = level.getData(xt, yt);
-        if (age < maxAge) {
+        if (age < maxAge && level.realm.contains("overworld")) {
             if (!IfWater(level, xt, yt)) level.setData(xt, yt, age + 1);
             else if (IfWater(level, xt, yt)) level.setData(xt, yt, age + (random.nextInt(12)==0 ? 3 : 2));
             if(age > maxAge)age = maxAge;
@@ -79,6 +79,12 @@ public class Plant extends FarmTile {
             ((Player)entity).addScore(random.nextInt(5) + 1);
         }
         if(name.contains("Reed"))level.setTile(x, y, Tiles.get("Water"));
-        else level.setTile(x, y, Tiles.get("Dirt"));
+        else {
+            if(IfWater(level,x,y) && Math.random()<0.1)
+
+            level.setTile(x, y, Tiles.get("Farmland"));
+            else
+            level.setTile(x, y, Tiles.get("Dirt"));
+        }
     }
 }

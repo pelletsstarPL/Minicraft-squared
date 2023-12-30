@@ -24,8 +24,11 @@ public class FishingRodItem extends Item {
 
         return items;
     }
-    private int uses = 0; // The more uses, the higher the chance of breaking
+   // private int uses = 0; // The more uses, the higher the chance of breaking
     public int level; // The higher the level the lower the chance of breaking
+    public int durability=13;
+    public int maxDur;
+    public int dur;
     public boolean displayBox() {
         return true;
     }
@@ -47,24 +50,34 @@ public class FishingRodItem extends Item {
             "Iron",
             "Gold",
             "Gem",
-            "Zanite",
+            "Obsidium",
     };
 
     public FishingRodItem(int level) {
-        super(LEVEL_NAMES[level] + " Fishing Rod", new Sprite(level, 11, 0));
+        super(LEVEL_NAMES[level] + " fishing rod", new Sprite(level, 11, 0));
         this.level = level;
+
+        this.durability=13 + (level - 5 < 0 ? 0 : level); // Initial durability fetched from the ToolType
+        this.dur = durability * (level + 1) + (level==0 ? 2 : 0); // Initial durability fetched from the ToolType
+        maxDur = dur;
     }
 
     public static int getChance(int idx, int level) {
         return LEVEL_CHANCES[level][idx];
     }
-
+    public boolean payDurability(int damage) {
+			/*if (dur <= 0) return false;
+		int d = damage/((level*10) * 3 == 0 ? 1 :(level*10) * 3);
+		if (!Game.isMode("creative")) dur -= d>4? 4: d<1? 1: d;*/
+        if (dur <= (damage-1 < 0 ? 0 : damage-1)) return false;
+        if (!Game.isMode("creative")) dur-=damage;
+        return true;
+    }
     @Override
     public boolean interactOn(Tile tile, Level level, int xt, int yt, Player player, Direction attackDir) {
         Player.boxAnim[0]=39;
         boolean success=false;
         if (tile == Tiles.get("water") && !player.isSwimming()) { // Make sure not to use it if swimming
-            uses++;
             player.isFishing = true;
             player.fishingLevel = this.level;
             return true;
@@ -78,18 +91,21 @@ public class FishingRodItem extends Item {
     public boolean canAttack() { return false; }
 
     @Override
-    public boolean isDepleted() {
-        if (random.nextInt(100) > 120 - uses + level * 6) { // Breaking is random, the lower the level, and the more times you use it, the higher the chance
-            Game.notifications.add("Your Fishing rod broke.");
-            return true;
-        }
-        return false;
+    public String getData() {
+        return super.getData() + "_" + dur;
     }
 
-    @Override
-    public Item clone() {
-        FishingRodItem item = new FishingRodItem(this.level);
-        item.uses = this.uses;
-        return item;
+    public boolean isDepleted() {
+        return dur <= 0 && this.durability > 0;
+    }
+
+
+    public FishingRodItem clone() {
+        FishingRodItem ti;
+        {
+            ti = new FishingRodItem(level);
+        }
+        ti.dur = dur;
+        return ti;
     }
 }

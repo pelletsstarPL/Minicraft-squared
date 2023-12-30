@@ -48,7 +48,7 @@ public class BucketItem extends StackableItem {
 	
 	private BucketItem(Fill fill) { this(fill, 1); }
 	private BucketItem(Fill fill, int count) {
-		super(fill.name() + " Bucket", new Sprite(fill.offset, 6, 0), count);
+		super(fill.name() + " bucket", new Sprite(fill.offset, 6, 0), count);
 		this.filling = fill;
 	}
 	public boolean displayBox(){return true;}
@@ -61,7 +61,7 @@ public class BucketItem extends StackableItem {
 			if (filling != Fill.Empty) {
 				if (fill == Fill.Empty) {
 					if(level.getTile(xt,yt)==Tiles.get("Empty patch vase") && level.getData(xt,yt)==0 && fill==Fill.Water){ //for vases
-						level.setData(xt,yt,Tiles.get("Water").id);
+						level.setData(xt,yt,Tiles.get(level.depth==-6 ? "Hole" : "Water").id);
 					} else level.setTile(xt, yt, filling.contained);
 					if (!Game.isMode("creative")) player.activeItem = editBucket(player, Fill.Empty);
 					return super.interactOn(true,true);

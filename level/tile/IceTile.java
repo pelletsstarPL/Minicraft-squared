@@ -18,7 +18,7 @@ import minicraft.item.ToolType;
 import minicraft.level.Level;
 
 public class IceTile extends Tile {
-	private static ConnectorSprite sprite = new ConnectorSprite(IceTile.class, new Sprite(37, 9, 3, 3, 1, 3), new Sprite(40, 9, 2, 2, 1))
+	private static ConnectorSprite sprite = new ConnectorSprite(IceTile.class, new Sprite(37, 9, 3, 3, 1, 3), Sprite.dots(/*Color.get(005, 105, 115, 115)*/ 3))
 	{
 		public boolean connectsTo(Tile tile, boolean isSide) {
 			if(!isSide) return true;
@@ -33,15 +33,17 @@ public class IceTile extends Tile {
 		maySpawn = true;
 	}
 
-	
+
 	public void render(Screen screen, Level level, int x, int y) {
+		long seed = (tickCount + (x / 2 - y) * 4311) / 10 * 54687121l + x * 3271612l + y * 3412987161l;
+		sprite.full = Sprite.randomDots(seed, 3);
 		sprite.render(screen, level, x, y);
 	}
 	
 	public boolean interact(Level level, int xt, int yt, Player player, Item item, Direction attackDir) {
 		if (item instanceof ToolItem) {
 			ToolItem tool = (ToolItem) item;
-			if (tool.type == ToolType.Pickaxe) {
+			if (tool.type == ToolType.Pickaxe || tool.type == ToolType.Hammer) {
 				if (player.payStamina(4 - tool.level) && tool.payDurability()) {
 					level.setTile(xt, yt, Tiles.get("Water"));
 					Sound.monsterHurt.play();
@@ -55,7 +57,7 @@ public class IceTile extends Tile {
 
 	public void steppedOn(Level level, int x, int y, Entity entity) {
 		int chance=random.nextInt(769);
-		if (entity instanceof Mob && (!(entity instanceof AirWizard)  && !(entity instanceof Ghost) && !(entity instanceof Wraith) && !(entity instanceof WraithA) && !(entity instanceof Clallay))) {
+		if (entity instanceof Mob && (!(entity instanceof AirWizard)  && !(entity instanceof Ghost) && !(entity instanceof Wraith)  && !(entity instanceof Clallay))) {
 			//ice is cracking under you
 			if(chance==233)level.setTile(x, y, Tiles.get("Water"));
 		}
@@ -66,7 +68,7 @@ public class IceTile extends Tile {
 
 		if (random.nextBoolean()) xn += random.nextInt(2) * 2 - 1;
 		else yn += random.nextInt(2) * 2 - 1;
-
+		if(level.depth==-6)level.setTile(xn, yn, Tiles.get("Hole")); //melt
 		if (level.getTile(xn, yn) == Tiles.get("Hole")) {
 			level.setTile(xn, yn, "Water");
 		}

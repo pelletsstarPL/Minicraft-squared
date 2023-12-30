@@ -1,6 +1,7 @@
 package minicraft.item;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 import minicraft.core.Game;
@@ -21,6 +22,7 @@ public class ToolItem extends Item {
 		for (ToolType tool : ToolType.values()) {
 			if (!tool.noLevel) {
 				for (int lvl = 0; lvl <= 6; lvl++)
+					if(Arrays.asList(tool.skipLvls).indexOf(lvl)==-1)
 					items.add(new ToolItem(tool, lvl));
 			} else {
 				items.add(new ToolItem(tool));
@@ -36,8 +38,7 @@ public class ToolItem extends Item {
 		return type != ToolType.Bow && type !=ToolType.Claymore && type !=ToolType.Sword;
 	}
 
-	public static final String[] LEVEL_NAMES = {"Crude", "Rock", "Iron", "Gold", "Gem","Zanite","Candy"}; // The names of the different levels. A later level means a stronger tool.
-	
+	public static final String[] LEVEL_NAMES = {"Crude", "Rock", "Iron", "Gold", "Gem","Obsidium","Candy"}; // The names of the different levels. A later level means a stronger tool.
 	public ToolType type; // Type of tool (Sword, hoe, axe, pickaxe, shovel)
 	public int level; // Level of said tool
 	public int dur,maxDur; // The durability of the tool
@@ -45,13 +46,15 @@ public class ToolItem extends Item {
 	
 	/** Tool Item, requires a tool type (ToolType.Sword, ToolType.Axe, ToolType.Hoe, etc) and a level (0 = wood, 2 = iron, 4 = gem, etc) */
 	public ToolItem(ToolType type, int level) {
-		super((level==0 && (type.name()=="Bow" || type.name()=="Sword" || type.name()=="Claymore") ? "Wood" + " " + type.name() : LEVEL_NAMES[level] + " " + type.name()), new Sprite(type.xPos, type.yPos + level, 0));
+		super((level==0 && (type.name()=="Bow" || type.name()=="Sword" || type.name()=="Claymore") ? "Wood" + " " + type.name() : LEVEL_NAMES[level] + " " + type.name().toLowerCase()), new Sprite(type.xPos, type.yPos + level, 0));
 		this.type = type;
 		this.level = level;
 		this.damage = (level==6 ? 1 : level)*5 + 10;
+
 		if(LEVEL_NAMES[level]!="Candy") {
 			dur = type.durability * (level + 1) + (level==0 ? 2 : 0); // Initial durability fetched from the ToolType
-			maxDur = type.durability * (level + 1) + (level==0 ? 2 : 0); // maxdur to improve
+			maxDur = dur; // maxdur to improve
+			if(level==5)dur*=1.2;maxDur=dur;
 		}else{ dur=10;maxDur=10;}
 	}
 
@@ -100,9 +103,9 @@ public class ToolItem extends Item {
 	public int getAttackDamageBonus(Entity e) {
 		if (!payDurability())
 			return 0;
-		int axebonus=(Renderer.player.potionEffects.containsKey(PotionType.Power) ? 2*level : (Renderer.player.potionEffects.containsKey(PotionType.Weak) ? -2*level : 0));
-		int swordbonus=(Renderer.player.potionEffects.containsKey(PotionType.Power) ? 3*level : (Renderer.player.potionEffects.containsKey(PotionType.Weak) ? -3*level : 0));
-		int claymorebonus=(Renderer.player.potionEffects.containsKey(PotionType.Power) ? 4*level : (Renderer.player.potionEffects.containsKey(PotionType.Weak) ? -4*level : 0));
+		int axebonus=(int)(Renderer.player.potionEffects.containsKey(PotionType.Power) ? 2*level : (Renderer.player.potionEffects.containsKey(PotionType.Weak) ? -2*level : 0));
+		int swordbonus=(int)(Renderer.player.potionEffects.containsKey(PotionType.Power) ? 3*level : (Renderer.player.potionEffects.containsKey(PotionType.Weak) ? -3*level : 0));
+		int claymorebonus=(int)(Renderer.player.potionEffects.containsKey(PotionType.Power) ? 4*level : (Renderer.player.potionEffects.containsKey(PotionType.Weak) ? -4*level : 0));
 		double mobBonus=1;
 		if(e instanceof EnemyMob){
 			if(((EnemyMob) e).lvl >= 4)mobBonus=1.33;
@@ -110,7 +113,7 @@ public class ToolItem extends Item {
 		if(Renderer.player.potionEffects.containsKey(PotionType.Power) && Renderer.player.potionEffects.containsKey(PotionType.Weak))axebonus=swordbonus=claymorebonus=0;
 		if (e instanceof Mob) {
 			int dmg = 0;
-			if (type == ToolType.Axe) {
+			if (type == ToolType.Axe || type == ToolType.Hammer) {
 				if(LEVEL_NAMES[level]=="Candy"){
 					dmg = (1) + random.nextInt(2);
 				}else {
@@ -156,7 +159,7 @@ public class ToolItem extends Item {
 	
 	@Override
 	public int hashCode() { return type.name().hashCode() + level; }
-	
+
 	public ToolItem clone() {
 		ToolItem ti;
 		if (type.noLevel) {

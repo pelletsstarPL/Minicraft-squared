@@ -107,19 +107,19 @@ public abstract class Item {
 		int h = 1;
 
 		// Renders the four corners of the box
-		screen.render(xx - 8, yy - 8, 0 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 0, 3);
-		screen.render(xx + (wCond+2) * 8, yy - 8, 0 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 1, 3);
-		screen.render(xx - 8, yy + 8, 0 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 2, 3);
-		screen.render(xx + (wCond+2) * 8, yy + 8, 0 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 3, 3);
+		screen.render(xx - 8, yy - 8, 15 + (Settings.get("coloredgui").equals(true) ? 2 : 0)* 32, 0, 3);
+		screen.render(xx + (wCond+2) * 8, yy - 8, 15 + (Settings.get("coloredgui").equals(true) ? 2 : 0) * 32, 1, 3);
+		screen.render(xx - 8, yy + 8, 15 + (Settings.get("coloredgui").equals(true) ? 2 : 0) * 32, 2, 3);
+		screen.render(xx + (wCond+2) * 8, yy + 8, 15 + (Settings.get("coloredgui").equals(true) ? 2 : 0) * 32, 3, 3);
 
 		// Renders each part of the box...
 		for (x = 0; x < (wCond+2); x++) {
-			screen.render(xx + x * 8, yy - 8, 1 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 0, 3); // ...top part
-			screen.render(xx + x * 8, yy + 8, 1 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 2, 3); // ...bottom part
+			screen.render(xx + x * 8, yy - 8, 16 + (Settings.get("coloredgui").equals(true) ? 2 : 0)* 32, 0, 3); // ...top part
+			screen.render(xx + x * 8, yy + 8, 16 + (Settings.get("coloredgui").equals(true) ? 2 : 0) * 32, 2, 3); // ...bottom part
 		}
 		for (y = 0; y < h; y++) {
-			screen.render(xx - 8, yy + y * 8, 2 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 0, 3); // ...left part
-			screen.render(xx + (wCond+2) * 8, yy + y * 8, 2 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 1, 3); // ...right part
+			screen.render(xx - 8, yy + y * 8, 17 + (Settings.get("coloredgui").equals(true) ? 2 : 0) * 32, 0, 3); // ...left part
+			screen.render(xx + (wCond+2) * 8, yy + y * 8, 17 + (Settings.get("coloredgui").equals(true) ? 2 : 0) * 32, 1, 3); // ...right part
 		}
 		//text
 		char[] ch = new char[10];
@@ -136,7 +136,7 @@ public abstract class Item {
 		}
 		// The middle
 		for (x = 0; x < (wCond+2); x++) {
-			screen.render(xx + x * 8, yy, 3 + (Settings.get("coloredgui").equals(true) ? 21 : 20) * 32, 0, 3);
+			screen.render(xx + x * 8, yy, 18 + (Settings.get("coloredgui").equals(true) ? 2 : 0) * 32, 0, 3);
 		}
 
 		// Item sprite
