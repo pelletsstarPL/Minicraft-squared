@@ -6,6 +6,7 @@ import java.util.Arrays;
 import minicraft.core.Game;
 import minicraft.core.io.InputHandler;
 import minicraft.core.io.Localization;
+import minicraft.core.io.Settings;
 import minicraft.gfx.Color;
 import minicraft.gfx.Font;
 import minicraft.gfx.Point;
@@ -28,13 +29,16 @@ public class BookDisplay extends Display {
 	
 	private String[][] lines;
 	private int page;
+
+	private int bg;
 	
 	private final boolean hasTitle;
 	private final boolean showPageCount;
 	private final int pageOffset;
 
 	public BookDisplay(String book) { this(book, false); }
-	public BookDisplay(String book, boolean hasTitle) {// this(book, hasTitle, !hasTitle); }
+	public BookDisplay(String book,boolean hasTitle) { this(book, hasTitle,0); }
+	public BookDisplay(String book, boolean hasTitle,int bg) {// this(book, hasTitle, !hasTitle); }
 	//public BookDisplay(String book, boolean hasTitle, boolean hideCountIfOnePage) {
 		page = 0;
 		
@@ -63,12 +67,12 @@ public class BookDisplay extends Display {
 		
 		showPageCount = hasTitle || lines.length != 1;
 		pageOffset = showPageCount ? 1 : 0;
-		
-		Menu.Builder builder = new Menu.Builder(true, spacing, RelPos.CENTER);
+	//	if(Settings.get("coloredgui").equals(true))this.bg = bg;
+		Menu.Builder builder = new Menu.Builder(true, spacing, RelPos.CENTER,bg);
 
 		Menu pageCount = builder // The small rect for the title
 			.setPositioning(new Point(Screen.w/2, 0), RelPos.BOTTOM)
-			.setEntries(StringEntry.useLines(Color.BLACK, "Page", hasTitle ? "Title" : "1/" + lines.length))
+			.setEntries(StringEntry.useLines(Color.ORANGE, "Page", hasTitle ? "Title" : "1/" + lines.length))
 			.setSelection(1)
 			.createMenu();
 		builder
@@ -89,7 +93,7 @@ public class BookDisplay extends Display {
 		if (page + dir >= 0 && page + dir < lines.length) {
 			menus[page+pageOffset].shouldRender = false;
 			page += dir;
-			if (showPageCount) menus[0].updateSelectedEntry(new StringEntry(page == 0 && hasTitle ? "Title" : (page + 1) + "/" + lines.length, Color.BLACK));
+			if (showPageCount) menus[0].updateSelectedEntry(new StringEntry(page == 0 && hasTitle ? "Title" : (page + 1) + "/" + lines.length, Color.ORANGE));
 			menus[page+pageOffset].shouldRender = true;
 		}
 	}

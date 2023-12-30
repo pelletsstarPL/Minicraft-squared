@@ -22,7 +22,7 @@ public class ContainerDisplay extends Display {
 	private Chest chest;
 	
 	public ContainerDisplay(Player player, Chest chest) {
-		super(new InventoryMenu(chest, chest.getInventory(), chest.name,23), new InventoryMenu(player, player.getInventory(), "Inventory",23));
+		super(new InventoryMenu(chest, chest.getInventory(), chest.name,4), new InventoryMenu(player, player.getInventory(), "Inventory",4));
 		//pInv = player.getInventory();
 		//cInv = chest.getInventory();
 		this.player = player;

@@ -12,17 +12,19 @@ import minicraft.screen.entry.StringEntry;
 public class OptionsWorldDisplay extends Display {
 
 	public OptionsWorldDisplay() {
-		super(true, new Menu.Builder(true, 6, RelPos.LEFT,21,
+		super(true, new Menu.Builder(true, 6, RelPos.LEFT,1,
 				(Game.isMode("hardcore") ? new StringEntry("Difficulty: Hard", Color.RED) : Settings.getEntry("diff")),
 				Settings.getEntry("fps"),
 				new SelectEntry("Sound", () -> Game.setMenu(new OptionsSound())),
+				new SelectEntry("Shortened potion display", () -> Game.setMenu(new OptionsPotions())),
 				Settings.getEntry("autosave"),
 				Settings.getEntry("statdisplay"),
 				Settings.getEntry("coloredgui"),
+
 				((Save.AirWizard2Beaten) ? Settings.getEntry("skinon") : new BlankEntry()),
-				new SelectEntry("Change Key Bindings", () -> Game.setMenu(new KeyInputDisplay())),
+				new SelectEntry("Change Key Bindings", () -> Game.setMenu(new KeyInputDisplay())))
 				//Settings.getEntry("language"),
-				new SelectEntry("Change your skin", () -> Game.setMenu(new SkinDisplay())))
+				//new SelectEntry("Change your skin", () -> Game.setMenu(new SkinDisplay())))
 			.setTitle("Options - World")
 			.createMenu()
 		);

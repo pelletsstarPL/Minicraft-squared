@@ -100,7 +100,7 @@ public class SkinDisplay extends Display {
 	}
 
 	public SkinDisplay() {
-		super(true, true, new Menu.Builder(true, 2, RelPos.CENTER, 24,getSkinsAsEntries()).setTitle("Skins",Color.PINK).setSize(168, 64).createMenu());
+		super(true, true, new Menu.Builder(true, 2, RelPos.CENTER, 5,getSkinsAsEntries()).setTitle("Skins",Color.PINK).setSize(168, 64).createMenu());
 
 		menus[0].setSelection(selectedSkinIndex);
 	}

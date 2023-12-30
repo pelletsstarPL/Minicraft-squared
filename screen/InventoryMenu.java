@@ -16,7 +16,7 @@ class InventoryMenu extends ItemListMenu
 	private final Entity holder;
 
 	InventoryMenu(final Entity holder, final Inventory inv, final String title) {
-		super(ItemListMenu.getBuilder(20), ItemEntry.useItems(inv.getItems()), title);
+		super(ItemListMenu.getBuilder(0), ItemEntry.useItems(inv.getItems()), title);
 		this.inv = inv;
 		this.holder = holder;
 	}
@@ -27,7 +27,7 @@ class InventoryMenu extends ItemListMenu
 	}
 
 	InventoryMenu(final InventoryMenu model) {
-		super(ItemListMenu.getBuilder(23), ItemEntry.useItems(model.inv.getItems()), model.getTitle());
+		super(ItemListMenu.getBuilder(4), ItemEntry.useItems(model.inv.getItems()), model.getTitle());
 		this.inv = model.inv;
 		this.holder = model.holder;
 		this.setSelection(model.getSelection());

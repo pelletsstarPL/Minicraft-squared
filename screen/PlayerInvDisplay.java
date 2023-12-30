@@ -13,7 +13,7 @@ public class PlayerInvDisplay extends Display {
 	private Player player;
 	
 	public PlayerInvDisplay(Player player) {
-		super(new InventoryMenu(player, player.getInventory(), "Inventory",23));
+		super(new InventoryMenu(player, player.getInventory(), "Inventory",4));
 		this.player = player;
 	}
 	

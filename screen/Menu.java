@@ -34,7 +34,7 @@ public class Menu {
 
 	@NotNull
 	private ArrayList<ListEntry> entries = new ArrayList<>();
-	private int bg = 20; //default
+	private int bg; //default
 	private int spacing = 0;
 	private Rectangle bounds = null;
 	private Rectangle entryBounds = null;
@@ -149,6 +149,7 @@ public class Menu {
 	Rectangle getBounds() { return new Rectangle(bounds); }
 	String getTitle() { return title; }
 	int getBg(){return bg;}
+
 
 	boolean isSelectable() { return selectable; }
 	boolean shouldRender() { return shouldRender; }
@@ -289,22 +290,22 @@ public class Menu {
 		this.offset = offset;
 	}
 
-	int b=20;
+	int b=0;
 	public void render(Screen screen) {
 
-		if(Settings.get("coloredgui").equals(true))b=bg;else b=20;
+		if(Settings.get("coloredgui").equals(true))b=bg;else b=0;
 		renderFrame(screen);
 		// render the title
 		if(title.length() > 0) {
 
 			if (drawVertically) {
 				for (int i = 0; i < title.length(); i++) {
-					if (hasFrame) screen.render(titleLoc.x, titleLoc.y + i * Font.textHeight(), 3 + b * 32, 0, 3);
+					if (hasFrame) screen.render(titleLoc.x, titleLoc.y + i * Font.textHeight(), 18 + b * 32, 0, 3);
 					Font.draw(title.substring(i, i + 1), screen, titleLoc.x, titleLoc.y + i * Font.textHeight(), titleColor);
 				}
 			} else {
 				for (int i = 0; i < title.length(); i++) {
-					if (hasFrame) screen.render(titleLoc.x + i * Font.textWidth(" "), titleLoc.y, 3 + b * 32, 0, 3);
+					if (hasFrame) screen.render(titleLoc.x + i * Font.textWidth(" "), titleLoc.y, 18 + b * 32, 0, 3);
 					Font.draw(title.substring(i, i + 1), screen, titleLoc.x + i * Font.textWidth(" "), titleLoc.y, titleColor);
 				}
 			}
@@ -323,7 +324,7 @@ public class Menu {
 
 			for (int i = 0; i < typingSearcher.length() + 4; i++) {
 				if (hasFrame) {
-					screen.render(xSearcherBar + spaceWidth * i - leading, titleLoc.y - 8, 3 + b * 32, 0, 3);
+					screen.render(xSearcherBar + spaceWidth * i - leading, titleLoc.y - 8, 18 + b * 32, 0, 3);
 				}
 
 				Font.draw("> " + typingSearcher + " <", screen, xSearcherBar - leading, titleLoc.y - 8, typingSearcher.length() < Menu.LIMIT_TYPING_SEARCHER ? Color.YELLOW : Color.RED);
@@ -349,9 +350,9 @@ public class Menu {
 				boolean selected = idx == selection;
 				entry.render(screen, pos.x, pos.y, selected);
 				int p=entry.toString().toLowerCase().indexOf(typingSearcher.toLowerCase());
-				if (searcherBarActive && useSearcherBar && p!=-1) {
+			/*	if (searcherBarActive && useSearcherBar && p!=-1) {
 					Font.draw(typingSearcher, screen, pos.x+(p*8) - 8, pos.y,  Color.YELLOW);
-				};
+				};*/
 
 				if (selected && entry.isSelectable()) {
 					// draw the arrows
@@ -396,7 +397,7 @@ public class Menu {
 
 				boolean xend = x == bounds.getLeft() || x == right;
 				boolean yend = y == bounds.getTop() || y == bottom;
-				int spriteoffset = (xend && yend ? 0 : (yend ? 1 : (xend ? 2 : 3))); // determines which sprite to use
+				int spriteoffset = (xend && yend ? 15 : (yend ? 16 : (xend ? 17 : 18))); // determines which sprite to use
 				int mirrors = ( x == right ? 1 : 0 ) + ( y == bottom ? 2 : 0 ); // gets mirroring
 				screen.render(x, y, spriteoffset + b * 32, mirrors, 3);
 
@@ -417,7 +418,7 @@ public class Menu {
 		private static final Point center = new Point(Screen.w/2, Screen.h/2);
 
 		private Menu menu;
-		private int bg = 20;
+		private int bg = 0;
 		private boolean setSelectable = false;
 		private float padding = 1;
 
@@ -432,7 +433,7 @@ public class Menu {
 		private boolean searcherBar;
 
 		public Builder(boolean hasFrame, int entrySpacing, RelPos entryPos, int bg,ListEntry... entries) { this(hasFrame, entrySpacing, entryPos, bg, Arrays.asList(entries)); }
-		public Builder(boolean hasFrame, int entrySpacing, RelPos entryPos, ListEntry... entries) { this(hasFrame, entrySpacing, entryPos, 20, Arrays.asList(entries)); }
+		public Builder(boolean hasFrame, int entrySpacing, RelPos entryPos, ListEntry... entries) { this(hasFrame, entrySpacing, entryPos, 0, Arrays.asList(entries)); }
 		public Builder(boolean hasFrame, int entrySpacing, RelPos entryPos, int bg, List<ListEntry> entries) {
 			menu = new Menu();
 			setEntries(entries);
@@ -447,7 +448,7 @@ public class Menu {
 			menu.hasFrame = hasFrame;
 			menu.spacing = entrySpacing;
 			menu.entryPos = entryPos;
-			menu.bg = 20;
+			menu.bg = 0;
 		}
 
 		public Builder setEntries(ListEntry... entries) { return setEntries(Arrays.asList(entries)); }
@@ -698,6 +699,10 @@ public class Menu {
 			b.searcherBar = searcherBar;
 
 			return b;
+		}
+
+		public void setBg(int i) {
+			this.bg = i;
 		}
 	}
 

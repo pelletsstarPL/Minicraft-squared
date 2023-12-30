@@ -16,7 +16,7 @@ import static minicraft.core.Renderer.screen;
 public class OptionsSound extends Display {
 
 	public OptionsSound() {
-		super(true, new Menu.Builder(true, 6, RelPos.CENTER,24,
+		super(true, new Menu.Builder(true, 6, RelPos.CENTER,4,
 				Settings.getEntry("sound"),
 				new StringEntry("Specific sounds toggles", Color.ORANGE),
 				Settings.getEntry("soundno"))

@@ -153,7 +153,7 @@ public class WorldSelectDisplay extends Display {
 		
 		
 		menus = new Menu[] {
-			new Menu.Builder(true, 0, RelPos.CENTER, 26,entries)
+			new Menu.Builder(true, 0, RelPos.CENTER, 7,entries)
 				.setDisplayLength(5)
 				.setScrollPolicies(1, true)
 				.createMenu()

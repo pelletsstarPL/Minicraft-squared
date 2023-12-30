@@ -70,10 +70,11 @@ public class LoadingDisplay extends Display {
 	public void render(Screen screen) {
 		super.render(screen);
 		int percent = Math.round(percentage);
-		Font.drawCentered("This may take a while", screen, 50, Color.RED);
-		Font.drawParagraph(screen, new FontStyle(Color.RED), 6,
-			Localization.getLocalized(msg) + (progressType.length() > 0 ? " " + Localization.getLocalized(progressType) : "") + ellipsis.updateAndGet(),
-			percent + "%"
+
+		Font.drawParagraph(screen, new FontStyle(Color.WHITE).setShadowType(Color.GRAY, true).setRelLinePos(RelPos.CENTER), 6,
+
+			Localization.getLocalized(msg) + (progressType.length() > 0 ? " " + Localization.getLocalized(progressType) : "") + ellipsis.updateAndGet(),"This may take a while"
 		);
+		Font.drawCentered("Total:" + percent + "%", screen, Screen.h/2+ 12 , Color.generatePercentageColor((byte)percentage));
 	}
 }

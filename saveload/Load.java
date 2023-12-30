@@ -13,6 +13,7 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import minicraft.entity.furniture.*;
 import minicraft.entity.mob.*;
 import minicraft.item.*;
 import minicraft.level.tile.SandTile;
@@ -31,14 +32,6 @@ import minicraft.entity.Entity;
 import minicraft.entity.ItemEntity;
 import minicraft.entity.Spark;
 import minicraft.entity.BlackSpark;
-import minicraft.entity.furniture.Bed;
-import minicraft.entity.furniture.Chest;
-import minicraft.entity.furniture.Crafter;
-import minicraft.entity.furniture.DeathChest;
-import minicraft.entity.furniture.DungeonChest;
-import minicraft.entity.furniture.Lantern;
-import minicraft.entity.furniture.Spawner;
-import minicraft.entity.furniture.Tnt;
 import minicraft.entity.particle.FireParticle;
 import minicraft.entity.particle.SmashParticle;
 import minicraft.entity.particle.TextParticle;
@@ -55,6 +48,7 @@ public class Load {
 
 	private static final String extension = Save.extension;
 	private float percentInc;
+	private static int wraithWeakness;
 
 	private ArrayList<String> data;
 	private ArrayList<String> extradata; // These two are changed when loading a new file. (see loadFromFile())
@@ -83,12 +77,10 @@ public class Load {
 
 		if (!loadGame) return;
 
-		if (worldVer.compareTo(new Version("1.9.2")) < 0)
-			new LegacyLoad(worldname);
 		else {
 			location += "/saves/" + worldname + "/";
 
-			percentInc = 5 + World.levels.length-1; // For the methods below, and world.
+			percentInc = 5 + World.getTotalLen() - 1; // For the methods below, and world.
 
 			percentInc = 100f / percentInc;
 
@@ -125,13 +117,8 @@ public class Load {
 		else
 			new Save();
 
-		File testFileOld = new File(location + "unlocks" + extension);
 		File testFile = new File(location + "Unlocks" + extension);
-		if (testFileOld.exists() && !testFile.exists()) {
-			testFileOld.renameTo(testFile);
-			new LegacyLoad(testFile);
-		}
-		else if (!testFile.exists()) {
+		if (!testFile.exists()) {
 			try {
 				testFile.createNewFile();
 			} catch (IOException ex) {
@@ -312,6 +299,8 @@ public class Load {
 			Settings.set("fps", Integer.parseInt(data.remove(0)));
 
 
+
+
 		if (prefVer.compareTo(new Version("2.0.7-dev5")) >= 0)
 			SkinDisplay.setSelectedSkinIndex(Integer.parseInt(data.remove(0)));
 
@@ -337,7 +326,13 @@ public class Load {
 				Settings.set("statdisplay", disp);
 				Settings.set("coloredgui", Boolean.parseBoolean(data.remove(0)));
 			}
-
+			if(prefVer.compareTo(new Version("3.0.0")) >= 0) {
+				Settings.set("potionsn", Integer.parseInt(data.remove(0)));
+				Settings.set("potiontxtlen", Integer.parseInt(data.remove(0)));
+				String disp = data.remove(0);
+				Settings.set("displayside", disp);
+				Settings.set("displayicon", Boolean.parseBoolean(data.remove(0)));
+			}//All about potion display
 			String keyData = data.get(0);
 			subdata = Arrays.asList(keyData.split(":"));
 		}
@@ -356,53 +351,60 @@ public class Load {
 	}
 
 	private void loadWorld(String filename) {
-		for(int l = World.maxLevelDepth; l >= World.minLevelDepth; l--) {
-			LoadingDisplay.setMessage(Level.getDepthString(l));
-			int lvlidx = World.lvlIdx(l);
-			loadFromFile(location + filename + lvlidx + extension);
+		int lvlIdxList[][] = {World.idxToDepth,World.idxToDepthObv};
+		Level lvlList[][] = {World.levels,World.obvLevels};
+		for(int j=0;j<World.realms.length;j++) {
+			World.minMax(lvlIdxList[j]);
+			for (int l = World.maxLevelDepth; l >= World.minLevelDepth; l--) {
 
-			int lvlw = Integer.parseInt(data.get(0));
-			int lvlh = Integer.parseInt(data.get(1));
+				int lvlidx = World.lvlIdx(l,lvlIdxList[j]);
+		 loadFromFile(location +  "/world/" + World.realms[j] + "/" + filename + lvlidx + extension);
 
-			boolean hasSeed = worldVer.compareTo(new Version("2.0.7-dev2")) >= 0;
-			long seed = hasSeed ? Long.parseLong(data.get(2)) : 0;
-			Settings.set("size", lvlw);
+				int lvlw = Integer.parseInt(data.get(0));
+				int lvlh = Integer.parseInt(data.get(1));
+				String realm = data.get(2);
+				LoadingDisplay.setMessage(Level.getDepthString(l,realm));
 
-			short[] tiles = new short[lvlw * lvlh];
-			short[] tdata = new short[lvlw * lvlh];
+				boolean hasSeed = worldVer.compareTo(new Version("2.0.7-dev2")) >= 0;
+				long seed = hasSeed ? Long.parseLong(data.get(3)) : 0;
+				Settings.set("size", lvlw);
 
-			for (int x = 0; x < lvlw; x++) {
-				for (int y = 0; y < lvlh; y++) {
-					int tileArrIdx = y + x * lvlw;
-					int tileidx = x + y * lvlw; // the tiles are saved with x outer loop, and y inner loop, meaning that the list reads down, then right one, rather than right, then down one.
-					String tilename = data.get(tileidx + (hasSeed ? 4 : 3));
+				short[] tiles = new short[lvlw * lvlh];
+				short[] tdata = new short[lvlw * lvlh];
 
-					tiles[tileArrIdx] = Tiles.get(tilename).id;
-					tdata[tileArrIdx] = Short.parseShort(extradata.get(tileidx));
+				for (int x = 0; x < lvlw; x++) {
+					for (int y = 0; y < lvlh; y++) {
+						int tileArrIdx = y + x * lvlw;
+						int tileidx = x + y * lvlw; // the tiles are saved with x outer loop, and y inner loop, meaning that the list reads down, then right one, rather than right, then down one.
+						String tilename = data.get(tileidx + (hasSeed ? 5 : 4));
+
+						tiles[tileArrIdx] = Tiles.get(tilename).id;
+						tdata[tileArrIdx] = Short.parseShort(extradata.get(tileidx));
+					}
 				}
-			}
 
-			Level parent = World.levels[World.lvlIdx(l+1)];
-			World.levels[lvlidx] = new Level(lvlw, lvlh, seed, l, parent, false);
+				Level parent = lvlList[j][World.lvlIdx(l ,lvlIdxList[j])];
+				lvlList[j][lvlidx] = new Level(lvlw, lvlh, seed, l, parent, false, realm);
 
-			Level curLevel = World.levels[lvlidx];
-			curLevel.tiles = tiles;
-			curLevel.data = tdata;
+				Level curLevel = lvlList[j][lvlidx];
+				curLevel.tiles = tiles;
+				curLevel.data = tdata;
 
-			if (Game.debug) curLevel.printTileLocs(Tiles.get("Stairs Down"));
+				if (Game.debug) curLevel.printTileLocs(Tiles.get("Stairs Down"));
 
-			if (parent == null) continue;
-			/// confirm that there are stairs in all the places that should have stairs.
-			for (minicraft.gfx.Point p: parent.getMatchingTiles(Tiles.get("Stairs Down"))) {
-				if (curLevel.getTile(p.x, p.y) != Tiles.get("Stairs Up")) {
-					curLevel.printLevelLoc("INCONSISTENT STAIRS detected; placing stairsUp", p.x, p.y);
-					curLevel.setTile(p.x, p.y, Tiles.get("Stairs Up"));
+				if (parent == null) continue;
+				/// confirm that there are stairs in all the places that should have stairs.
+				for (minicraft.gfx.Point p : parent.getMatchingTiles(Tiles.get("Stairs Down"))) {
+					if (curLevel.getTile(p.x, p.y) != Tiles.get("Stairs Up")) {
+						curLevel.printLevelLoc("INCONSISTENT STAIRS detected; placing stairsUp", p.x, p.y);
+						curLevel.setTile(p.x, p.y, Tiles.get("Stairs Up"));
+					}
 				}
-			}
-			for (minicraft.gfx.Point p: curLevel.getMatchingTiles(Tiles.get("Stairs Up"))) {
-				if (parent.getTile(p.x, p.y) != Tiles.get("Stairs Down")) {
-					parent.printLevelLoc("INCONSISTENT STAIRS detected; placing stairsDown", p.x, p.y);
-					parent.setTile(p.x, p.y, Tiles.get("Stairs Down"));
+				for (minicraft.gfx.Point p : curLevel.getMatchingTiles(Tiles.get("Stairs Up"))) {
+					if (parent.getTile(p.x, p.y) != Tiles.get("Stairs Down")) {
+						parent.printLevelLoc("INCONSISTENT STAIRS detected; placing stairsDown", p.x, p.y);
+						parent.setTile(p.x, p.y, Tiles.get("Stairs Down"));
+					}
 				}
 			}
 		}
@@ -414,12 +416,15 @@ public class Load {
 		loadPlayer(player, data);
 	}
 	public void loadPlayer(Player player, List<String> origData) {
+		int lvlIdxList[][] = {World.idxToDepth,World.idxToDepthObv};
+		Level lvlList[][] = {World.levels,World.obvLevels};
 		List<String> data = new ArrayList<>(origData);
 		player.x = Integer.parseInt(data.remove(0));
 		player.y = Integer.parseInt(data.remove(0));
 		player.spawnx = Integer.parseInt(data.remove(0));
 		player.spawny = Integer.parseInt(data.remove(0));
 		player.health = Integer.parseInt(data.remove(0));
+		player.obsidianHP = Integer.parseInt(data.remove(0));
 		player.hunger = Integer.parseInt(data.remove(0));
 		player.thirst = Integer.parseInt(data.remove(0));
 		player.armor = Integer.parseInt(data.remove(0));
@@ -445,16 +450,18 @@ public class Load {
 		}
 
 		Game.currentLevel = Integer.parseInt(data.remove(0));
+		int realmid = Integer.parseInt(data.remove(0));
+		player.setRealmId(realmid);
 		if (worldVer.compareTo(new Version("2.5.0")) >= 0) {
 			int stam=Integer.parseInt(data.remove(0)); //TODO: make overcaps be reduced to max stat
 			player.stamina = stam > player.maxStat ? player.maxStat : stam;
 		}
 
-		Level level = World.levels[Game.currentLevel];
+		Level level = lvlList[player.getRealmId()][Game.currentLevel];
 		if (!player.isRemoved()) player.remove(); // Removes the user player from the level, in case they would be added twice.
 		if (!Game.isValidServer() || player != Game.player) {
 			if(level != null)
-				level.add(player);
+				level.add(player,realmid);
 			else if(Game.debug)
 				System.out.println(Network.onlinePrefix() + "game level to add player " + player + " to is null.");
 		}
@@ -569,21 +576,23 @@ public class Load {
 	}
 
 	private void loadEntities(String filename) {
+		Level lvlList[][] = {World.levels,World.obvLevels};
 		LoadingDisplay.setMessage("Entities");
 		loadFromFile(location + filename + extension);
-
-		for (int i = 0; i < World.levels.length; i++) {
-			World.levels[i].clearEntities();
+		for(int j = 0;j < lvlList.length;j ++)
+		for (int i = 0; i < lvlList[j].length; i++) {
+			lvlList[j][i].clearEntities();
 		}
 		for (String name : data) {
 			if (name.startsWith("Player")) continue;
 			loadEntity(name, worldVer, true);
 		}
 
-		for (int i = 0; i < World.levels.length; i++) {
-			World.levels[i].checkChestCount();
-			World.levels[i].checkAirWizard();
-		}
+
+		World.levels[0].checkChestCount();
+		World.obvLevels[0].checkChestCount();
+		World.obvLevels[1].checkChestCount();
+
 	}
 
 	@Nullable
@@ -593,6 +602,8 @@ public class Load {
 	}
 	@Nullable
 	public static Entity loadEntity(String entityData, Version worldVer, boolean isLocalSave) {
+		int lvlIdxList[][] = {World.idxToDepth,World.idxToDepthObv};
+		Level lvlList[][] = {World.levels,World.obvLevels};
 		entityData = entityData.trim();
 		if (entityData.length() == 0) return null;
 
@@ -618,7 +629,7 @@ public class Load {
 			if (existing != null) {
 				// Existing one is out of date; replace it.
 				existing.remove();
-				Game.levels[Game.currentLevel].add(existing);
+				lvlList[existing.getRealmId()][Game.currentLevel].add(existing,existing.getRealmId());
 				return null;
 			}
 
@@ -626,7 +637,7 @@ public class Load {
 				if (eid == Game.player.eid)
 					return Game.player; // Don't reload the main player via an entity addition, though do add it to the level (will be done elsewhere)
 				if (Game.player instanceof RemotePlayer &&
-					!((RemotePlayer)Game.player).shouldTrack(x >> 4, y >> 4, World.levels[entityLevel])
+						!((RemotePlayer)Game.player).shouldTrack(x >> 4, y >> 4, lvlList[Game.player.getRealmId()][entityLevel])
 				) {
 					// The entity is too far away to bother adding to the level.
 					if(Game.debug) System.out.println("CLIENT: Entity is too far away to bother loading: " + eid);
@@ -684,7 +695,7 @@ public class Load {
 			return null;
 
 		if (newEntity instanceof Mob && !(newEntity instanceof RemotePlayer)) { // This is structured the same way as in Save.java.
-			Mob mob = (Mob)newEntity;
+			Mob mob = (Mob) newEntity;
 			mob.health = Integer.parseInt(info.get(2));
 
 
@@ -697,7 +708,7 @@ public class Load {
 
 			if (EnemyMob.class.isAssignableFrom(c)) {
 				EnemyMob enemyMob = ((EnemyMob) mob);
-				enemyMob.lvl = Integer.parseInt(info.get(3));
+				enemyMob.lvl = Integer.parseInt(info.get(6));
 
 				if (enemyMob.lvl == 0) {
 					if (Game.debug) System.out.println("Level 0 mob: " + entityName);
@@ -707,40 +718,21 @@ public class Load {
 				}
 
 				mob = enemyMob;
-			} else if (worldVer.compareTo(new Version("2.0.7-dev1")) >= 0) { // If the version is more or equal to 2.0.7-dev1
-				if (newEntity instanceof Sheep) {
-					if(worldVer.compareTo(new Version("2.5.0")) < 0) { //old saving
-						Sheep sheep = ((Sheep) mob);
-						if (info.get(3).equalsIgnoreCase("true")) {
-							sheep.cutOld = Boolean.parseBoolean(info.get(3)); //old way of saving
-						}
-						mob = sheep;
-					}else{ //new saving
-							Sheep sheep = ((Sheep) mob);
-							sheep.cut = Integer.parseInt(info.get(4));
-							mob = sheep;
-					}
-				}
-
-
 			}
-			if(worldVer.compareTo(new Version("2.5.0")) >= 0){
-				if (newEntity instanceof Cow) {
-					Cow cow = ((Cow) mob);
-						cow.milkCooldown = Integer.parseInt(info.get(4));
-					mob = cow;
-				}
-			}
-			mob.burningDuration=Integer.parseInt(worldVer.compareTo(new Version("2.5.0")) < 0 && newEntity instanceof Sheep ? info.get(4) : info.get(3)); //BURNING
+			mob.burningDuration = Integer.parseInt(info.get(3)); //BURNING
+			mob.extracolor = Integer.parseInt(info.get(4));
+			mob.extradata = Integer.parseInt(info.get(5));
 			newEntity = mob;
-
+		}else if(newEntity instanceof KnightStatue){
+			KnightStatue k = (KnightStatue) newEntity;
+			k.setBossHealth(Integer.parseInt( info.get(2)));
 		} else if (newEntity instanceof Chest) {
 			Chest chest = (Chest)newEntity;
 			boolean isDeathChest = chest instanceof DeathChest;
 			boolean isDungeonChest = chest instanceof DungeonChest;
-			List<String> chestInfo = info.subList(2, info.size()-1);
+			List<String> chestInfo = info.subList(2, info.size()-2);
 
-			int endIdx = chestInfo.size() - (isDeathChest || isDungeonChest ? 1 : 0);
+			int endIdx = chestInfo.size() - (isDeathChest || isDungeonChest ? 2 : 0);
 			for (int idx = 0; idx < endIdx; idx++) {
 				String itemData = chestInfo.get(idx);
 				if (worldVer.compareTo(new Version("2.0.7-dev1")) < 0)
@@ -755,8 +747,14 @@ public class Load {
 			if (isDeathChest) {
 				((DeathChest)chest).time = Integer.parseInt(chestInfo.get(chestInfo.size()-1));
 			} else if (isDungeonChest) {
-				((DungeonChest)chest).setLocked(Boolean.parseBoolean(chestInfo.get(chestInfo.size()-1)));
-				if (((DungeonChest)chest).isLocked()) World.levels[Integer.parseInt(info.get(info.size()-1))].chestCount++;
+				if(worldVer.compareTo(new Version("3.0.0")) >= 0){
+				((DungeonChest)chest).setLocked(Boolean.parseBoolean(chestInfo.get(chestInfo.size()-2))); //is locked?
+
+					((DungeonChest)chest).setDoubleLock(Boolean.parseBoolean(chestInfo.get(chestInfo.size()-1))); //double lock
+				}else  ((DungeonChest)chest).setLocked(Boolean.parseBoolean(chestInfo.get(chestInfo.size()-1))); //is locked? old loading
+
+				chest.setRealmId(Integer.parseInt(info.get(info.size()-1)));
+				if (((DungeonChest)chest).isLocked())lvlList[chest.getRealmId()][Integer.parseInt(info.get(info.size()-1))].chestCount++;
 			}
 
 			newEntity = chest;
@@ -767,7 +765,13 @@ public class Load {
 		} else if (newEntity instanceof Lantern && worldVer.compareTo(new Version("1.9.4")) >= 0 && info.size() > 3) {
 			newEntity = new Lantern(Lantern.Type.values()[Integer.parseInt(info.get(2))]);
 		}
-
+		else if(newEntity instanceof  MimicChest){
+			newEntity = new MimicChest(Integer.parseInt(info.get(2)));
+			((MimicChest) newEntity).setDoubleLock(Boolean.parseBoolean(info.get(3)));
+		}
+		if(newEntity instanceof AirWizard)AirWizard.active=true;
+		if(newEntity instanceof NightWizard)NightWizard.active=true;
+		if(newEntity instanceof ObsidianKnight)ObsidianKnight.active=true;
 		if (!isLocalSave) {
 			if (newEntity instanceof Arrow) {
 				int ownerID = Integer.parseInt(info.get(2));
@@ -799,11 +803,12 @@ public class Load {
 		if (newEntity instanceof ItemEntity && eid == -1)
 			System.out.println("Warning: Item entity was loaded with no eid");
 
-		int curLevel = Integer.parseInt(info.get(info.size()-1));
-		if (World.levels[curLevel] != null) {
-			World.levels[curLevel].add(newEntity, x, y);
+		int curLevel = Integer.parseInt(info.get(info.size()-2));
+		int curRealm = Integer.parseInt(info.get(info.size()-1));
+		if (lvlList[curRealm][curLevel] != null) {
+			lvlList[curRealm][curLevel].add(newEntity, x, y,curRealm);
 			if (Game.debug && newEntity instanceof RemotePlayer)
-				World.levels[curLevel].printEntityStatus("Loaded ", newEntity, "mob.RemotePlayer");
+				lvlList[curRealm][curLevel].printEntityStatus("Loaded ", newEntity, "mob.RemotePlayer");
 		} else if (newEntity instanceof RemotePlayer && Game.isValidClient())
 			System.out.println("CLIENT: Remote player not added because on null level");
 
@@ -820,24 +825,28 @@ public class Load {
 			case "Pig": return new Pig();
 			case "Ghost": return new Ghost();
 			case "Zombie": return new Zombie(moblvl);
-			case "Wraith": return new Wraith(moblvl);
-			case "WraithA": return new WraithA(moblvl); //airwizard wraiths that don't despawn. to make wizard killable those can't despawn or he will be invulnerable forever
+			case "Wraith": return new Wraith(moblvl,wraithWeakness);
 			case "Slime": return new Slime(moblvl);
 			case "Creeper": return new Creeper(moblvl);
+			case "Mimic": return new Mimic(moblvl);
+			case "MimicChest": return new MimicChest(moblvl);
 			case "Skeleton": return new Skeleton(moblvl);
 			case "Knight": return new Knight(moblvl);
+			case "ObsidianKnight": return new ObsidianKnight(1);
 			case "KnightTop": return new KnightTop(moblvl);
+			case "FireSage": return new FireSage(moblvl);
 			case "Clallay": return new Clallay();
 			case "AncSkeleton": return new AncSkeleton(moblvl);
 			case "Snake": return new Snake(moblvl);
 			case "AirWizard": return new AirWizard(moblvl>1);
-			case "NightWizard": return new NightWizard(moblvl);
+			case "NightWizard": return new NightWizard(Updater.isbloody ? 2 : 1);
 			case "Spawner": return new Spawner(new Zombie(1));
 			case "Workbench": return new Crafter(Crafter.Type.Workbench);
 			case "Chest": return new Chest();
 			case "DeathChest": return new DeathChest();
 			case "DungeonChest": return new DungeonChest(false);
 			case "Anvil": return new Crafter(Crafter.Type.Anvil);
+			case "Shardforge": return new Crafter(Crafter.Type.Shardforge);
 			case "Enchanter": return new Crafter(Crafter.Type.Enchanter);
 			case "Loom": return new Crafter(Crafter.Type.Loom);
 			case "Furnace": return new Crafter(Crafter.Type.Furnace);
@@ -845,6 +854,7 @@ public class Load {
 			case "Oven": return new Crafter(Crafter.Type.Oven);
 			case "Bed": return new Bed();
 			case "Tnt": return new Tnt();
+			case "KnightStatue": return new KnightStatue(4500);
 			case "Lantern": return new Lantern(Lantern.Type.NORM);
 			case "Arrow": return new Arrow(new Skeleton(0), 0, 0, Direction.NONE, 0);
 			case "ItemEntity": return new ItemEntity(Items.get("unknown"), 0, 0);

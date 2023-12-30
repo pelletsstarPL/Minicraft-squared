@@ -30,7 +30,7 @@ public class WorldEditDisplay extends Display {
 		this.action = action;
 		this.worldName = worldName;
 		
-		Builder builder = new Builder(false,8, RelPos.CENTER,23);
+		Builder builder = new Builder(false,8, RelPos.CENTER,4);
 		ArrayList<ListEntry> entries = new ArrayList<>();
 		
 		if(action != Action.Delete) {

@@ -78,7 +78,7 @@ public class WorldGenDisplay extends Display {
 		};
 		
 		menus = new Menu[] {
-			new Menu.Builder(true, 10, RelPos.LEFT,23,
+			new Menu.Builder(true, 10, RelPos.LEFT,4,
 				nameField,
 				nameHelp,
 				Settings.getEntry("mode"),

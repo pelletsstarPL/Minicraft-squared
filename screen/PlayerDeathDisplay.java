@@ -50,7 +50,7 @@ public class PlayerDeathDisplay extends Display {
 
 		
 		menus = new Menu[]{
-			new Menu.Builder(true, 0, RelPos.LEFT, 25,entries)
+			new Menu.Builder(true, 0, RelPos.LEFT, 1,entries)
 				.setPositioning(new Point(SpriteSheet.boxWidth, SpriteSheet.boxWidth * 3), RelPos.BOTTOM_RIGHT)
 				.setTitle("You died! Aww!")
 				.setTitlePos(RelPos.TOP_LEFT)

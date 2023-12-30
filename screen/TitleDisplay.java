@@ -34,7 +34,7 @@ public class TitleDisplay extends Display {
 	private String SplashText;
 	private int count = 0; // This and reverse are for the logo; they produce the fade-in/out effect.
 	private boolean reverse = false;
-	public static String version="2.8.0";
+	public static String version="3.0.2";
 
 	public TitleDisplay() {
 
@@ -52,7 +52,7 @@ public class TitleDisplay extends Display {
 			new SelectEntry("Options", () -> Game.setMenu(new OptionsMainMenuDisplay())),
             new SelectEntry("Skins", () -> Game.setMenu(new SkinDisplay())),
 				new SelectEntry( "Help", () -> /*Game.setMenu(new PlayDisplay())*/{
-						Game.setMenu(new Display(true, new Menu.Builder(true, 2, RelPos.CENTER,25,
+						Game.setMenu(new Display(true, new Menu.Builder(true, 2, RelPos.CENTER,5,
 								new BlankEntry(),
 								new SelectEntry("Instructions", () -> Game.setMenu(new BookDisplay(BookData.instructions))),
 								new BlankEntry(),
@@ -94,7 +94,7 @@ public class TitleDisplay extends Display {
 		boolean isHalloween=time.getMonth() == Month.OCTOBER && time.getDayOfMonth() >= 10;
 		boolean isValentines=time.getMonth() == Month.FEBRUARY && time.getDayOfMonth() >= 10 && time.getDayOfMonth() <= 16;
 		//we'll set ids
-		if(random.nextInt(3)==0)
+		if(random.nextInt(5)!=3)
 		if (isXmas) {
 			 rand = random.nextInt(5)+1;
 			 SplashText = seasonalSplashes[rand];
@@ -343,6 +343,8 @@ public class TitleDisplay extends Display {
 		"Sweet!",
 		"Great!",
 		"Glad that Glad is here :)",
+			"Do you like the view?",
+			"Epic view isn't it?",
 		"Cool!",
 		"Radical!",
 		"011011000110111101101100!",

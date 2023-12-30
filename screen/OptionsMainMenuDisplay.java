@@ -18,10 +18,11 @@ public class OptionsMainMenuDisplay extends Display {
     public OptionsMainMenuDisplay() {
         super(true);
 
-        Menu optionsMenu = new Menu.Builder(true, 6, RelPos.LEFT,21,
+        Menu optionsMenu = new Menu.Builder(true, 6, RelPos.LEFT,1,
             Settings.getEntry("fps"),
                 new SelectEntry("Sound", () -> Game.setMenu(new OptionsSound())),
-            Settings.getEntry("statdisplay"),
+                new SelectEntry("Shortened potion display", () -> Game.setMenu(new OptionsPotions())),
+                Settings.getEntry("statdisplay"),
                 Settings.getEntry("coloredgui"),
             new SelectEntry("Change Key Bindings", () -> Game.setMenu(new KeyInputDisplay())),
             //Settings.getEntry("language"),

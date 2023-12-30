@@ -8,7 +8,7 @@ class ItemListMenu extends Menu
 {
 
     static Menu.Builder getBuilder() {
-		return new Menu.Builder(true, 0, RelPos.LEFT, 19,new ListEntry[0]).setPositioning(new Point(9, 9), RelPos.BOTTOM_RIGHT).setDisplayLength(9).setSelectable(true).setScrollPolicies(1.0f, false).setSearcherBar(true);
+		return new Menu.Builder(true, 0, RelPos.LEFT, 4,new ListEntry[0]).setPositioning(new Point(9, 9), RelPos.BOTTOM_RIGHT).setDisplayLength(9).setSelectable(true).setScrollPolicies(1.0f, false).setSearcherBar(true);
 	}
 	static Menu.Builder getBuilder(int bg) {
 		return new Menu.Builder(true, 0, RelPos.LEFT, bg,new ListEntry[0]).setPositioning(new Point(9, 9), RelPos.BOTTOM_RIGHT).setDisplayLength(9).setSelectable(true).setScrollPolicies(1.0f, false).setSearcherBar(true);
