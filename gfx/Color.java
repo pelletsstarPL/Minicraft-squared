@@ -211,4 +211,15 @@ public class Color {
 			b = 0;
 		return r * 16 + g * 6 + b;
 	}
+
+	//percent integer is used for generating colour: 100% green, 50% yellow and 0% red . All gradually
+	public static int generatePercentageColor(short percent){
+		if(percent > 100)percent = 100;else if(percent < 0)percent =0;
+		short yellowscale = (short) ( percent<25 || percent > 75 ? 0 : (percent >=25 && percent < 50) ? 5*(percent - 25) : -5*(percent - 75));
+		short r= (short) (2.55f*(100-percent) + yellowscale);
+		short g= (short) (2.55f*percent + yellowscale);
+
+		//We won't need blue
+		return get(1,r,g,0);
+	}
 }

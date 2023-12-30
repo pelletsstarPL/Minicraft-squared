@@ -30,7 +30,7 @@ public class NightWizard extends EnemyMob {
             sprites[i] = list;
         }
     }
-
+    public  static boolean active;
     public static boolean beaten = false;
     public boolean canBeAffectedByLava() { return false; }
     public static int revenge=0;
@@ -54,8 +54,10 @@ public class NightWizard extends EnemyMob {
 
     @Override
     public void tick() {
+        active=true;
         if (Updater.getTime() == Updater.Time.Night) {
             if(Updater.isbloody)this.lvl=2;
+
             else this.lvl=1;
             this.speed=2;
             this.speedS=2;
@@ -69,7 +71,7 @@ public class NightWizard extends EnemyMob {
                 Game.notifications.add("Night wizard has awakened.");
                 if (Updater.isbloody)
                     Game.notifications.add("..in bloody realm");
-                if (health < maxHealth) this.heal((int) (maxHealth * 0.66));
+                if (health < maxHealth) this.heal((int) (maxHealth * 0.4));
             }
 
             if (Game.isMode("Creative")) return; // Should not attack if player is in creative
@@ -117,7 +119,7 @@ public class NightWizard extends EnemyMob {
                             ny = random.nextInt(level.h) * 16 + 8; //reroll
                         }
                         if (rnd < 2)
-                            level.add((new Wraith((revenge + 1) > 4 + (lvl>1 ? 1 : 0) ? 4 + (lvl>1 ? 1 : 0) : (revenge + 1) + (lvl>1 ? 1 : 0))), nx, ny);
+                            level.add((new Wraith((revenge + 1) > 4 + (lvl>1 ? 1 : 0) ? 4 + (lvl>1 ? 1 : 0) : (revenge + 1) + (lvl>1 ? 1 : 0),0)), nx, ny);
                         else if (rnd >= 2 && rnd <= 40)
                             level.add((new Slime((revenge + 1) > 4 + (lvl>1 ? 1 : 0) ? 4 + (lvl>1 ? 1 : 0) : (revenge + 1) + (lvl>1 ? 1 : 0))), nx, ny);
                         else if (rnd <= 75)
@@ -142,7 +144,7 @@ public class NightWizard extends EnemyMob {
                     dir = 0; // Direction is reset, if attackDelay is less than 45; prepping for attack.
 
                 this.dir = Direction.getDirection(dir);
-
+                if(player!=null)
                 attackDelay -= player.potionEffects.containsKey(PotionType.AntiTime) ? 2 : player.potionEffects.containsKey(PotionType.Time) ? (Updater.tickCount % 2 == 0 ? 1 : 0) : 1;
                 if (attackDelay <= 0) {
                     //attackType = 0; // Attack type is set to 0, as the default.
@@ -247,26 +249,7 @@ public class NightWizard extends EnemyMob {
         }else{
             lvlSprites[lvl-1]=sprites[lvl-1];
         }
-        int textcol = Color.get(1, 0, 204, 0);
-        int textcol2 = Color.get(1, 0, 51, 0);
-        int percent = health / (maxHealth / 100);
-        String h = percent + "%";
-
-        if (percent < 1) h = "1%";
-
-        if (percent < 16) {
-            textcol = Color.get(1, 204, 0, 0);
-            textcol2 = Color.get(1, 51, 0, 0);
-        }
-        else if (percent < 51) {
-            textcol = Color.get(1, 204, 204, 9);
-            textcol2 = Color.get(1, 51, 51, 0);
-        }
-        int textwidth = Font.textWidth(h);
-        if(Updater.getTime()== Updater.Time.Night) {
-            Font.draw(h, screen, (x - textwidth / 2) + 1, y - 17, textcol2);
-            Font.draw(h, screen, (x - textwidth / 2), y - 18, textcol);
-        }
+    if(Updater.getTime()==Updater.Time.Night)renderHPPercent(screen);
     }
 
     @Override
@@ -283,6 +266,7 @@ public class NightWizard extends EnemyMob {
 
     public void die() {
         revenge=0;
+        active=false;
         for(int i=0;i<100;i++) {
             if(i%100==0) {
                 attackTime = 200;

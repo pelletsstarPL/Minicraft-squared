@@ -10,11 +10,11 @@ import minicraft.entity.Entity;
 import minicraft.entity.furniture.Tnt;
 import minicraft.entity.particle.BurnParticle;
 import minicraft.entity.particle.TextParticle;
-import minicraft.gfx.Color;
-import minicraft.gfx.MobSprite;
+import minicraft.gfx.*;
 import minicraft.item.PotionType;
 import minicraft.level.tile.Tile;
 import minicraft.level.tile.Tiles;
+import minicraft.screen.RelPos;
 
 public abstract class Mob extends Entity {
 	
@@ -24,12 +24,13 @@ public abstract class Mob extends Entity {
 	public Direction dir = Direction.DOWN; // The direction the mob is facing, used in attacking and rendering. 0 is down, 1 is up, 2 is left, 3 is right
 	int hurtTime = 0; // A delay after being hurt, that temporarily prevents further damage for a short time
 	private int xKnockback, yKnockback; // The amount of vertical/horizontal knockback that needs to be inflicted, if it's not 0, it will be moved one pixel at a time.
-	public int health;
-	public int isBurning;
+
 	final int maxHealth; // The amount of health we currently have, and the maximum.
 	int walkTime;
 	public int speed;
 	public int speedS;
+	public int extracolor=0xFFFFFF; //set white by default
+	public int extradata=0; //set white by default
 	int tickTime = 0; // Incremented whenever tick() is called, is effectively the age in ticks
 	
 	/**
@@ -46,7 +47,18 @@ public abstract class Mob extends Entity {
 		speed = 1;
 		speedS = speed;
 	}
-	
+	/**
+	 *  Generates HP percentage above the mob
+	 */
+	public void renderHPPercent(Screen screen){
+		int percent =this. health / (this.maxHealth / 100);
+		String h = percent + "%";
+		int textwidth = Font.textWidth(h);
+		int color = Color.generatePercentageColor((byte) percent);
+		FontStyle boss = new FontStyle(color).setShadowType(Color.tint(color,-3,false), true).setXPos( x - textwidth/2).setYPos(y-18);
+		Font.drawParagraph(screen,boss,0,h);
+	}
+
 	/**
 	 * Updates the mob.
 	 */
@@ -63,6 +75,7 @@ public abstract class Mob extends Entity {
 			}
 		if(this.burningDuration>0){
 			if(level.getTile(x / 16, y / 16) == Tiles.get("water"))this.burningDuration=0;
+			if(getClosestPlayer()!=null)
 			if(this.burningDuration%(10*(getClosestPlayer().potionEffects.containsKey(PotionType.Time) && !getClosestPlayer().isWithin(3,this) ? 2 : 1))==0)
 				level.add(new BurnParticle(x - 8 + (random.nextInt(8)-4), y - 8 + (random.nextInt(8)-4)));
 			this.burningDuration--;
@@ -188,10 +201,7 @@ public abstract class Mob extends Entity {
 		return false;
 	}
 	public boolean isSwimming() {
-		if (level == null) return false;
-		Tile tile = level.getTile(x >> 4, y >> 4); // Get the tile the mob is standing on (at x/16, y/16)
-		 // Check if the tile is liquid, and return true if so
-		return tile == Tiles.get("water") || tile == Tiles.get("lava") || tile==Tiles.get("Reed");
+		return false; //by default
 	}
 	/* Offset locations to start drawing the sprite relative to our position */
 	int xo = x - 8; // Horizontal
@@ -285,6 +295,7 @@ public abstract class Mob extends Entity {
 		if (health > maxHealth) health = maxHealth; // If our health has exceeded our maximum, lower it back down to said maximum
 	}
 
+
 	protected static Direction getAttackDir(Entity attacker, Entity hurt) {
 		return Direction.getDirection(hurt.x - attacker.x, hurt.y - attacker.y);
 	}
@@ -311,4 +322,5 @@ public abstract class Mob extends Entity {
 		
 		return false;
 	}
+
 }

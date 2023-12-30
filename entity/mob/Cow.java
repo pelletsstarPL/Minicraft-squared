@@ -14,30 +14,30 @@ import java.util.Stack;
 
 public class Cow extends PassiveMob {
 	private static MobSprite[][] sprites = MobSprite.compileMobSpriteAnimations(0, 30);
-	public int milkCooldown=0;
 	/**
 	 * Creates the cow with the right sprites and color.
+	 * extradata will be cooldown for our cow to be milked
 	 */
 	public Cow() {
 		super(sprites, 5);
 	}
 
 	public boolean interact(Player player, @Nullable Item item, Direction attackDir) {
-		if (milkCooldown>0) return false;
+		if (this.extradata>0) return false;
 		String name = item.getName();
-		if(milkCooldown<=0) {
+		if(this.extradata<=0) {
 			if (name.contains("Bottle")) {
 				((StackableItem) item).count--;
 				if (((StackableItem) item).count <= 0) Game.player.activeItem = null;
 				Game.player.getInventory().add(Items.get("Milk"));
-				milkCooldown = 12000;
+				this.extradata = 12000;
 				return true;
 			}
 			if (name.contains("Empty Bucket")) {
 				((StackableItem) item).count--;
 				if (((StackableItem) item).count <= 0) Game.player.activeItem = null;
 				Game.player.getInventory().add(Items.get("Milk Bucket"));
-				milkCooldown = 24000;
+				this.extradata = 24000;
 				return true;
 			}
 		}
@@ -57,6 +57,6 @@ public class Cow extends PassiveMob {
 	@Override
 	public void tick() {
 		super.tick();
-		if (milkCooldown > 0) milkCooldown--;
+		if (this.extradata > 0) this.extradata--;
 	}
 }

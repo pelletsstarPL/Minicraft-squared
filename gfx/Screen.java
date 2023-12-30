@@ -3,6 +3,7 @@ package minicraft.gfx;
 import java.util.Arrays;
 
 import minicraft.item.PotionType;
+import minicraft.level.tile.Tiles;
 import org.jetbrains.annotations.NotNull;
 
 import minicraft.core.Renderer;
@@ -10,12 +11,12 @@ import minicraft.core.Updater;
 import sun.java2d.pipe.RenderQueue;
 
 public class Screen {
-	
+
 	public static final int w = Renderer.WIDTH; // Width of the screen
 	public static final int h = Renderer.HEIGHT; // Height of the screen
 	public static final Point center = new Point(w/2, h/2);
 	public static int reduce=0;
-	
+
 	private static final int MAXDARK = 128;
 	private static int redu=0;
 	private static final int MAXRED = Color.get(1,128,0,0);
@@ -24,11 +25,11 @@ public class Screen {
 	/// x and y offset of screen:
 	private int xOffset;
 	private int yOffset;
-	
+
 	// Used for mirroring an image:
 	private static final int BIT_MIRROR_X = 0x01; // Written in hexadecimal; binary: 01
 	private static final int BIT_MIRROR_Y = 0x02; // Binary: 10
-	
+
 	public int[] pixels; // Pixels on the screen
 
 	// Since each sheet is 256x256 pixels, each one has 1024 8x8 "tiles"
@@ -63,120 +64,120 @@ public class Screen {
 	public SpriteSheet getSpriteSheet() {
 		return sheets[4];
 	}
-	
+
 	/** Clears all the colors on the screen */
 	public void clear(int color) {
 		// Turns each pixel into a single color (clearing the screen!)
 		Arrays.fill(pixels, color);
 	}
-	
+
 	public void render(int[] pixelColors) {
 		System.arraycopy(pixelColors, 0, pixels, 0, Math.min(pixelColors.length, pixels.length));
 	}
 
-    public void render(int xp, int yp, int tile, int bits) {
-        render(xp, yp, tile, bits, 0);
-    }
+	public void render(int xp, int yp, int tile, int bits) {
+		render(xp, yp, tile, bits, 0);
+	}
 
-    public void render(int xp, int yp, int tile, int bits, int sheet) {
-        render(xp, yp, tile, bits, sheet, -1);
-    }
+	public void render(int xp, int yp, int tile, int bits, int sheet) {
+		render(xp, yp, tile, bits, sheet, -1);
+	}
 
-    public void render(int xp, int yp, int tile, int bits, int sheet, int whiteTint) {
-        render(xp, yp, tile, bits, sheet, whiteTint, false);
-    }
+	public void render(int xp, int yp, int tile, int bits, int sheet, int whiteTint) {
+		render(xp, yp, tile, bits, sheet, whiteTint, false);
+	}
 
-    public void render(int xp, int yp, int tile, int bits, int sheet, int whiteTint, boolean fullbright) {
-        render(xp, yp, tile % 32, tile / 32, bits, sheet, whiteTint, fullbright, 0);
-    }
-    
-    public void render(int xp, int yp, int tile, int bits, int sheet, int whiteTint, boolean fullbright, int color) {
-        render(xp, yp, tile % 32, tile / 32, bits, sheet, -1, false, color);
-    }
+	public void render(int xp, int yp, int tile, int bits, int sheet, int whiteTint, boolean fullbright) {
+		render(xp, yp, tile % 32, tile / 32, bits, sheet, whiteTint, fullbright, 0);
+	}
 
-    public void render(int xp, int yp, Pixel pixel) {
-        render(xp, yp, pixel, -1);
-    }
+	public void render(int xp, int yp, int tile, int bits, int sheet, int whiteTint, boolean fullbright, int color) {
+		render(xp, yp, tile % 32, tile / 32, bits, sheet, -1, false, color);
+	}
 
-    public void render(int xp, int yp, Pixel pixel, int whiteTint) {
-        render(xp, yp, pixel, whiteTint, false);
-    }
+	public void render(int xp, int yp, Pixel pixel) {
+		render(xp, yp, pixel, -1);
+	}
 
-    public void render(int xp, int yp, Pixel pixel, int whiteTint, boolean fullbright) {
-        render(xp, yp, pixel.getX(), pixel.getY(), pixel.getMirror(), pixel.getIndex(), whiteTint, fullbright, 0);
-    }
-    
-    public void render(int xp, int yp, Pixel pixel, int whiteTint, boolean fullbright, int color) {
-        render(xp, yp, pixel.getX(), pixel.getY(), pixel.getMirror(), pixel.getIndex(), whiteTint, fullbright, color);
-    }
+	public void render(int xp, int yp, Pixel pixel, int whiteTint) {
+		render(xp, yp, pixel, whiteTint, false);
+	}
 
-    public void render(int xp, int yp, Pixel pixel, int bits, int whiteTint, boolean fullbright) {
-        render(xp, yp, pixel.getX(), pixel.getY(), bits, pixel.getIndex(), whiteTint, fullbright, 0);
-    }
-    
-    public void render(int xp, int yp, Pixel pixel, int bits, int whiteTint, boolean fullbright, int color) {
-        render(xp, yp, pixel.getX(), pixel.getY(), bits, pixel.getIndex(), whiteTint, fullbright, color);
-    }
+	public void render(int xp, int yp, Pixel pixel, int whiteTint, boolean fullbright) {
+		render(xp, yp, pixel.getX(), pixel.getY(), pixel.getMirror(), pixel.getIndex(), whiteTint, fullbright, 0);
+	}
+
+	public void render(int xp, int yp, Pixel pixel, int whiteTint, boolean fullbright, int color) {
+		render(xp, yp, pixel.getX(), pixel.getY(), pixel.getMirror(), pixel.getIndex(), whiteTint, fullbright, color);
+	}
+
+	public void render(int xp, int yp, Pixel pixel, int bits, int whiteTint, boolean fullbright) {
+		render(xp, yp, pixel.getX(), pixel.getY(), bits, pixel.getIndex(), whiteTint, fullbright, 0);
+	}
+
+	public void render(int xp, int yp, Pixel pixel, int bits, int whiteTint, boolean fullbright, int color) {
+		render(xp, yp, pixel.getX(), pixel.getY(), bits, pixel.getIndex(), whiteTint, fullbright, color);
+	}
 
 
-    /** Renders an object from the sprite sheet based on screen coordinates, tile (SpriteSheet location), colors, and bits (for mirroring).
-     *  I believe that xp and yp refer to the desired position of the upper-left-most pixel. 
-     */
-    private void render(int xp, int yp, int xTile, int yTile, int bits, int sheet, int whiteTint, boolean fullbright, int color) {
-        // xp and yp are originally in level coordinates, but offset turns them to screen coordinates.
-    	
-        xp -= xOffset; // account for screen offset
-        yp -= yOffset;
-        
-        // determines if the image should be mirrored...
-        boolean mirrorX = (bits & BIT_MIRROR_X) > 0; // horizontally.
-        boolean mirrorY = (bits & BIT_MIRROR_Y) > 0; // vertically.
+	/** Renders an object from the sprite sheet based on screen coordinates, tile (SpriteSheet location), colors, and bits (for mirroring).
+	 *  I believe that xp and yp refer to the desired position of the upper-left-most pixel.
+	 */
+	private void render(int xp, int yp, int xTile, int yTile, int bits, int sheet, int whiteTint, boolean fullbright, int color) {
+		// xp and yp are originally in level coordinates, but offset turns them to screen coordinates.
 
-        SpriteSheet currentSheet;
-        currentSheet = sheets[sheet];
-        
-        xTile %= currentSheet.width; // to avoid out of bounds
-        yTile %= currentSheet.height; // ^
-        
-        // Gets the offset of the sprite into the spritesheet
-        // pixel array, the 8's represent the size of the box.
-        // (8 by 8 pixel sprite boxes)
-        int toffs = xTile * 8 + yTile * 8 * currentSheet.width; 
+		xp -= xOffset; // account for screen offset
+		yp -= yOffset;
 
-        /// THIS LOOPS FOR EVERY LITTLE PIXEL
-        for (int y = 0; y < 8; y++) { // Loops 8 times (because of the height of the tile)
-            int ys = y; // current y pixel
-            if (mirrorY) {
-            	ys = 7 - y; // Reverses the pixel for a mirroring effect
-            }
-            if (y + yp < 0 || y + yp >= h) {
-            	continue; // If the pixel is out of bounds, then skip the rest of the loop.
-            }
-            for (int x = 0; x < 8; x++) { // Loops 8 times (because of the width of the tile)
-                if (x + xp < 0 || x + xp >= w) {
-                    continue; // skip rest if out of bounds.
-                }
+		// determines if the image should be mirrored...
+		boolean mirrorX = (bits & BIT_MIRROR_X) > 0; // horizontally.
+		boolean mirrorY = (bits & BIT_MIRROR_Y) > 0; // vertically.
 
-                int xs = x; // current x pixel
-                if (mirrorX) {
-                    xs = 7 - x; // Reverses the pixel for a mirroring effect
-                }
+		SpriteSheet currentSheet;
+		currentSheet = sheets[sheet];
 
-                // Gets the color of the current pixel from the value stored in the sheet.
-                int col = currentSheet.pixels[toffs + xs + ys * currentSheet.width];
+		xTile %= currentSheet.width; // to avoid out of bounds
+		yTile %= currentSheet.height; // ^
 
-                boolean isTransparent = (col >> 24 == 0);
+		// Gets the offset of the sprite into the spritesheet
+		// pixel array, the 8's represent the size of the box.
+		// (8 by 8 pixel sprite boxes)
+		int toffs = xTile * 8 + yTile * 8 * currentSheet.width;
 
-                if (!isTransparent) {
-                    int position = (x + xp) + (y + yp) * w;
+		/// THIS LOOPS FOR EVERY LITTLE PIXEL
+		for (int y = 0; y < 8; y++) { // Loops 8 times (because of the height of the tile)
+			int ys = y; // current y pixel
+			if (mirrorY) {
+				ys = 7 - y; // Reverses the pixel for a mirroring effect
+			}
+			if (y + yp < 0 || y + yp >= h) {
+				continue; // If the pixel is out of bounds, then skip the rest of the loop.
+			}
+			for (int x = 0; x < 8; x++) { // Loops 8 times (because of the width of the tile)
+				if (x + xp < 0 || x + xp >= w) {
+					continue; // skip rest if out of bounds.
+				}
 
-                    if (whiteTint != -1 && col == 0x1FFFFFF) {
-                        // if this is white, write the whiteTint over it
-                        pixels[position] = Color.upgrade(whiteTint);
-                    } else {
-                        // Inserts the colors into the image
-                        if (fullbright) {
-                            pixels[position] = Color.WHITE; // mob color when hit
+				int xs = x; // current x pixel
+				if (mirrorX) {
+					xs = 7 - x; // Reverses the pixel for a mirroring effect
+				}
+
+				// Gets the color of the current pixel from the value stored in the sheet.
+				int col = currentSheet.pixels[toffs + xs + ys * currentSheet.width];
+
+				boolean isTransparent = (col >> 24 == 0);
+
+				if (!isTransparent) {
+					int position = (x + xp) + (y + yp) * w;
+
+					if (whiteTint != -1 && col == 0x1FFFFFF) {
+						// if this is white, write the whiteTint over it
+						pixels[position] = Color.upgrade(whiteTint);
+					} else {
+						// Inserts the colors into the image
+						if (fullbright) {
+							pixels[position] = Color.WHITE; // mob color when hit
 						} else {
 							if (color != 0) { // full sprite color
 								pixels[position] = color;
@@ -184,21 +185,21 @@ public class Screen {
 								pixels[position] = Color.upgrade(col);
 							}
 						}
-                    }
-                }
-            }
-        }
-    }
+					}
+				}
+			}
+		}
+	}
 
 	/** Sets the offset of the screen */
 	public void setOffset(int xOffset, int yOffset) {
 		// This is called in few places, one of which is level.renderBackground, right before all the tiles are rendered. The offset is determined by the Game class (this only place renderBackground is called), by using the screen's width and the player's position in the level.
 		// In other words, the offset is a conversion factor from level coordinates to screen coordinates. It makes a certain coord in the level the upper left corner of the screen, when subtracted from the tile coord.
-		
+
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;
 	}
-	
+
 	/* Used for the scattered dots at the edge of the light radius underground.
 
 		These values represent the minimum light level, on a scale from 0 to 25 (255/10), 0 being no light, 25 being full light (which will be portrayed as transparent on the overlay lightScreen pixels) that a pixel must have in order to remain lit (not black).
@@ -207,108 +208,180 @@ public class Screen {
 		16 is the minimum pixel lighness required to ensure that the pixel will always remain lit.
 	*/
 	private static final int[] dither = new int[] {
-		0, 8, 2, 10,
-		12, 4, 14, 6,
-		3, 11, 1, 9,
-		15, 7, 13, 5
+			0, 8, 2, 10,
+			12, 4, 14, 6,
+			3, 11, 1, 9,
+			15, 7, 13, 5
 	};
-	
+
 	/** Overlays the screen with pixels */
-    public void overlay(Screen screen2, int currentLevel, int xa, int ya) {
+	public void overlay(Screen screen2, int currentLevel, int xa, int ya) {
 		double tintFactor = 0;
-		if (currentLevel >= 3 && currentLevel < 6) {
-			int transTime = Updater.dayLength / 4;
-			double relTime = (Updater.tickCount % transTime) * 1.0 / transTime;
-			switch (Updater.getTime()) {
-				case Dawn:tintFactor =  MAXDARK-10-(Updater.tickCount/30); break;
-				case Morning:tintFactor =  MAXDARK-10-(Updater.tickCount/30); break;
-				case Day: tintFactor=0; break;
-				case Dusk:case Evening: tintFactor = (relTime * MAXDARK * (Updater.tickCount/(Updater.dayLength/2.5))+12 > MAXDARK-5 ? MAXDARK-5 : (relTime * MAXDARK * (Updater.tickCount/(Updater.dayLength/2.2))+12)); break;
-				case Night: tintFactor = MAXDARK; break;
-			}
+		if (Renderer.player.getRealmId() == 0) {
+			if (currentLevel >= 6) {
+				int transTime = Updater.dayLength / 4;
+				double relTime = (Updater.tickCount % transTime) * 1.0 / transTime;
+				switch (Updater.getTime()) {
+					case Dawn:
+						tintFactor = MAXDARK - 10 - (Updater.tickCount / 30);
+						break;
+					case Morning:
+						tintFactor = MAXDARK - 10 - (Updater.tickCount / 30);
+						break;
+					case Day:
+						tintFactor = 0;
+						break;
+					case Dusk:
+					case Evening:
+						tintFactor = (relTime * MAXDARK * (Updater.tickCount / (Updater.dayLength / 2.5)) + 12 > MAXDARK - 5 ? MAXDARK - 5 : (relTime * MAXDARK * (Updater.tickCount / (Updater.dayLength / 2.2)) + 12));
+						break;
+					case Night:
+						tintFactor = MAXDARK;
+						break;
+				}
 
-			if (currentLevel > 3) tintFactor -= (tintFactor < 10 ? tintFactor : 10);
-			tintFactor *= -1; // All previous operations were assuming this was a darkening factor.
-		}
-		else if(currentLevel >= 5)
-			tintFactor = -MAXDARK;
-        
-		int[] oPixels = screen2.pixels;  // The Integer array of pixels to overlay the screen with.
-		int i = 0; // Current pixel on the screen
-		for (int y = 0; y < h; y++) { // loop through height of screen
-            for (int x = 0; x < w; x++) { // loop through width of screen
+				if (currentLevel > 5) tintFactor -= (tintFactor < 10 ? tintFactor : 10);
+				tintFactor *= -1; // All previous operations were assuming this was a darkening factor.
+			} else if (currentLevel == 0)
+				tintFactor = -MAXDARK;
 
-				if (oPixels[i] / 10 <= dither[((x + xa) & 3) + ((y + ya) & 3) * 4]) {
+			int[] oPixels = screen2.pixels;  // The Integer array of pixels to overlay the screen with.
+			int i = 0; // Current pixel on the screen
+			for (int y = 0; y < h; y++) { // loop through height of screen
+				for (int x = 0; x < w; x++) { // loop through width of screen
 
-                    /// The above if statement is simply comparing the light level stored in oPixels with the minimum light level stored in dither. if it is determined that the oPixels[i] is less than the minimum requirements, the pixel is considered "dark", and the below is executed...
-					if (currentLevel < 4 || Renderer.player.potionEffects.containsKey(PotionType.Blind)) { // if in caves... or blind...
-                        /// in the caves, not being lit means being pitch black.
-						pixels[i] = 0;
-                    } else{
-						/// Outside the caves, not being lit simply means being darker.
-						if(Renderer.player.potionEffects.containsKey(PotionType.Blind))pixels[i]=0;
-						else pixels[i] = Color.tintColor(pixels[i], (int)tintFactor); // darkens the color one shade.
-                    }
-                }
-				boolean chck=Updater.isbloody ? (Updater.tickCount>37800 || Updater.tickCount<8000) : Updater.tickCount<8000;
-				if(currentLevel>=4 && currentLevel!=6) { //basically surface and above index 6 is for obs dungeon
-					if ((Updater.tickCount > 37800 || Updater.tickCount < 3500) && Updater.isbloody) {
+					if (oPixels[i] / 10 <= dither[((x + xa) & 3) + ((y + ya) & 3) * 4]) {
+
+						/// The above if statement is simply comparing the light level stored in oPixels with the minimum light level stored in dither. if it is determined that the oPixels[i] is less than the minimum requirements, the pixel is considered "dark", and the below is executed...
+						if ((currentLevel < 6 && currentLevel > 0) || Renderer.player.potionEffects.containsKey(PotionType.Blind)) { // if in caves... or blind...
+							/// in the caves, not being lit means being pitch black.
+							pixels[i] = 0;
+						} else {
+							/// Outside the caves, not being lit simply means being darker.
+							if (Renderer.player.potionEffects.containsKey(PotionType.Blind)) pixels[i] = 0;
+							else
+								pixels[i] = Color.tintColor(pixels[i], (int) tintFactor); // darkens the color one shade.
+						}
+					}
+					boolean chck = Updater.isbloody ? (Updater.tickCount > 37800 || Updater.tickCount < 8000) : Updater.tickCount < 8000;
+					if (currentLevel >= 6) { //basically surface and above
+						if ((Updater.tickCount > 37800 || Updater.tickCount < 3500) && Updater.isbloody) {
+							int r = pixels[i] >> 16 & 0xFF;
+							int g = pixels[i] >> 8 & 0xFF;
+							int b = pixels[i] & 0xFF;
+							int red = reduce > 100 ? 100 : reduce;
+							pixels[i] = Color.get(1, r, (g - red < 0 ? 0 : g - red), (b - red < 0 ? 0 : b - red));
+						}
+						if (Updater.tickCount < 8000 && !Updater.isbloody) {
+							int r = pixels[i] >> 16 & 0xFF;
+							int g = pixels[i] >> 8 & 0xFF;
+							int b = pixels[i] & 0xFF;
+							//	System.out.println(reduce);
+							int reduceG = reduce - 8 < 0 ? 0 : reduce - 8;
+							if (reduceG > 40) reduceG = 40;
+							pixels[i] = Color.get(1, r, g - reduceG < 0 ? 0 : g - reduceG, (b - reduce < 0 ? 0 : b - reduce));
+						}
+
+					}
+					if (Renderer.player.potionEffects.containsKey(PotionType.Time)) {
 						int r = pixels[i] >> 16 & 0xFF;
 						int g = pixels[i] >> 8 & 0xFF;
 						int b = pixels[i] & 0xFF;
-						int red = reduce > 100 ? 100 : reduce;
-						pixels[i] = Color.get(1, r, (g - red < 0 ? 0 : g - red), (b - red < 0 ? 0 : b - red));
+						// Normalize and gamma correct:
+						double rr = Math.pow(r / 255.0, 2.2);
+						double gg = Math.pow(g / 255.0, 2.2);
+						double bb = Math.pow(b / 255.0, 2.2);
+
+						// Calculate luminance:
+						double lum = 0.2126 * rr + 0.7152 * gg + 0.0722 * bb;
+
+						// Gamma compand and rescale to byte range:
+						int grayLevel = (int) (255.0 * Math.pow(lum, 1.0 / 2.2));
+						int gray = (grayLevel << 16) + (grayLevel << 8) + grayLevel;
+						if (oPixels[i] / 10 <= dither[((x + xa) & 3) + ((y + ya) & 3) * 4]) {
+
+							pixels[i] = gray;
+							pixels[i] = Color.tintColor(pixels[i], ((Updater.tickCount % 31) - 15));
+						} else {
+							if (Updater.tickCount % 100 > 85) pixels[i] = gray;
+							else pixels[i] = Color.tintColor(pixels[i], -50 + ((Updater.tickCount % 20) - 10));
+						}
 					}
-					if (Updater.tickCount < 8000 && !Updater.isbloody) {
-						int r = pixels[i] >> 16 & 0xFF;
-						int g = pixels[i] >> 8 & 0xFF;
-						int b = pixels[i] & 0xFF;
-						//	System.out.println(reduce);
-						int reduceG = reduce - 8 < 0 ? 0 : reduce - 8;
-						if (reduceG > 40) reduceG = 40;
-						pixels[i] = Color.get(1, r, g - reduceG < 0 ? 0 : g - reduceG, (b - reduce < 0 ? 0 : b - reduce));
+					if (Renderer.player.potionEffects.containsKey(PotionType.AntiTime)) {
+						if (oPixels[i] / 10 <= dither[((x + xa) & 3) + ((y + ya) & 3) * 4]) {
+
+							pixels[i] = Color.tintColor(-pixels[i], ((Updater.tickCount % 31) - 15));
+						} else {
+							if (Updater.tickCount % 100 > 85) pixels[i] = -pixels[i];
+							else pixels[i] = Color.tintColor(pixels[i], -50 + ((Updater.tickCount % 20) - 10));
+						}
 					}
-
-				}
-				if(Renderer.player.potionEffects.containsKey(PotionType.Time)) {
-					int r = pixels[i] >> 16 & 0xFF;
-					int g = pixels[i] >> 8 & 0xFF;
-					int b = pixels[i] & 0xFF;
-					// Normalize and gamma correct:
-					double rr = Math.pow(r / 255.0, 2.2);
-					double gg = Math.pow(g / 255.0, 2.2);
-					double bb = Math.pow(b / 255.0, 2.2);
-
-					// Calculate luminance:
-					double lum = 0.2126 * rr + 0.7152 * gg + 0.0722 * bb;
-
-					// Gamma compand and rescale to byte range:
-					int grayLevel = (int) (255.0 * Math.pow(lum, 1.0 / 2.2));
-					int gray = (grayLevel << 16) + (grayLevel << 8) + grayLevel;
-					if (oPixels[i] / 10 <= dither[((x + xa) & 3) + ((y + ya) & 3) * 4]) {
-
-						pixels[i] = gray;
-						pixels[i] = Color.tintColor(pixels[i], ((Updater.tickCount%31)-15));
-					}else{
-						if(Updater.tickCount%100>85) pixels[i] = gray;
-						else pixels[i] = Color.tintColor(pixels[i], -50+((Updater.tickCount%20)-10));
-					}
-				}
-				if(Renderer.player.potionEffects.containsKey(PotionType.AntiTime)) {
-					if (oPixels[i] / 10 <= dither[((x + xa) & 3) + ((y + ya) & 3) * 4]) {
-
-						pixels[i] = Color.tintColor(-pixels[i], ((Updater.tickCount%31)-15));
-					}else{
-						if(Updater.tickCount%100>85) pixels[i] = -pixels[i];
-						else pixels[i] = Color.tintColor(pixels[i], -50+((Updater.tickCount%20)-10));
-					}
-				}
-				// Increase the tinting of all colors by 20.
+					// Increase the tinting of all colors by 20.
 					pixels[i] = Color.tintColor(pixels[i], 20);
-                i++; // Moves to the next pixel.
-            }
-        }
-    }
+					i++; // Moves to the next pixel.
+				}
+			}
+		} else {
+			tintFactor = -MAXDARK;
+
+			int[] oPixels = screen2.pixels;  // The Integer array of pixels to overlay the screen with.
+			int i = 0; // Current pixel on the screen
+			for (int y = 0; y < h; y++) { // loop through height of screen
+				for (int x = 0; x < w; x++) { // loop through width of screen
+
+					if (oPixels[i] / 10 <= dither[((x + xa) & 3) + ((y + ya) & 3) * 4]) {
+
+						/// The above if statement is simply comparing the light level stored in oPixels with the minimum light level stored in dither. if it is determined that the oPixels[i] is less than the minimum requirements, the pixel is considered "dark", and the below is executed...
+						if (Renderer.player.potionEffects.containsKey(PotionType.Blind)) { // if in caves... or blind...
+							/// in the caves, not being lit means being pitch black.
+							pixels[i] = 0;
+						} else {
+							/// Outside the caves, not being lit simply means being darker.
+							if (Renderer.player.potionEffects.containsKey(PotionType.Blind)) pixels[i] = 0;
+							else
+								pixels[i] = Color.tintColor(pixels[i], (int)( currentLevel > 1 ? tintFactor/2 : tintFactor)); // darkens the color one shade.
+						}
+					}
+					if (Renderer.player.potionEffects.containsKey(PotionType.Time)) {
+						int r = pixels[i] >> 16 & 0xFF;
+						int g = pixels[i] >> 8 & 0xFF;
+						int b = pixels[i] & 0xFF;
+						// Normalize and gamma correct:
+						double rr = Math.pow(r / 255.0, 2.2);
+						double gg = Math.pow(g / 255.0, 2.2);
+						double bb = Math.pow(b / 255.0, 2.2);
+
+						// Calculate luminance:
+						double lum = 0.2126 * rr + 0.7152 * gg + 0.0722 * bb;
+
+						// Gamma compand and rescale to byte range:
+						int grayLevel = (int) (255.0 * Math.pow(lum, 1.0 / 2.2));
+						int gray = (grayLevel << 16) + (grayLevel << 8) + grayLevel;
+						if (oPixels[i] / 10 <= dither[((x + xa) & 3) + ((y + ya) & 3) * 4]) {
+
+							pixels[i] = gray;
+							pixels[i] = Color.tintColor(pixels[i], ((Updater.tickCount % 31) - 15));
+						} else {
+							if (Updater.tickCount % 100 > 85) pixels[i] = gray;
+							else pixels[i] = Color.tintColor(pixels[i], -50 + ((Updater.tickCount % 20) - 10));
+						}
+					}
+					if (Renderer.player.potionEffects.containsKey(PotionType.AntiTime)) {
+						if (oPixels[i] / 10 <= dither[((x + xa) & 3) + ((y + ya) & 3) * 4]) {
+
+							pixels[i] = Color.tintColor(-pixels[i], ((Updater.tickCount % 31) - 15));
+						} else {
+							if (Updater.tickCount % 100 > 85) pixels[i] = -pixels[i];
+							else pixels[i] = Color.tintColor(pixels[i], -50 + ((Updater.tickCount % 20) - 10));
+						}
+					}
+					// Increase the tinting of all colors by 20.
+					pixels[i] = Color.tintColor(pixels[i], 20);
+					i++; // Moves to the next pixel.
+				}
+			}
+		}
+	}
 	public void renderLight(int x, int y, int r) {
 		// Applies offsets:
 		x -= xOffset;
@@ -318,13 +391,13 @@ public class Screen {
 		int x1 = x + r;
 		int y0 = y - r;
 		int y1 = y + r;
-		
+
 		// Prevent light from rendering off the screen:
 		if (x0 < 0) x0 = 0;
 		if (y0 < 0) y0 = 0;
 		if (x1 > w) x1 = w;
 		if (y1 > h) y1 = h;
-		
+
 		for (int yy = y0; yy < y1; yy++) { // Loop through each y position
 			int yd = yy - y; // Get distance to the previous y position.
 			yd = yd * yd; // Square that distance
@@ -346,25 +419,43 @@ public class Screen {
 	}
 
 	public void setPixel(int xp, int yp, int color) {
-        // Loops 8 times (because of the height of the tile)
-        for (int y = 0; y < 8; y++) {
-            if (y + yp < 0 || y + yp >= h) {
-                // If the pixel is out of bounds, then skip the rest of the loop.
-                continue;
-            }
+		// Loops 8 times (because of the height of the tile)
+		for (int y = 0; y < 8; y++) {
+			if (y + yp < 0 || y + yp >= h) {
+				// If the pixel is out of bounds, then skip the rest of the loop.
+				continue;
+			}
 
-            // Loops 8 times (because of the width of the tile)
-            for (int x = 0; x < 8; x++) {
-                if (x + xp < 0 || x + xp >= w) {
-                    // skip rest if out of bounds.
-                    continue;
-                }
+			// Loops 8 times (because of the width of the tile)
+			for (int x = 0; x < 8; x++) {
+				if (x + xp < 0 || x + xp >= w) {
+					// skip rest if out of bounds.
+					continue;
+				}
 
-                if (color >> 24 != 0) {
-                    pixels[(x + xp) + (y + yp) * w] = color;
-                }
-            }
-        }
-    }
+				if (color >> 24 != 0) {
+					pixels[(x + xp) + (y + yp) * w] = color;
+				}
+			}
+		}
+	}
+	public void darken(Screen screen2,int lvl,int xa, int ya){
+		int[] oPixels = screen2.pixels;  // The Integer array of pixels to overlay the screen with.
+		int i = 0; // Current pixel on the screen
+		for (int y = 0; y < h; y++) { // loop through height of screen
+			for (int x = 0; x < w; x++) { // loop through width of screen
+				// Increase the tinting of all colors by 20.
+				int r = pixels[i] >> 16 & 0xFF;
+				int g = pixels[i] >> 8 & 0xFF;
+				int b = pixels[i] & 0xFF;
+				int darken = 100;
+				pixels[i] = Color.get(1, r - darken< 0 ? 0 : r - darken, g - darken< 0 ? 0 : g - darken, (b - darken < 0 ? 0 : b - darken));
+				i++; // Moves to the next pixel.
+			}
+		}
+	}
+
 }
+
+
 

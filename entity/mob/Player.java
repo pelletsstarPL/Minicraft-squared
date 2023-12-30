@@ -50,6 +50,8 @@ import minicraft.screen.PlayerInvDisplay;
 import minicraft.screen.SkinDisplay;
 import minicraft.screen.WorldSelectDisplay;
 
+import javax.tools.Tool;
+
 public class Player extends Mob implements ItemHolder, ClientTickable {
 	public static Integer[] boxAnim={0,0};
 	protected InputHandler input;
@@ -63,6 +65,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 
 	public double moveSpeed = 1; // The number of coordinate squares to move; each tile is 16x16.
 	private int score; // The player's score
+	public int movRlmDelay;
 	private boolean isSprinting=false;
 	public  static int isBurning = 0; //in fact we will define duration of burning so that's why integer
 	private int multipliertime = mtm; // Time left on the current multiplier.
@@ -78,6 +81,9 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 	public static final int maxStat = 10;
 	public static final int maxHealth = 20, maxStamina = maxStat, maxHunger = maxStat*2,maxThirst = maxStat*2;
 	public static final int maxArmor = 100;
+
+	public static int obsidianHP;
+	private int currentMaxHp;
 
 	public static MobSprite[][] sprites;
 	public static MobSprite[][] carrySuitSprites;
@@ -130,17 +136,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 	//public HashMap<PotionType, PotionEffect> potionEffects;
 	public HashMap<PotionType, Integer> potionEffects;
 
-	/*class PotionEffect {
-		public PotionType type;
-		public int duration;
-		public boolean natural;
-		public PotionEffect(PotionType type, int duration,boolean natural) {
-			this.type = type;
-			this.duration = duration;
-			this.natural = natural;
-		}
-		//public boolean natural;
-	}*/
+
 	public boolean showpotioneffects; // Whether to display the current potion effects on screen
 	public boolean toggleLight; // Whether to display darkness in the caves (creative mode only)
 	public boolean toggleGui=true; // Whether to display darkness in the caves (creative mode only)
@@ -157,6 +153,8 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 	public int maxFishingTicks = 120;
 	public int fishingTicks = maxFishingTicks;
 	public int fishingLevel;
+
+	public int getCurrentMaxHp(){return this.currentMaxHp;}
 
 	// Note: the player's health & max health are inherited from Mob.java
 
@@ -328,9 +326,10 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 
 	@Override
 	public void tick() {
-
-
-
+		if(movRlmDelay>0)movRlmDelay--;
+		this.currentMaxHp = 20 + this.obsidianHP;
+		if(curArmor!=null)
+		if(curArmor.getDisplayName()=="Obsidium Armor" && Updater.tickCount%20>15 && burningDuration>0)burningDuration--; //active burning remaining time reduction
 		animtik++;
 		if((hunger<6 || thirst<6) && isSprinting==true)isSprinting=false;
 		if((potionEffects.containsKey(PotionType.Time) || potionEffects.containsKey(PotionType.AntiTime))&& !Updater.paused)Sound.timeloop.loop(true);
@@ -377,14 +376,17 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 		if (isFishing) {
 			if (!Bed.inBed(this) && !isSwimming()) {
 				fishingTicks--;
-				if(!activeItem.getName().toLowerCase().contains("fishing rod"))isFishing = false;
-				if (fishingTicks <= 0) {
+				//if(!activeItem.getName().toLowerCase().contains("fishing rod"))isFishing = false;
+				if (fishingTicks <= 0 &&((FishingRodItem) activeItem).durability > 0){
+					if (((FishingRodItem) activeItem).durability <= 0){isFishing=false; getInventory().removeItems(activeItem,1);activeItem=null;}
+					else	if (!Game.isConnectedClient()) {
 					// Checks to make sure that the client doesn't drop a "fake" item
-					if (!Game.isConnectedClient()) {
+
 						goFishing();
 					}
 				}
 			} else {
+				if (((FishingRodItem) activeItem).durability <= 0){isFishing=false; getInventory().removeItems(activeItem,1);activeItem=null;};
 				isFishing = false;
 				fishingTicks = maxFishingTicks;
 			}
@@ -407,6 +409,13 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 			toggleGui = !toggleGui;
 			cooldowninfo = 10;
 		}
+		if(Game.isMode("Creative"))
+		if(input.getKey("lvlup").clicked ) {
+			World.scheduleLevelChange(1);
+		}
+		else if(input.getKey("lvldown").clicked ) {
+			World.scheduleLevelChange(-1);
+		}
 		if(input.getKey("sprint").clicked && sprintdelay == 0 && isSprinting == false && !isSwimming() && thirst>6 && hunger>6) {
 			sprintdelay = 10;
 			isSprinting = true;
@@ -426,10 +435,18 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 		}else if(stamina==0) {isSprinting=false;sprintdelay = 400;}
 
 		Tile onTile = level.getTile(x >> 4, y >> 4); // Gets the current tile the player is on
+		//Overworld <----> OBV
+		if(onTile == Tiles.get("Obsidian void portal")){
+		//we wanna go back to Overworld OBD
+			movRlmDelay = 50;
+
+			World.scheduleRealmChange(this.getRealmId()==1 ? -1 : 1,level.depth < 0 ? -(level.depth +World.obvLevels.length) : -World.obvLevels.length - level.depth); // Decide whether to go  overworld or OBV
+		}
 		if (onTile == Tiles.get("Stairs Down") || onTile == Tiles.get("Stairs Up") || onTile == Tiles.get("Obsidian Stairs Down") || onTile == Tiles.get("Obsidian Stairs Up")) {
 			if (onStairDelay <= 0) { // When the delay time has passed...
 				List<String> data = Arrays.asList(onTile.getData(level.depth+1,x >> 4,y >> 4).split("\\s*;\\s*"));
 				List<String> data2 = Arrays.asList(onTile.getData(level.depth-1,x >> 4,y >> 4).split("\\s*;\\s*"));
+
 				World.scheduleLevelChange((onTile == Tiles.get("Stairs Up") || onTile == Tiles.get("Obsidian Stairs Up")) ? 1 : -1); // Decide whether to go up or down.
 				//System.out.println(onTile.getData(level.depth+1,x >> 4,y >> 4));
 				int d1=Integer.parseInt(data.get(3));
@@ -437,7 +454,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 				if(d1!=0 || d2!=0){
 					World.scheduleLevelChange(0); //move player back down
 					Game.notifications.add("Cannot use these stairs");
-					Game.notifications.add("the "+(level.getTile(x >> 4, y >> 4).name.toLowerCase().contains("down")  ? "bottom" : "top")+" is buried");
+					Game.notifications.add("The "+(level.getTile(x >> 4, y >> 4).name.toLowerCase().contains("down")  ? "bottom" : "top")+" is buried");
 				}
 				onStairDelay = 10; // Resets delay, since the level has now been changed.
 				return; // SKIPS the rest of the tick() method.
@@ -446,9 +463,10 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 			onStairDelay = 10; // Resets the delay, if on a stairs tile, but the delay is greater than 0. In other words, this prevents you from ever activating a level change on a stair tile, UNTIL you get off the tile for 10+ ticks.
 		} else if (onStairDelay > 0) onStairDelay--; // Decrements stairDelay if it's > 0, but not on stair tile... does the player get removed from the tile beforehand, or something?
 
-		if (onTile == Tiles.get("Infinite Fall") && !Game.isMode("creative")) {
+		if ((onTile == Tiles.get("Infinite Fall") || onTile == Tiles.get("Infinite Void"))&& !Game.isMode("creative")) {
 			if (onFallDelay <= 0) {
-				World.scheduleLevelChange(-1);
+				if( World.currentLevel == 0)this.die(); //fall in void and die
+				else World.scheduleLevelChange(-1);
 				onFallDelay = 40;
 				return;
 			}
@@ -536,7 +554,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 			}
 
 			/// System that heals you depending on your hunger
-			if (health < maxHealth && hunger >= 18) {
+			if (health < currentMaxHp && hunger >= 18) {
 				hungerChargeDelay++;
 				if (hungerChargeDelay > 20*Math.pow(maxHunger-hunger+2, 2)) {
 					health++;
@@ -613,7 +631,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 			regentick++;
 			if (regentick > 60) {
 				regentick = 0;
-				if (health < 20) {
+				if (health < currentMaxHp) {
 					health++;
 				}
 			}
@@ -622,13 +640,14 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 			poisontick++;
 			if (poisontick > 60) {
 				poisontick = 0;
-				if (health <= 20) {
 					if(!Game.isMode("creative")){Sound.playerHurt.play();
 						level.add(new TextParticle("1", x, y, Color.WHITE));};
 					health--; //it's the way to make damage be dealt through armor
-				}
+
 			}
 		}
+		if(potionEffects.containsKey(PotionType.FireMark) && !potionEffects.containsKey(PotionType.Lava) && Updater.tickCount%250==0 && burningDuration>0)
+			hurt(2,Direction.NONE);
 
 		if (Updater.savecooldown > 0 && !Updater.saving)
 			Updater.savecooldown--;
@@ -639,7 +658,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 			// Create the raw movement vector.
 			Vector2 vec = new Vector2(0, 0);
 
-			// Move while we are not falling.
+			// Move while we are not falling. nor we don't have slowness
 			if (onFallDelay <= 0) {
 				if (input.getKey("move-up").down) {
 					vec.y--;
@@ -674,12 +693,13 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 					if (isFishing) isFishing = false;
 				}
 			}
-
 			// Executes if not saving; and... essentially halves speed if out of stamina.
 			if ((vec.x != 0 || vec.y != 0) && (staminaRechargeDelay % 2 == 0 || isSwimming()) && !Updater.saving) {
 				double spd=(moveSpeed) * (potionEffects.containsKey(PotionType.Speed) ? 1.5 : 1)+(isSprinting==true ? 1 : 0);
+
 				int xd = (int) (vec.x * spd);
 				int yd = (int) (vec.y * spd);
+
 
 				Direction newDir = Direction.getDirection(xd, yd);
 				if (newDir == Direction.NONE) newDir = dir;
@@ -830,6 +850,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 			//if (Game.debug) System.out.println(Network.onlinePrefix() + "player is using reflexive item: " + activeItem);
 			activeItem.interactOn(Tiles.get("rock"), level, 0, 0, this, attackDir);
 			if (!Game.isMode("creative") && activeItem.isDepleted()) {
+				//isFishing=false;
 				activeItem = null;
 			}
 			return;
@@ -1001,12 +1022,16 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 						Game.notifications.add(itemData.substring(1));
 					} else {
 						level.dropItem(x, y, Items.get(itemData));
+						((FishingRodItem)activeItem).payDurability(Math.random() < 0.01 ? 2 : 1);
+						if (((FishingRodItem) activeItem).durability <= 0){isFishing=false; activeItem=null;}
 						caught = true;
 						break; // Don't let people catch more than one thing with one use
 					}
 				}
 			}
 		} else {
+			((FishingRodItem)activeItem).payDurability(1);
+
 			caught = true; // End this fishing session
 		}
 
@@ -1190,7 +1215,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 		}
 
 		// Renders the fishing rods when fishing
-		if (isFishing) {
+		if (isFishing && activeItem != null) {
 			switch (dir) {
 				case UP:
 					screen.render(xo + 4, yo - 4, fishingLevel + 11 * 32, 1);
@@ -1321,11 +1346,16 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 	 */
 	@Override
 	public int getLightRadius() {
-		int r = 5; // The radius of the light.
+		int r = 3; // The radius of the light.
 
-		if (activeItem != null && activeItem instanceof FurnitureItem) { // If player is holding furniture
-			int rr = ((FurnitureItem) activeItem).furniture.getLightRadius(); // Gets furniture light radius
-			if (rr > r) r = rr; // Brings player light up to furniture light, if less, since the furnture is not yet part of the level and so doesn't emit light even if it should.
+		if(this.level.depth >= 0)r = this.potionEffects.containsKey(PotionType.Blind) ? 4 : 0;
+		if (activeItem != null) {
+			if (activeItem.getDisplayName().contains("Torch")) r = 5; //If player is holding torchy item
+			if (activeItem instanceof FurnitureItem) { // If player is holding furniture
+				int rr = ((FurnitureItem) activeItem).furniture.getLightRadius(); // Gets furniture light radius
+				if (rr > r)
+					r = rr; // Brings player light up to furniture light, if less, since the furnture is not yet part of the level and so doesn't emit light even if it should.
+			}
 		}
 
 		return r; // Return light radius
@@ -1339,7 +1369,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 		else if (Network.isConnectedClient())
 			Analytics.MultiplayerDeath.ping();
 
-		score -= score / 3; // Subtracts score penalty (minus 1/3 of the original score)
+		score -= score / (Updater.gameTime < Updater.dayLength *3 && !Game.isMode("Score")  ? 2 : 3); // Subtracts score penalty (minus 1/3 of the original score)
 		resetMultiplier();
 
 		// Make death chest
@@ -1351,7 +1381,7 @@ public class Player extends Mob implements ItemHolder, ClientTickable {
 		Sound.playerDeath.play();
 
 		if (!Game.ISONLINE)
-			World.levels[Game.currentLevel].add(dc);
+			this.level.add(dc,this.getRealmId()); //spawn death chest in players realm
 		else if (Game.isConnectedClient())
 			Game.client.sendPlayerDeath(this, dc);
 

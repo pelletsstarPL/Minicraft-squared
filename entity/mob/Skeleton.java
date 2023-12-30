@@ -3,10 +3,8 @@ package minicraft.entity.mob;
 import minicraft.core.Game;
 import minicraft.core.Renderer;
 import minicraft.core.Updater;
-import minicraft.core.World;
 import minicraft.core.io.Settings;
 import minicraft.entity.Arrow;
-import minicraft.entity.particle.BurnParticle;
 import minicraft.gfx.MobSprite;
 import minicraft.gfx.Screen;
 import minicraft.item.Items;
@@ -14,6 +12,7 @@ import minicraft.level.tile.Tiles;
 
 public class Skeleton extends EnemyMob {
 	private static MobSprite[][][] sprites;
+	private static final MobSprite[][] longhair = MobSprite.compileMobSpriteAnimations(16, 42);
 	static {
 		sprites = new MobSprite[5][4][2];
 		for (int i = 0; i < 5; i++) {
@@ -34,6 +33,8 @@ public class Skeleton extends EnemyMob {
 		
 		arrowtime = 500 / (lvl + 5);
 		artime = arrowtime;
+		this.extracolor=Math.random() < 0.33 ? (lvl > 1 ? 0xc2c2c2 : 0xf0f0f0) : random.nextInt(0xFFFFFF);
+		this.usesCustomColor=true;
 	}
 	@Override
 	public void render(Screen screen) {
@@ -43,6 +44,10 @@ public class Skeleton extends EnemyMob {
 			if (!Updater.paused) Renderer.screen.render(x, y, 5 + 5 * 32, 1, 3); // Render the mirrored
 		}
 		super.render(screen);
+		if((this.extracolor+this.lvl)%4==0) {
+			MobSprite hair = longhair[dir.getDir()][(walkDist >> 3) % longhair[dir.getDir()].length];
+			hair.render(screen, x - 8, y - 11, -1, this.extracolor);
+		}
 	}
 	@Override
 	public void tick() {

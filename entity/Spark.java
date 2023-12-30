@@ -12,7 +12,7 @@ public class Spark extends Entity {
 	private double xa, ya; // The x and y acceleration
 	private double xx, yy; // The x and y positions
 	private int time; // The amount of time that has passed
-	private final AirWizard owner; // The AirWizard that created this spark
+	private final EnemyMob owner; // The AirWizard that created this spark
 
 	/**
 	 * Creates a new spark. Owner is the AirWizard which is spawning this spark.
@@ -20,7 +20,7 @@ public class Spark extends Entity {
 	 * @param xa X velocity.
 	 * @param ya Y velocity.
 	 */
-	public Spark(AirWizard owner, double xa, double ya) {
+	public Spark(EnemyMob owner, double xa, double ya) {
 		super(0, 0);
 		
 		this.owner = owner;
@@ -47,7 +47,7 @@ public class Spark extends Entity {
 		y = (int) yy;
 
 		// If the entity is a mob, but not a Air Wizard or Wraith, then hurt the mob with 1 damage.
-		List<Entity> toHit = level.getEntitiesInRect(entity -> entity instanceof Mob && !(entity instanceof AirWizard) && !(entity instanceof Wraith) && !(entity instanceof WraithA) && !(entity instanceof NightWizard), new Rectangle(x, y, 0, 0, Rectangle.CENTER_DIMS)); // Gets the entities in the current position to hit.
+		List<Entity> toHit = level.getEntitiesInRect(entity -> entity instanceof Mob && !(entity instanceof AirWizard) && !(entity instanceof Wraith) && !(entity instanceof NightWizard), new Rectangle(x, y, 0, 0, Rectangle.CENTER_DIMS)); // Gets the entities in the current position to hit.
 		toHit.forEach(entity -> ((Mob) entity).hurt(owner, 1));
 	}
 	

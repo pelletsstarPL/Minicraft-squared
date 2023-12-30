@@ -69,7 +69,9 @@ public class EnemyMob extends MobAi {
 	public EnemyMob(int lvl, MobSprite[][][] lvlSprites, int health, int detectDist) {
 		this(lvl, lvlSprites, health, true, detectDist, 60, 200);
 	}
-	@Override
+
+
+    @Override
 	public void tick() {
 		super.tick();
 		Player player = getClosestPlayer();
@@ -134,7 +136,7 @@ public class EnemyMob extends MobAi {
 	 * @return true if the mob can spawn here, false if not.
 	 */
 	public static boolean checkStartPos(Level level, int x, int y) { // Find a place to spawn the mob
-		int r = (level.depth == -5 ? (Game.isMode("score") ? 22 : 15) : 13);
+		int r = (level.depth == -6 ? (Game.isMode("score") ? 22 : 15) : 13);
 
 		if (!MobAi.checkStartPos(level, x, y, 60, r))
 			return false;
@@ -143,8 +145,8 @@ public class EnemyMob extends MobAi {
 		y = y >> 4;
 
 		Tile t = level.getTile(x, y);
-		if (level.depth > 0 && Updater.isbloody && Updater.getTime() == Updater.Time.Night) return true;
-		if (level.depth == -5) {
+		if (level.depth > 0 && Updater.isbloody && Updater.getTime() == Updater.Time.Night && level.realm=="overworld") return true;
+		if (level.depth == -6) {
 			if (t != Tiles.get("Obsidian")) return false;
 		} else if (t != Tiles.get("Lily pad") && t != Tiles.get("Stone Door") && t != Tiles.get("Wood Door") && t != Tiles.get("Obsidian Door") && t != Tiles.get("wheat") && t != Tiles.get("farmland") && t != Tiles.get("Skygrass") && t != Tiles.get("Cloud tallgrass")) {
 			// Prevents mobs from spawning on lit tiles, farms, or doors (unless in the dungeons)
@@ -155,6 +157,6 @@ public class EnemyMob extends MobAi {
 	
 	@Override
 	public int getMaxLevel() {
-		return lvlSprites.length;
+		return 5;
 	}
 }

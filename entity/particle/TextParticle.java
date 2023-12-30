@@ -21,7 +21,7 @@ public class TextParticle extends Particle {
 	 */
 	public TextParticle(String msg, int x, int y, int col) {
 		super(x, y, msg.length(), 60, null);
-
+		this.setRealmId(1);
 		style = new FontStyle(col).setShadowType(Color.BLACK, false);
 		this.msg = msg;
 		xx = x; // Assigns x pos

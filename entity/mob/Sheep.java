@@ -17,12 +17,9 @@ public class Sheep extends PassiveMob {
 	private static final MobSprite[][] cutSprites = MobSprite.compileMobSpriteAnimations(0, 28);
 
 
-	public boolean cutOld = false;
-	public int cut = 0;
-	private int ageWhenCut = 0;
-
 	/**
 	 * Creates a sheep entity.
+	 *  extradata will be cooldown for our sheep to be wooled
 	 */
 	public Sheep() {
 		super(sprites);
@@ -33,7 +30,7 @@ public class Sheep extends PassiveMob {
 		int xo = x - 8;
 		int yo = y - 11;
 
-		MobSprite[][] curAnim = cut>0 ? cutSprites : sprites;
+		MobSprite[][] curAnim = this.extradata>0 ? cutSprites : sprites;
 
 		MobSprite curSprite = curAnim[dir.getDir()][(walkDist >> 3) % curAnim[dir.getDir()].length];
 		if (hurtTime > 0) {
@@ -46,18 +43,17 @@ public class Sheep extends PassiveMob {
 	@Override
 	public void tick() {
 		super.tick();
-		if (cut > 0) cut--;
+		if (this.extradata > 0) this.extradata--;
 	}
 
 	public boolean interact(Player player, @Nullable Item item, Direction attackDir) {
-		if (cut>0) return false;
+		if (this.extradata>0) return false;
 
 		if (item instanceof ToolItem) {
 			if (((ToolItem) item).type == ToolType.Shears) {
-				cut = 18400;
+				this.extradata = 18400;
 
 				dropItem(1, 3, Items.get("Wool"));
-				ageWhenCut = age;
 				((ToolItem) item).payDurability();
 				return true;
 
@@ -72,7 +68,7 @@ public class Sheep extends PassiveMob {
 		if (Settings.get("diff").equals("Normal")) {min = 1; max = 2;}
 		if (Settings.get("diff").equals("Hard")) {min = 0; max = 2;}
 		if(this.burningDuration<=150)
-		if (cut==0) dropItem(min, max, Items.get("wool"));
+		if (this.extradata==0) dropItem(min, max, Items.get("wool"));
 
 		dropItem(min, max, Items.get(this.burningDuration>150 ? "Steak" : "Raw Beef"));
 

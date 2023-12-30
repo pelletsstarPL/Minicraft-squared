@@ -1,9 +1,12 @@
 package minicraft.entity.mob;
 
 import minicraft.core.Game;
+import minicraft.core.Renderer;
+import minicraft.core.Updater;
 import minicraft.core.io.Sound;
 import minicraft.entity.Direction;
 import minicraft.entity.Arrow;
+import minicraft.entity.particle.BurnParticle;
 import minicraft.entity.particle.TextParticle;
 import minicraft.gfx.Color;
 import minicraft.gfx.MobSprite;
@@ -13,16 +16,20 @@ import minicraft.item.Item;
 import minicraft.item.PotionType;
 import minicraft.level.Level;
 import minicraft.level.tile.Tile;
+import minicraft.level.tile.Tiles;
 
 public abstract class MobAi extends Mob {
 	
 	int randomWalkTime, randomWalkChance, randomWalkDuration;
+
 	int xmov, ymov;
+	public boolean usesCustomColor;
+
+
 	private int lifetime;
 	protected int age = 0; // Not private because it is used in Sheep.java.
 	
 	private boolean slowtick = false;
-	
 	/**
 	 * Constructor for a mob with an ai.
 	 * @param sprites All of this mob's sprites.
@@ -31,6 +38,7 @@ public abstract class MobAi extends Mob {
 	 * @param rwTime How long the mob will walk in a random direction. (random walk duration)
 	 * @param rwChance The chance of this mob will walk in a random direction (random walk chance)
 	 */
+
 	protected MobAi(MobSprite[][] sprites, int maxHealth, int lifetime, int rwTime, int rwChance) {
 		super(sprites, maxHealth);
 		this.lifetime = lifetime;
@@ -99,7 +107,12 @@ public abstract class MobAi extends Mob {
 		if (hurtTime > 0) {
 			curSprite.render(screen, xo, yo, true);
 		} else {
-			curSprite.render(screen, xo, yo);
+			if(this.usesCustomColor){
+				if(isSwimming())curSprite.renderRow(0,screen, xo, yo + 4, -1,this.extracolor);
+				else curSprite.render(screen, xo, yo, -1,this.extracolor);
+			}else
+				if(isSwimming())curSprite.renderRow(0,screen, xo, yo + 4);
+				else curSprite.render(screen, xo, yo);
 		}
 	}
 	
@@ -158,6 +171,11 @@ public abstract class MobAi extends Mob {
 	@Override
 	public boolean canBurn() {
 		return true;
+	}
+
+	@Override
+	public boolean canFly() {
+		return false;
 	}
 
 	@Override
@@ -233,5 +251,9 @@ public abstract class MobAi extends Mob {
 		}
 		
 		super.die();
+	}
+	public void setCustomColour(int clor) {
+		if (clor >= 0 && clor <= 0xFFFFFF) return; //if color is invalid or mob does not use custom colours
+		this.extracolor = clor;
 	}
 }

@@ -65,15 +65,18 @@ public class MobSprite extends Sprite {
 	}
 
 	public static MobSprite[][] compileMobSpriteAnimations(int sheetX, int sheetY) {
+		return compileMobSpriteAnimations(sheetX,sheetY,2,2);
+	}
+	public static MobSprite[][] compileMobSpriteAnimations(int sheetX, int sheetY,int spriteW,int spriteH) {
 		MobSprite[][] sprites = new MobSprite[4][2];
 		// dir numbers: 0=down, 1=up, 2=left, 3=right.
 		/// On the spritesheet, most mobs have 4 sprites there, first facing down, then up, then right 1, then right 2. The first two get flipped to animate them, but the last two get flipped to change direction.
 
 		// Contents: down 1, up 1, right 1, right 2
-		MobSprite[] set1 = MobSprite.compileSpriteList(sheetX, sheetY, 2, 2, 0, 4);
+		MobSprite[] set1 = MobSprite.compileSpriteList(sheetX , sheetY, spriteW, spriteH, 0, 4);
 
 		// Contents: down 2, up 2, left 1, left 2
-		MobSprite[] set2 = MobSprite.compileSpriteList(sheetX, sheetY, 2, 2, 1, 4);
+		MobSprite[] set2 = MobSprite.compileSpriteList(sheetX, sheetY, spriteW, spriteH, 1, 4);
 
 		// Down
 		sprites[0][0] = set1[0];
