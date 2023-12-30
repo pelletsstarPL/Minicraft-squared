@@ -6,12 +6,10 @@ import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import javax.imageio.ImageIO;
+import javax.tools.Tool;
 
 import minicraft.core.io.Settings;
 import minicraft.core.io.Sound;
@@ -25,16 +23,13 @@ import minicraft.gfx.Font;
 import minicraft.gfx.FontStyle;
 import minicraft.gfx.Screen;
 import minicraft.gfx.SpriteSheet;
-import minicraft.item.Items;
-import minicraft.item.ToolItem;
-import minicraft.item.ToolType;
+import minicraft.item.*;
 import minicraft.level.Level;
 import minicraft.level.tile.Tiles;
 import minicraft.saveload.Load;
 import minicraft.screen.LoadingDisplay;
 import minicraft.screen.TitleDisplay;
 import minicraft.screen.RelPos;
-import minicraft.item.PotionType;
 
 
 public class Renderer extends Game {
@@ -124,7 +119,7 @@ public class Renderer extends Game {
 				renderDebugInfo();
 			}
 			else {
-				if(currentLevel==5)renderLevel(currentLevel-1,true);
+				if(currentLevel>0)renderLevel(currentLevel-1,true);
 				renderLevel(currentLevel,false); //we want to fully see it
 
 				renderGui();
@@ -161,7 +156,8 @@ public class Renderer extends Game {
 
 
 	private static void renderLevel(int lvlId,boolean visualOnly) {
-		Level level = levels[lvlId];
+		Level lvlList[][] = {World.levels,World.obvLevels};
+		Level level = lvlList[player.getRealmId()][lvlId];
 		if (level == null) return;
 		int xScroll = player.x - Screen.w / 2; // Scrolls the screen in the x axis.
 		int yScroll = player.y - (Screen.h - 8) / 2; // Scrolls the screen in the y axis.
@@ -171,28 +167,39 @@ public class Renderer extends Game {
 		if (yScroll < 0) yScroll = 0; // ...Top border.
 		if (xScroll > level.w * 16 - Screen.w) xScroll = level.w * 16 - Screen.w; // ...Right border.
 		if (yScroll > level.h * 16 - Screen.h) yScroll = level.h * 16 - Screen.h; // ...Bottom border.
+		if ( (player.getRealmId()==1) &&(currentLevel == 0 ||  visualOnly)) { // If the current level is second floor of obsidian dungeon - 1.7
+			for (int y = 0; y < 28; y++)
+				for (int x = 0; x < 48; x++) {
+					// Creates the void bg for dungeon level - 1.7
+					int xmod=(int)(Math.round(Math.random() * 20));
+					screen.render(x * 8 - ((xScroll / 4) & 7), y * 8 - ((yScroll / 4) & 7),  xmod + (currentLevel == 0 ? 26 : 27) * 32, 0,1);
+				}
+		}
 		level.renderBackground(screen, xScroll, yScroll); // Renders current level background
 		level.renderSprites(screen, xScroll, yScroll,visualOnly); // Renders level sprites on screen
 
-		// This creates the darkness in the caves and blindness
-		//if (((Updater.tickCount < Updater.dayLength/4 || Updater.tickCount > Updater.dayLength/2) /*&& !isMode("creative")*/) || player.potionEffects.containsKey(PotionType.Blind) && (!Game.isMode("creative"))) {
-			lightScreen.clear(0);		// This doesn't mean that the pixel will be black; it means that the pixel will be DARK, by default; lightScreen is about light vs. dark, not necessarily a color. The light level it has is compared with the minimum light values in dither to decide whether to leave the cell alone, or mark it as "dark", which will do different things depending on the game level and time of day.
-			int brightnessMultiplier = player.potionEffects.containsKey(PotionType.Light) ? 12 : player.potionEffects.containsKey(PotionType.Blind) ? 3 : 8; // Brightens all light sources by a factor of 1.5 when the player has the Light potion effect. (8 above is normal)
-			if(player.potionEffects.containsKey(PotionType.Light) && player.potionEffects.containsKey(PotionType.Blind)) brightnessMultiplier =2;
-			//System.out.println(currentLevel);
+				// This creates the darkness in the caves and blindness
+				//if (((Updater.tickCount < Updater.dayLength/4 || Updater.tickCount > Updater.dayLength/2) /*&& !isMode("creative")*/) || player.potionEffects.containsKey(PotionType.Blind) && (!Game.isMode("creative"))) {
+				lightScreen.clear(0);        // This doesn't mean that the pixel will be black; it means that the pixel will be DARK, by default; lightScreen is about light vs. dark, not necessarily a color. The light level it has is compared with the minimum light values in dither to decide whether to leave the cell alone, or mark it as "dark", which will do different things depending on the game level and time of day.
+				int brightnessMultiplier = player.potionEffects.containsKey(PotionType.Light) ? 12 : player.potionEffects.containsKey(PotionType.Blind) ? 3 : 8; // Brightens all light sources by a factor of 1.5 when the player has the Light potion effect. (8 above is normal)
+				if (player.potionEffects.containsKey(PotionType.Light) && player.potionEffects.containsKey(PotionType.Blind))
+					brightnessMultiplier = 2;
+				//System.out.println(currentLevel);
+				if (!visualOnly)
+					level.renderLight(lightScreen, xScroll, yScroll, brightnessMultiplier); // Finds (and renders) all the light from objects (like the player, lanterns, and lava).
 
-			level.renderLight(lightScreen, xScroll, yScroll, brightnessMultiplier); // Finds (and renders) all the light from objects (like the player, lanterns, and lava).
+				if (!isMode("creative") || player.toggleLight) {
+					if (!visualOnly)
+						screen.overlay(lightScreen, lvlId, visualOnly ? player.x : xScroll, yScroll); // Overlays the light screen over the main screen. on creative you see everything in caves
+				} else {
+					if (currentLevel > 5)
+						screen.overlay(lightScreen, lvlId, xScroll, yScroll); // Overlays the light screen over the main screen.
+				}
 
-			if(!isMode("creative") || player.toggleLight ){
+				if (visualOnly) screen.darken(screen, lvlId, xScroll, yScroll);
+				//level.renderLight(lightScreen, xScroll, yScroll, brightnessMultiplier); // Finds (and renders) all the light from objects (like the player, lanterns, and lava).
+				//}
 
-					screen.overlay(lightScreen, lvlId, visualOnly ? player.x : xScroll, yScroll); // Overlays the light screen over the main screen. on creative you see everything in caves
-			}else{
-				if (currentLevel > 3 && currentLevel<=5)
-				screen.overlay(lightScreen, lvlId, xScroll, yScroll); // Overlays the light screen over the main screen.
-			}
-			if(visualOnly)screen.darken(screen,lvlId,xScroll,yScroll);
-			//level.renderLight(lightScreen, xScroll, yScroll, brightnessMultiplier); // Finds (and renders) all the light from objects (like the player, lanterns, and lava).
-		//}
 	}
 
 
@@ -215,28 +222,28 @@ public class Renderer extends Game {
 					int y = 25;
 
 					// Renders the four corners of the box
-					screen.render(xx - 8, yy - 8, 0 + 20 * 32, 0, 3);
-					screen.render(xx + w * 8, yy - 8, 0 + 20 * 32, 1, 3);
-					screen.render(xx - 8, yy + 8, 0 + 20 * 32, 2, 3);
-					screen.render(xx + w * 8, yy + 8, 0 + 20 * 32, 3, 3);
+					screen.render(xx - 8, yy - 8, 15 + 0 * 32, 0, 3);
+					screen.render(xx + w * 8, yy - 8, 15 + 0 * 32, 1, 3);
+					screen.render(xx - 8, yy + 8, 15 + 0 * 32, 2, 3);
+					screen.render(xx + w * 8, yy + 8, 15 + 0 * 32, 3, 3);
 
 					// Renders each part of the box...
 					for (x = 0; x < w; x++) {
-						screen.render(xx + x * 8, yy - 8, 1 + 20 * 32, 0, 3); // ...top part
-						screen.render(xx + x * 8, yy + 8, 1 + 20 * 32, 2, 3); // ...bottom part
+						screen.render(xx + x * 8, yy - 8, 16 + 0 * 32, 0, 3); // ...top part
+						screen.render(xx + x * 8, yy + 8, 16 + 0 * 32, 2, 3); // ...bottom part
 					}
 					for (y = 0; y < h; y++) {
-						screen.render(xx - 8, yy + y * 8, 2 + 20 * 32, 0, 3); // ...left part
-						screen.render(xx + w * 8, yy + y * 8, 2 + 20 * 32, 1, 3); // ...right part
+						screen.render(xx - 8, yy + y * 8, 17 +0* 32, 0, 3); // ...left part
+						screen.render(xx + w * 8, yy + y * 8, 17 + 0 * 32, 1, 3); // ...right part
 					}
 
 					// The middle
 					for (x = 0; x < w; x++) {
-						screen.render(xx + x * 8, yy, 3 + 20 * 32, 0, 3);
+						screen.render(xx + x * 8, yy, 18 + 0 * 32, 0, 3);
 					}
 
 					if (isMode("creative") || ac >= 1000) {
-						Font.drawTransparentBackground(" INF", screen, 108 - player.activeItem.arrAdjusted, Screen.h - 24);
+						Font.drawTransparentBackground(" ∞", screen, 108 - player.activeItem.arrAdjusted, Screen.h - 24);
 					} else {
 						Font.drawTransparentBackground(" x" + ac, screen, 108 - player.activeItem.arrAdjusted, Screen.h - 24);
 					}
@@ -247,11 +254,12 @@ public class Renderer extends Game {
 			}
 
 			// TOOL DURABILITY STATUS
-			if (player.activeItem instanceof ToolItem) {
+			if ( player.activeItem instanceof ToolItem || player.activeItem instanceof FishingRodItem ) {
+				Item tool = player.activeItem;
+				byte dura;
 				// Draws the text
-				ToolItem tool = (ToolItem) player.activeItem;
-				int dura = (tool.dur * 100) / tool.maxDur;
-				int green = (int) (dura * 2.55f);
+				if(player.activeItem instanceof ToolItem)dura = (byte)((((ToolItem) tool).dur * 100) /((ToolItem) tool).maxDur); //its <0,100> so we can use byte
+				else dura = (byte)((((FishingRodItem) tool).dur * 100) / ((FishingRodItem) tool).maxDur); //its <0,100> so we can use byte
 				String Dura = dura + "%";
 				int w = Dura.length(); // Length of message in characters.
 				int h = 1;
@@ -263,33 +271,34 @@ public class Renderer extends Game {
 				int y = 25;
 
 				// Renders the four corners of the box
-				screen.render(xx - 8, yy - 8, 0 + 20 * 32, 0, 3);
-				screen.render(xx + w * 8, yy - 8, 0 + 20 * 32, 1, 3);
-				screen.render(xx - 8, yy + 8, 0 + 20 * 32, 2, 3);
-				screen.render(xx + w * 8, yy + 8, 0 + 20 * 32, 3, 3);
+				screen.render(xx - 8, yy - 8, 15 +0 * 32, 0, 3);
+				screen.render(xx + w * 8, yy - 8, 15 +0 * 32, 1, 3);
+				screen.render(xx - 8, yy + 8, 15 +0 * 32, 2, 3);
+				screen.render(xx + w * 8, yy + 8, 15 +0* 32, 3, 3);
 
 				// Renders each part of the box...
 				for (x = 0; x < w; x++) {
-					screen.render(xx + x * 8, yy - 8, 1 + 20 * 32, 0, 3); // ...top part
-					screen.render(xx + x * 8, yy + 8, 1 + 20 * 32, 2, 3); // ...bottom part
+					screen.render(xx + x * 8, yy - 8, 16 +0 * 32, 0, 3); // ...top part
+					screen.render(xx + x * 8, yy + 8, 16 +0 * 32, 2, 3); // ...bottom part
 				}
 				for (y = 0; y < h; y++) {
-					screen.render(xx - 8, yy + y * 8, 2 + 20 * 32, 0, 3); // ...left part
-					screen.render(xx + w * 8, yy + y * 8, 2 + 20 * 32, 1, 3); // ...right part
+					screen.render(xx - 8, yy + y * 8, 17 +0 * 32, 0, 3); // ...left part
+					screen.render(xx + w * 8, yy + y * 8, 17 +0 * 32, 1, 3); // ...right part
 				}
 
 				// The middle
 				for (x = 0; x < w; x++) {
-					screen.render(xx + x * 8, yy, 3 + 20 * 32, 0, 3);
+					screen.render(xx + x * 8, yy, 18 +0 * 32, 0, 3);
 				}
 
-				Font.drawTransparentBackground(dura + "%", screen, 140 + player.activeItem.durAdjusted, Screen.h - 24, Color.get(1, 255 - green, green, 0));
+				Font.drawTransparentBackground(dura + "%", screen, 140 + player.activeItem.durAdjusted, Screen.h - 24, Color.generatePercentageColor(dura));
 			}
+
 
 			// This draws the black square where the selected item would be if you were holding it
 			if (!isMode("creative") || player.activeItem != null) {
 				for (int x = 20; x < 36; x++) {
-					screen.render(x * 8, Screen.h - 8, 32 + 30 * 32, 0, 3);
+					screen.render(x * 8, Screen.h - 8, 0 + 28 * 32, 0, 3);
 				}
 			}
 
@@ -385,14 +394,22 @@ public class Renderer extends Game {
 
 			/// This renders the potions overlay
 			if (player.showpotioneffects && player.potionEffects.size() > 0) {
+				String typeTxt="";
 				Map.Entry<PotionType, Integer>[] effects = player.potionEffects.entrySet().toArray(new Map.Entry[0]);
-
+				int nmbr=(int) Settings.get("potionsn");
+				String side=Settings.get("displayside").toString();
+				int txtLen=(int)Settings.get("potiontxtlen");
 				// The key is potion type, value is remaining potion duration.
-				for (int i = 0; i < effects.length; i++) {
-					PotionType pType = effects[i].getKey();
-					int pTime = effects[i].getValue() / Updater.normSpeed;
-					Font.drawTransparentBackground("(" + input.getMapping("potionEffects") + " to hide)", screen, 180, 9);
-					Font.drawTransparentBackground(pType + " (" + (pTime / 60) + ":" + ((pTime % 60 < 10) ? "0" + (pTime % 60) : (pTime % 60)) + ")", screen, 180 - (pType.name().length() > 7 ? (pType.name().length() - 7) * 8 : 0), 17 + i * Font.textHeight(), pType.dispColor);
+				for (int i = 0; i < (effects.length > nmbr  ? nmbr : effects.length); i++) {
+					int index=effects.length <= nmbr ? i : (i+(Updater.tickCount/100))% effects.length;
+					PotionType pType = effects[index].getKey();
+					int pTime = effects[index].getValue() / Updater.normSpeed;
+					if(txtLen!=0)typeTxt=pType.toString().length()>(int)Settings.get("potiontxtlen")  ? pType.toString().substring(0,(int)Settings.get("potiontxtlen")) : pType.toString();
+					if(Updater.tickCount%300>150 || effects.length <= nmbr)
+					Font.drawTransparentBackground("(" + input.getMapping("potionEffects") + ") to hide", screen, (side=="Left" ? 16 : 172), 9);
+					else Font.drawTransparentBackground("(" + input.getMapping("potionFullList") + ") for full list", screen, (side=="Left" ? 8 : 146), 9);
+					if(pType.icon!=null && (boolean)Settings.get("displayicon"))pType.icon.render(screen,(side=="Left" ? 16 : 172) - (typeTxt.length() > txtLen ? (typeTxt.length() - txtLen) * 8 : 0), 17 + i * Font.textHeight());
+					Font.drawTransparentBackground(typeTxt + " (" + (pTime / 60) + ":" + ((pTime % 60 < 10) ? "0" + (pTime % 60) : (pTime % 60)) + ")", screen, (side=="Left" ? 24 : 180) - (typeTxt.length() > txtLen ? (typeTxt.length() - txtLen) * 8 : 0), 17 + i * Font.textHeight(), pType.dispColor);
 				}
 			}
 			// This is the status icons, like health hearts, stamina bolts, and hunger "burgers".
@@ -409,17 +426,23 @@ public class Renderer extends Game {
 					int regen = 0;
 					int shield = 0;
 					int hardcore = 0;
+
 					if (player.getPotionEffects().containsKey(PotionType.Poison)) poisoned = 3;
 					if (player.getPotionEffects().containsKey(PotionType.Hunger)) hungered = 3;
 					if (player.getPotionEffects().containsKey(PotionType.Thirst)) thirsted = 3;
 					if (isMode("Hardcore")) hardcore = 8;
-
-					screen.render(0, Screen.h - (16 + wiggleHP), (0 + hardcore) + (2 + poisoned) * 32, 0, 3); //heart
+					int heartIndexX = (0 + hardcore );
+					int heartIndexY =  (2 + poisoned);
+					if(player.health > 20){
+						heartIndexX =(((player.health/20)-1) > 6 ? 6 : (player.health/20)-1) +  19 + hardcore ;
+						heartIndexY = 2 +poisoned;
+					}
+					screen.render(0, Screen.h - (16 + wiggleHP),  heartIndexX + heartIndexY * 32, 0, 3); //heart
 					if (player.getPotionEffects().containsKey(PotionType.Regen))
 						screen.render(0, Screen.h - (16 + wiggleHP), 0 + 10 * 32, 0, 3);
 					if (player.getPotionEffects().containsKey(PotionType.Shield))
 						screen.render(0, Screen.h - (16 + wiggleHP), 0 + 8 * 32, 0, 3);
-					Font.draw((player.health < 0 ? "0/" + player.maxHealth : player.health + "/" + player.maxHealth), screen, 10, Screen.h - 16, Color.get(Color.WHITE_CODE));
+					Font.draw((player.health < 0 ? "0/" + player.getCurrentMaxHp() : player.health + "/" + player.getCurrentMaxHp()), screen, 10, Screen.h - 16, Color.get(Color.WHITE_CODE));
 
 					//Stamina
 					if (player.staminaRechargeDelay > 0 && player.stamina <= 0) {
@@ -466,7 +489,7 @@ public class Renderer extends Game {
 					Font.draw((player.thirst < 0 ? "0/" + player.maxThirst : player.thirst + "/" + player.maxThirst), screen, Screen.w - 48, Screen.h - 8, Color.get(Color.WHITE_CODE));
 
 
-				} else {
+				} else { //TRADITIONAL
 					int hpmod = player.health;
 					int hunmod = player.hunger;
 					int thimod = player.thirst;
@@ -584,39 +607,38 @@ public class Renderer extends Game {
 	}
 
 	private static void renderDebugInfo() {
-
+		Level lvlList[][] = {World.levels,World.obvLevels};
 		int textcol = Color.WHITE;
 
 		if (showinfo) { // Renders show debug info on the screen.
 			ArrayList<String> info = new ArrayList<>();
 			info.add("VERSION: "+TitleDisplay.version);
 			info.add(Initializer.fra + " fps");
-			info.add("Cur Day ticks: " + Updater.tickCount + " (" + Updater.getTime() + ")");
-			info.add("Day: " + (int)(Math.floor(Updater.gameTime/Updater.dayLength)+1));
+				info.add("Cur day ticks: " + Updater.tickCount + " (" +(player.getRealmId() == 0 ? Updater.getTime() : "N/A" )+")");
+				info.add("Day: " + (int) (Math.floor(Updater.gameTime / Updater.dayLength) + 1));
 			info.add((Updater.normSpeed * Updater.gamespeed) + " tps");
 
 			if (!isValidServer()) {
-				info.add("walk spd: " + player.moveSpeed);
+				//info.add("walk spd: " + player.moveSpeed);
 				info.add("X: " + (player.x / 16) + "-" + (player.x % 16));
 				info.add("Y: " + (player.y / 16) + "-" + (player.y % 16));
-				if (levels[currentLevel] != null)
-					info.add("Tile: " + levels[currentLevel].getTile(player.x >> 4, player.y >> 4).name);
+				if ( lvlList[player.getRealmId()][currentLevel] != null)
+					info.add("Tile: " +  lvlList[player.getRealmId()][currentLevel].getTile(player.x >> 4, player.y >> 4).name);
 				//	info.add("Data: " + levels[currentLevel].getData(player.x >> 4, player.y >> 4));
 				if (isMode("score")) info.add("Score: " + player.getScore());
 			}
 
-			if (levels[currentLevel] != null) {
+			if (lvlList[player.getRealmId()][currentLevel] != null) {
 				if (!isValidClient())
-					info.add("Mob Cnt: " + levels[currentLevel].mobCount + "/" + levels[currentLevel].maxMobCount);
+					info.add("Mob cnt: " + lvlList[player.getRealmId()][currentLevel].mobCount + "/" + lvlList[player.getRealmId()][currentLevel].maxMobCount);
 				else
-					info.add("Mob Load Cnt: " + levels[currentLevel].mobCount);
+					info.add("Mob load cnt: " + lvlList[player.getRealmId()][currentLevel].mobCount);
 			}
-
 			// Displays number of chests left, if on dungeon level.
-			if (levels[currentLevel] != null && (isValidServer() || currentLevel == 6 && !isValidClient())) {
-				if (levels[6].chestCount > 0)
-					info.add("Chests: " + levels[6].chestCount);
-				else
+			if (lvlList[player.getRealmId()][currentLevel] != null /*&& (isValidServer() && !isValidClient())*/) {
+				if (player.getLevel().chestCount > 0)
+					info.add("Chests: " + player.getLevel().chestCount);
+				else if((player.getRealmId() == 1 && currentLevel < 2) || (player.getRealmId()==0 && currentLevel ==0))
 					info.add("Chests: Complete!");
 			}
 
@@ -629,8 +651,10 @@ public class Renderer extends Game {
 				}
 			}
 
-			if (levels[currentLevel] != null) {
-				info.add("Seed: " + levels[currentLevel].getSeed());
+			if ( lvlList[player.getRealmId()][currentLevel] != null) {
+				info.add("Seed: " +  lvlList[player.getRealmId()][currentLevel].getSeed());
+				info.add("Level name: " + Level.getLevelName( lvlList[player.getRealmId()][currentLevel].depth,player.getRealmId()));
+				info.add("Level realm: " + World.realms[player.getRealmId()]);
 			}
 
 			FontStyle style = new FontStyle(textcol).setShadowType(Color.BLACK, true).setXPos(1);
@@ -657,24 +681,24 @@ public class Renderer extends Game {
 		int h = 1;
 
 		// Renders the four corners of the box
-		screen.render(xx - 8, yy - 8, 0 + 20 * 32, 0, 3);
-		screen.render(xx + w * 8, yy - 8, 0 + 20 * 32, 1, 3);
-		screen.render(xx - 8, yy + 8, 0 + 20 * 32, 2, 3);
-		screen.render(xx + w * 8, yy + 8, 0 + 20 * 32, 3, 3);
+		screen.render(xx - 8, yy - 8, 15 + 0 * 32, 0, 3);
+		screen.render(xx + w * 8, yy - 8, 15 + 0 * 32, 1, 3);
+		screen.render(xx - 8, yy + 8, 15 + 0 * 32, 2, 3);
+		screen.render(xx + w * 8, yy + 8, 15 + 0 * 32, 3, 3);
 
 		// Renders each part of the box...
 		for (int x = 0; x < w; x++) {
-			screen.render(xx + x * 8, yy - 8, 1 + 20 * 32, 0, 3); // ...Top part
-			screen.render(xx + x * 8, yy + 8, 1 + 20 * 32, 2, 3); // ...Bottom part
+			screen.render(xx + x * 8, yy - 8, 16 + 0 * 32, 0, 3); // ...Top part
+			screen.render(xx + x * 8, yy + 8, 16 + 0 * 32, 2, 3); // ...Bottom part
 		}
 		for (int y = 0; y < h; y++) {
-			screen.render(xx - 8, yy + y * 8, 2 + 20 * 32, 0, 3); // ...Left part
-			screen.render(xx + w * 8, yy + y * 8, 2 + 20 * 32, 1, 3); // ...Right part
+			screen.render(xx - 8, yy + y * 8, 17 + 0 * 32, 0, 3); // ...Left part
+			screen.render(xx + w * 8, yy + y * 8, 17 + 0 * 32, 1, 3); // ...Right part
 		}
 
 		// The middle
 		for (int x = 0; x < w; x++) {
-			screen.render(xx + x * 8, yy, 3 + 20 * 32, 0, 3);
+			screen.render(xx + x * 8, yy, 18 + 0 * 32, 0, 3);
 		}
 		Font.draw(msg, screen, xx, yy, Color.get(1, 5*51, 5*51, 5*25));
 	}

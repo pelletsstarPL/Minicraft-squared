@@ -48,7 +48,7 @@ public class BlackSpark extends Entity {
 		y = (int) yy;
 
 		// If the entity is a mob, but not a Night Wizard or Wraith, then hurt the mob with 1 damage.
-		List<Entity> toHit = level.getEntitiesInRect(entity -> entity instanceof Mob && !(entity instanceof AirWizard) && !(entity instanceof Wraith) && !(entity instanceof WraithA)  && !(entity instanceof NightWizard), new Rectangle(x, y, 0, 0, Rectangle.CENTER_DIMS)); // Gets the entities in the current position to hit.
+		List<Entity> toHit = level.getEntitiesInRect(entity -> entity instanceof Mob && !(entity instanceof AirWizard) && !(entity instanceof Wraith)  && !(entity instanceof NightWizard), new Rectangle(x, y, 0, 0, Rectangle.CENTER_DIMS)); // Gets the entities in the current position to hit.
 		toHit.forEach(entity -> ((Mob) entity).hurt(owner, owner.lvl));
 	}
 	

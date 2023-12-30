@@ -15,33 +15,50 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import minicraft.core.Game;
 
 public class Sound {
+	static String baseExt = "/resources/sound/";
+
 	// Creates sounds from their respective files
-	public static final Sound playerHurt = new Sound("/resources/sound/playerhurt.wav");
-	public static final Sound playerDeath = new Sound("/resources/sound/death.wav");
-	public static final Sound monsterHurt = new Sound("/resources/sound/monsterhurt.wav");
-	public static final Sound bossDeath = new Sound("/resources/sound/bossdeath.wav");
-	public static final Sound wraithDeath = new Sound("/resources/sound/wraithDeath.wav");
-	public static final Sound fuse = new Sound("/resources/sound/fuse.wav");
-	public static final Sound fuseChests = new Sound("/resources/sound/fuseChests.wav");
-	public static final Sound explode = new Sound("/resources/sound/explode.wav");
-	public static final Sound pickup = new Sound("/resources/sound/pickup.wav");
-	public static final Sound craft = new Sound("/resources/sound/craft.wav");
-	public static final Sound back = new Sound("/resources/sound/craft.wav");
-	public static final Sound place = new Sound("/resources/sound/craft.wav");
-	public static final Sound select = new Sound("/resources/sound/select.wav");
-	public static final Sound confirm = new Sound("/resources/sound/confirm.wav");
-	public static final Sound nightactivate = new Sound("/resources/sound/nightwizactivate.wav");
-	public static final Sound nightbuff = new Sound("/resources/sound/nightbuff.wav");
-	public static final Sound sprint = new Sound("/resources/sound/powerup.wav");
-	public static final Sound no = new Sound("/resources/sound/no.wav");
-	public static final Sound woosh = new Sound("/resources/sound/woosh.wav");
-	public static final Sound timeloop = new Sound("/resources/sound/timeloop.wav");
+	/**KNIGHT STATUE
+	 **/
+
+	public static final Sound statuePh1 = new Sound(baseExt + "knightStatue/statuePh1.wav");
+	public static final Sound statuePh2 = new Sound(baseExt + "knightStatue/statuePh2.wav");
+	public static final Sound statuePh3 = new Sound(baseExt + "knightStatue/statuePh3.wav");
+
+	/**MOB ACTIONS
+			**/
+	public static final Sound playerHurt = new Sound(baseExt + "mobActions/playerhurt.wav");
+	public static final Sound playerDeath = new Sound(baseExt + "mobActions/death.wav");
+	public static final Sound monsterHurt = new Sound(baseExt + "mobActions/monsterhurt.wav");
+	public static final Sound bossDeath = new Sound(baseExt + "mobActions/bossdeath.wav");
+	public static final Sound wraithDeath = new Sound(baseExt + "mobActions/wraithDeath.wav");
+	public static final Sound nightactivate = new Sound(baseExt + "mobActions/nightwizactivate.wav");
+
+	/**OTHER GAME ACTIONS
+	 **/
+	public static final Sound fuse = new Sound(baseExt + "fuse.wav");
+	public static final Sound fuseChests = new Sound(baseExt + "fuseChests.wav");
+	public static final Sound explode = new Sound(baseExt + "explode.wav");
+	public static final Sound pickup = new Sound(baseExt + "pickup.wav");
+	public static final Sound craft = new Sound(baseExt + "craft.wav");
+	public static final Sound back = new Sound(baseExt + "craft.wav");
+	public static final Sound place = new Sound(baseExt + "craft.wav");
+	public static final Sound select = new Sound(baseExt + "select.wav");
+	public static final Sound confirm = new Sound(baseExt + "confirm.wav");
+	public static final Sound nightbuff = new Sound(baseExt + "nightbuff.wav");
+	public static final Sound sprint = new Sound(baseExt + "powerup.wav");
+	public static final Sound no = new Sound(baseExt + "no.wav");
+	public static final Sound woosh = new Sound(baseExt + "woosh.wav");
+	public static final Sound timeloop = new Sound(baseExt + "timeloop.wav");
+
 
 	private Clip clip; // Creates a audio clip to be played
 	
 	public static void init() {} // A way to initialize the class without actually doing anything
-	
+
+
 	private Sound(String name) {
+
 		if (!Game.HAS_GUI) return;
 		
 		try {

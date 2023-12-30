@@ -9,6 +9,7 @@ import minicraft.entity.Direction;
 import minicraft.entity.mob.EnemyMob;
 import minicraft.entity.mob.MobAi;
 import minicraft.entity.mob.Player;
+import minicraft.entity.mob.Wraith;
 import minicraft.entity.particle.FireParticle;
 import minicraft.entity.particle.TextParticle;
 import minicraft.gfx.Color;
@@ -26,7 +27,7 @@ public class Spawner extends Furniture {
 	private Random rnd = new Random();
 	
 	private static final int ACTIVE_RADIUS = 8*16;
-	private static final int minSpawnInterval = 200, maxSpawnInterval = 500;
+	private static final int minSpawnInterval = 200, maxSpawnInterval = 550;
 	private static final int minMobSpawnChance = 10; // 1 in minMobSpawnChance chance of calling trySpawn every interval.
 	
 	public MobAi mob;
@@ -58,7 +59,7 @@ public class Spawner extends Furniture {
 	 * @param m Mob which will be spawned.
 	 */
 	public Spawner(MobAi m) {
-		super(getClassName(m.getClass()) + " Spawner", new Sprite(8, 32, 2, 2, 2), 7, 2);
+		super(getClassName(m.getClass()) + " spawner", new Sprite(8, 32, 2, 2, 2), 7, 2);
 		health = 100;
 		initMob(m);
 		resetSpawnInterval();
@@ -99,6 +100,7 @@ public class Spawner extends Furniture {
 	 */
 	private void trySpawn() {
 		if (level == null || Game.isValidClient()) return;
+
 		if (level.mobCount >= level.maxMobCount) return; // Can't spawn more entities
 		
 		Player player = getClosestPlayer();
@@ -108,12 +110,16 @@ public class Spawner extends Furniture {
 		
 		if (xd * xd + yd * yd > ACTIVE_RADIUS * ACTIVE_RADIUS) return;
 		
-		MobAi newmob;
+		MobAi newmob = null;
+
 		try {
-			if (mob instanceof EnemyMob)
+			if (mob instanceof EnemyMob) {
 				//noinspection JavaReflectionMemberAccess
-				newmob = mob.getClass().getConstructor(int.class).newInstance(lvl);
-			else
+				if(mob instanceof Wraith){newmob = mob.getClass().getConstructor(int.class,boolean.class).newInstance(lvl,false);}
+				else newmob = mob.getClass().getConstructor(int.class).newInstance(lvl);
+				if(newmob.usesCustomColor)newmob.extracolor=random.nextInt(0xFFFFFF);
+
+			}else
 				newmob = mob.getClass().newInstance();
 		} catch (Exception ex) {
 			System.err.println("Spawner ERROR: could not spawn mob; error initializing mob instance:");
@@ -136,7 +142,7 @@ public class Spawner extends Furniture {
 		newmob.y = spawnPos.y << 4;
 		//if (Game.debug) level.printLevelLoc("spawning new " + mob, (newmob.x >> 4), (newmob.y >> 4), "...");
 		
-		level.add(newmob);
+		level.add(newmob,this.getRealmId());
 		Sound.monsterHurt.play();
 		for (int i = 0; i < 6; i++) {
 			 int randX = rnd.nextInt(16);
@@ -166,7 +172,7 @@ public class Spawner extends Furniture {
 			}
 			
 			health -= dmg;
-			level.add(new TextParticle("" + dmg, x, y, Color.get(-1, 200, 300, 400)));
+			level.add(new TextParticle("" + dmg, x, y, Color.MAGENTA));
 			if (health <= 0) {
 				tool.payDurability();
 				level.remove(this);
@@ -198,6 +204,7 @@ public class Spawner extends Furniture {
 			if (lvl > maxMobLevel) lvl = 1;
 			try {
 				EnemyMob newmob = (EnemyMob)mob.getClass().getConstructor(int.class).newInstance(lvl);
+				if(mob instanceof Wraith)newmob = (EnemyMob)mob.getClass().getConstructor(int.class).newInstance(lvl,false);
 				initMob(newmob);
 			} catch (Exception ex) {
 				ex.printStackTrace();

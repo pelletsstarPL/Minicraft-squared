@@ -1,0 +1,15 @@
+20,book
+10,iron ore
+25,iron ore,4
+7,gunpowder
+7,torch,3
+5,torch,2
+10,string,3
+6,string,2
+14,lapis
+14,coal
+80,lapis,6
+20,obsidian,3
+3,string
+6,cloth
+:steak,2:wood,7

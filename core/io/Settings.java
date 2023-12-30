@@ -18,6 +18,7 @@ public class Settings {
 	
 	static {
 		options.put("fps", new RangeEntry("Max FPS", 30, 400, getRefreshRate())); // Has to check if the game is running in a headless mode. If it doesn't set the fps to 60
+
 		options.put("diff", new ArrayEntry<>("Difficulty", "Easy", "Normal", "Hard"));
 		options.get("diff").setSelection(1);
 		options.put("coloredgui", new BooleanEntry("Colored gui", true));
@@ -39,8 +40,8 @@ public class Settings {
 		options.put("dominantbiome", new ArrayEntry<>("Dominant biome", "Normal", "Forest", "Desert","Drylands", "Plain", "Swamp","Taiga","Tundra"));
 		options.put("theme", new ArrayEntry<>("World theme", "Normal", "Hell"));
 		options.put("type", new ArrayEntry<>("Terrain Type", "Island", "Box", "Mountain", "Irregular"));
-		options.put("biomedominace", new RangeEntry("Dom. biom. dominance", 0, 5, getRefreshRate()));
-		options.put("stonemass", new RangeEntry("Stonemass level", -1, 5, getRefreshRate()));
+		options.put("biomedominace", new RangeEntry("Dom. biom. dominance", 0, 5, 0));
+		options.put("stonemass", new RangeEntry("Stonemass level", -1, 5, 0));
 
 		options.put("unlockedskin", new BooleanEntry("Wear Suit", false));
 		options.put("skinon", new BooleanEntry("Wear Suit", false));
@@ -65,6 +66,11 @@ public class Settings {
 
 		options.put("textures", new ArrayEntry<>("textures", "Original", "Custom"));
 		options.get("textures").setSelection(0);
+
+		options.put("potionsn", new RangeEntry("Displayed potions amount", 2,5,3));
+		options.put("potiontxtlen", new ArrayEntry<>("Displayed text length", 0,3,5,7));
+		options.put("displayside", new ArrayEntry<>("Side of display", "Right","Left"));
+		options.put("displayicon", new BooleanEntry("Display icon", true));
 	}
 	
 	public static void init() {}

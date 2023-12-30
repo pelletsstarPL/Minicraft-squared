@@ -32,11 +32,14 @@ public abstract class Entity implements Tickable {
 	// Entity coordinates are per pixel, not per tile; each tile is 16x16 entity pixels.
 	protected final Random random = new Random();
 	public int x, y; // x, y entity coordinates on the map
+	private  int realmId; //0 overworld, 1 dungeon and other
+
 	private int xr, yr; // x, y radius of entity
 	private boolean removed; // Determines if the entity is removed from it's level; checked in Level.java
 	protected Level level; // The level that the entity is on
 	public int col; // Current color.
-	
+	public int health;
+
 	public int eid; // This is intended for multiplayer, but I think it could be helpful in single player, too. certainly won't harm anything, I think... as long as finding a valid id doesn't take long...
 	private String prevUpdates = ""; // Holds the last value returned from getUpdateString(), for comparison with the next call.
 	private String curDeltas = ""; // Holds the updates returned from the last time getUpdates() was called.
@@ -62,7 +65,13 @@ public abstract class Entity implements Tickable {
 		eid = -1;
 		lastUpdate = System.nanoTime();
 	}
-	
+
+	public int getRealmId(){
+		return this.realmId;
+	}
+	public void setRealmId(int rId){
+		;this.realmId = rId;
+	}
 	public abstract void render(Screen screen); // Used to render the entity on screen.
 	
 	@Override
@@ -95,12 +104,16 @@ public abstract class Entity implements Tickable {
 	public boolean canSwim() { return false; } // Determines if the entity can swim (extended in sub-classes)
 	public boolean canWool() { return false; } // This, strangely enough, determines if the entity can walk on wool; among some other things..?
 	public boolean canBurn() { return true; } // This, strangely enough, determines if the entity can be burned
+	public boolean canFly() { return false; } // This, strangely enough, determines if the entity can fly
 	public boolean canBeAffectedByLava() { return true; } // This, strangely enough, determines if the entity can be burned
 
 	public int getLightRadius() { return 0; } // Used for lanterns... and player? that might be about it, though, so idk if I want to put it here.
 	public int burningDuration=0;
 
-	
+	public void setCustomHitbox(int xr,int yr){
+		this.xr  = xr;
+		this.yr = yr;
+	}
 	/** If this entity is touched by another entity (extended by sub-classes) */
 	protected void touchedBy(Entity entity) {}
 
@@ -141,6 +154,7 @@ public abstract class Entity implements Tickable {
 	 * @return true if the move was successful, false if not.
 	 */
 	protected boolean move2(int xd, int yd) {
+
 		if (xd == 0 && yd == 0) return true; // Was not stopped
 
 		boolean interact = true;//!Game.isValidClient() || this instanceof ClientTickable;
@@ -329,13 +343,14 @@ public abstract class Entity implements Tickable {
 	 * @return true if a variable was updated, false if not.
 	 */
 	protected boolean updateField(String fieldName, String val) {
+		Level[][] levels = {World.levels,World.obvLevels};
 		switch (fieldName) {
 			case "eid": eid = Integer.parseInt(val); return true;
 			case "x": x = Integer.parseInt(val); return true;
 			case "y": y = Integer.parseInt(val); return true;
 			case "level":
 				if (val.equals("null")) return true; // This means no level.
-				Level newLvl = World.levels[Integer.parseInt(val)];
+				Level newLvl = levels[this.getRealmId()][World.lvlIdx(this.level.depth,World.lvlIdxList[this.getRealmId()])];
 				if (newLvl != null && level != null) {
 					if (newLvl.depth == level.depth) return true;
 					level.remove(this);
@@ -432,4 +447,6 @@ public abstract class Entity implements Tickable {
 	
 	@Override
 	public final int hashCode() { return eid; }
+
+
 }

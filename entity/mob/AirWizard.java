@@ -4,10 +4,7 @@ import minicraft.core.Game;
 import minicraft.core.Updater;
 import minicraft.core.io.Settings;
 import minicraft.core.io.Sound;
-import minicraft.entity.Arrow;
-import minicraft.entity.Direction;
-import minicraft.entity.Entity;
-import minicraft.entity.Spark;
+import minicraft.entity.*;
 import minicraft.gfx.Color;
 import minicraft.gfx.Font;
 import minicraft.gfx.MobSprite;
@@ -33,6 +30,10 @@ public class AirWizard extends EnemyMob {
 
 	public static boolean beaten = false;
 	public boolean canBeAffectedByLava() { return false; }
+	@Override
+	public boolean canFly() {
+		return true;
+	}
 	public boolean secondform;
 	private int artime;
 	int direction;
@@ -41,6 +42,7 @@ public class AirWizard extends EnemyMob {
 	private int attackType = 0;
 	public boolean phaseTriggered;
 	private int renderTime;
+	public  static boolean active;
 	private float hpLevel=health/maxHealth;
 	private int nextPhase = this.maxHealth-(secondform ? 1000 : 500);
 
@@ -73,13 +75,13 @@ public class AirWizard extends EnemyMob {
 			Sound.fuseChests.play(); // Play boss-rise/awakening sound.
 			invulnerability = (secondform && hpLevel < 0.41 ? 6 : 4);
 			Game.notifications.add(quotes[random.nextInt(quotes.length)]);
-			level.add(new WraithA(3 + (hpLevel < 0.21 ? 1 : 0)), x - 12, y - 12);
-			level.add(new WraithA(3 + (hpLevel < 0.21 ? 1 : 0)), x - 12, y + 12);
-			level.add(new WraithA(3 + (hpLevel < 0.21 ? 1 : 0)), x + 12, y - 12);
-			level.add(new WraithA(3 + (hpLevel < 0.26 ? 1 : 0)), x + 12, y + 12);
+			level.add(new Wraith(3 + (hpLevel < 0.21 ? 1 : 0),1), x - 12, y - 12);
+			level.add(new Wraith(3 + (hpLevel < 0.21 ? 1 : 0),1), x - 12, y + 12);
+			level.add(new Wraith(3 + (hpLevel < 0.21 ? 1 : 0),1), x + 12, y - 12);
+			level.add(new Wraith(3 + (hpLevel < 0.26 ? 1 : 0),1), x + 12, y + 12);
 			if (secondform && hpLevel < 0.41) {
-				level.add(new WraithA(4), x - 12, y - 12);
-				level.add(new WraithA(4), x - 12, y + 12);
+				level.add(new Wraith(4,1), x - 12, y - 12);
+				level.add(new Wraith(4,1), x - 12, y + 12);
 			}
 			this.health--;
 			phaseTriggered=false;
@@ -93,6 +95,7 @@ public class AirWizard extends EnemyMob {
 	public void tick() {
 
 		super.tick();
+		active = true;
 		Player player = getClosestPlayer();
 		if(health==nextPhase && health!=0){
 			phaseTriggered=true;
@@ -112,6 +115,7 @@ public class AirWizard extends EnemyMob {
 
 			this.dir = Direction.getDirection(dir);
 
+			if(player!=null)
 			attackDelay-=player.potionEffects.containsKey(PotionType.AntiTime) ? 2 : player.potionEffects.containsKey(PotionType.Time) ? (Updater.tickCount%2==0 ? 1 : 0) : 1;
 			if (attackDelay <= 0) {
 				//attackType = 0; // Attack type is set to 0, as the default.
@@ -210,25 +214,8 @@ public class AirWizard extends EnemyMob {
 			lvlSprites[lvl-1] = (secondform ? MobSprite.compileMobSpriteAnimations(0, 22+(hpLevel<0.5 ? 4 :0)) : MobSprite.compileMobSpriteAnimations(0, 20+(hpLevel<0.5 ? 4 :0)));
 		}else lvlSprites[lvl-1] =(secondform ? MobSprite.compileMobSpriteAnimations(8, 22+(hpLevel<0.5 ? 4 :0)) : MobSprite.compileMobSpriteAnimations(8, 20+(hpLevel<0.5 ? 4 :0)));
 		super.render(screen);
+		renderHPPercent(screen);
 
-		int textcol = Color.get(1, 0, 204, 0);
-		int textcol2 = Color.get(1, 0, 51, 0);
-		int percent = health / (maxHealth / 100);
-		String h =percent + "%";
-
-		if (percent < 1) h = "1%";
-
-		if (percent < 16) {
-			textcol = Color.get(1, 204, 0, 0);
-			textcol2 = Color.get(1, 51, 0, 0);
-		}
-		else if (percent < 51) {
-			textcol = Color.get(1, 204, 204, 9);
-			textcol2 = Color.get(1, 51, 51, 0);
-		}
-		int textwidth = Font.textWidth(h);
-		Font.draw(h, screen, (x - textwidth/2) + 1, y - 17, textcol2);
-		Font.draw(h, screen, (x - textwidth/2), y - 18, textcol);
 	}
 
 	@Override
@@ -242,6 +229,7 @@ public class AirWizard extends EnemyMob {
 	/** What happens when the air wizard dies */
 	public void die() {
 		super.die(); // Calls the die() method in EnemyMob.java
+		active = false;
 		Player[] players = level.getPlayers();
 		Sound.bossDeath.play(); // Play boss-death sound.
 		if (!secondform) {
@@ -273,6 +261,9 @@ public class AirWizard extends EnemyMob {
 
 		}
 	}
-
+		@Override
+		public boolean isSwimming(){
+		return false; //AW always flies . They never swim
+		}
 	public int getMaxLevel() { return 2; }
 }

@@ -5,9 +5,9 @@ import minicraft.gfx.Sprite;
 public class Lantern extends Furniture {
 	public enum Type {
 		NORM ("Lantern", 9, 0),
-		IRON ("Iron Lantern", 12, 2),
-		GOLD ("Gold Lantern", 15, 4),
-		GEM ("Gem Lantern", 19, 6);
+		IRON ("Iron lantern", 12, 2),
+		GOLD ("Gold lantern", 15, 4),
+		GEM ("Gem lantern", 19, 6);
 
 		protected int light, offset;
 		protected String title;

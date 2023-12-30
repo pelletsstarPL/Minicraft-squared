@@ -5,6 +5,7 @@ import java.awt.GraphicsEnvironment;
 
 import minicraft.core.io.Localization;
 import minicraft.core.io.Settings;
+import minicraft.core.io.Sound;
 import minicraft.entity.furniture.Bed;
 import minicraft.entity.mob.Player;
 import minicraft.gfx.Screen;
@@ -13,11 +14,7 @@ import minicraft.level.Level;
 import minicraft.level.tile.Tile;
 import minicraft.level.tile.Tiles;
 import minicraft.saveload.Save;
-import minicraft.screen.EndGameDisplay;
-import minicraft.screen.LevelTransitionDisplay;
-import minicraft.screen.PauseDisplay;
-import minicraft.screen.PlayerDeathDisplay;
-import minicraft.screen.WorldSelectDisplay;
+import minicraft.screen.*;
 
 import static minicraft.gfx.Screen.reduce;
 
@@ -25,7 +22,6 @@ public class Updater extends Game {
 	private Updater() {}
 	
 	// TIME AND TICKS
-	
 	public static final int normSpeed = 60; // Measured in ticks / second.
 	public static int textDisplayMove = 0;
 	public static float gamespeed = 1; // Measured in MULTIPLES OF NORMSPEED.
@@ -95,6 +91,8 @@ public class Updater extends Game {
 	// VERY IMPORTANT METHOD!! Makes everything keep happening.
 	// In the end, calls menu.tick() if there's a menu, or level.tick() if no menu.
 	public static void tick() {
+
+		if(input.getKey("potionfulllist").clicked && player.potionEffects.size()>(int)Settings.get("potionsn"))setMenu(new PotionListDisplay());
 		if(tickCount%30==0)textDisplayMove++;
 		if(gameTime>dayLength)pastDay1=false;
 		double bchance=Math.random();
@@ -144,8 +142,8 @@ public class Updater extends Game {
 		
 		if (isValidClient())
 			Game.client.checkConnection();
-		
-		Level level = levels[currentLevel];
+		Level lvlList[][] = {levels,obvLevels};
+		Level level = lvlList[player.getRealmId()][currentLevel];
 		if (Bed.sleeping() && !isValidClient()) {
 			// IN BED
 			if (gamespeed != 20) {
@@ -226,13 +224,14 @@ public class Updater extends Game {
 			
 			if (!isValidServer() || menu != null && !hadMenu) // The "menu != null && !hadMenu" check is a possible fix for a bug. If menu has changed and we're a server, tick.
 				input.tick(); // INPUT TICK; no other class should call this, I think...especially the *Menu classes.
-			
+
+			//REWORK!
 			if (isValidClient() && Renderer.readyToRenderGameplay) {
-				for (int i = 0; i < levels.length; i++)
-					if (levels[i] != null)
-						levels[i].tick(i == currentLevel);
+				for (int i = 0; i < lvlList[player.getRealmId()].length; i++)
+					if (lvlList[player.getRealmId()][i] != null)
+						lvlList[player.getRealmId()][i].tick(i == currentLevel);
 			}
-			
+
 			if (menu != null) {
 				// A menu is active.
 				if (player != null)
@@ -251,11 +250,16 @@ public class Updater extends Game {
 						if (World.playerDeadTime > 60) {
 							setMenu(new PlayerDeathDisplay());
 						}
-					} else if (World.pendingLevelChange != 0) {
+					} else if (World.pendingLevelChange != 0 && World.pendingRealmChange ==0) {
 						setMenu(new LevelTransitionDisplay(World.pendingLevelChange));
 						World.pendingLevelChange = 0;
+					} else if(World.pendingRealmChange !=0 && World.pendingLevelChange!=0){
+						setMenu(new RealmTransitionDisplay(World.pendingRealmChange,World.pendingLevelChange));
+						World.pendingRealmChange = 0;
+						World.pendingLevelChange = 0;
+						player.movRlmDelay = 50;
+
 					}
-					
 					player.tick(); // Ticks the player when there's no menu.
 					if (isValidClient() && Bed.inBed(player) && !Bed.sleeping() && input.getKey("exit").clicked)
 						Game.client.sendBedExitRequest();
@@ -282,9 +286,9 @@ public class Updater extends Game {
 					if (input.getKey("ctrl-p").clicked) {
 						// Print all players on all levels, and their coordinates.
 						System.out.println("Printing players on all levels "+Network.onlinePrefix());
-						for (int i = 0; i < levels.length; i++) {
-							if (levels[i] == null) continue;
-							levels[i].printEntityLocs(Player.class);
+						for (int i = 0; i < lvlList[player.getRealmId()].length; i++) {
+							if (lvlList[player.getRealmId()][i] == null) continue;
+							lvlList[player.getRealmId()][i].printEntityLocs(Player.class);
 						}
 					}
 					
@@ -346,10 +350,10 @@ public class Updater extends Game {
 						if (input.getKey("minus").clicked && player.moveSpeed > 1) player.moveSpeed--; // -= 0.5D;
 						
 						if (input.getKey("shift-u").clicked) {
-							levels[currentLevel].setTile(player.x>>4, player.y>>4, Tiles.get("Stairs Up"));
+							lvlList[player.getRealmId()][currentLevel].setTile(player.x>>4, player.y>>4, Tiles.get("Stairs Up"));
 						}
 						if (input.getKey("shift-d").clicked) {
-							levels[currentLevel].setTile(player.x>>4, player.y>>4, Tiles.get("Stairs Down"));
+							lvlList[player.getRealmId()][currentLevel].setTile(player.x>>4, player.y>>4, Tiles.get("Stairs Down"));
 						}
 						
 						if (isConnectedClient() && input.getKey("alt-t").clicked) {

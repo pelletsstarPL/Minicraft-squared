@@ -128,6 +128,7 @@ public class InputHandler implements KeyListener {
 		keymap.put("CREATIVE=debug", "SHIFT-C|SHIFT-2");
 		
 		keymap.put("POTIONEFFECTS", "P"); // Toggle potion effect display
+		keymap.put("POTIONFULLLIST", "O"); // display full potion effects list
 		//keymap.put("FPSDISP", "F3"); // Toggle fps display
 		keymap.put("INFO", "SHIFT-I"); // Toggle player stats display
 
@@ -140,6 +141,8 @@ public class InputHandler implements KeyListener {
 
 		//Creative
 		keymap.put("TOGGLELIGHT","SHIFT-L"); //toggles light in caves while in creative
+		keymap.put("LVLUP","SHIFT-UP"); //toggles light in caves while in creative
+		keymap.put("LVLDOWN","SHIFT-DOWN"); //toggles light in caves while in creative
 	}
 	
 	public void resetKeyBindings() {

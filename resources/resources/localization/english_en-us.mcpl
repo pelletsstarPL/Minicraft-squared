@@ -280,10 +280,6 @@ Potion
 Power Glove
 Power Glove
 
-# ShearItem.java
-
-Shear
-Shear
 
 # StackableItem.java
 
@@ -430,8 +426,113 @@ Can only be placed on
 Dig a hole first!
 Dig a hole first!
 
+Moss
+Moss
+
+MossT
+MossT
+
+Snow
+Snow
+
+Snowlayer
+Snowlayer
+
+Deepslate
+Deepslate
+
+Patch Vase
+Patch Vasa
+
+Ornate Obsidian
+Ornate Obsidian
+
+Decorated Obsidian
+Decorated Obsidian
+
+Tile Obsidian
+Tile Obsidian
+
+Fungus Spores
+Fungus Spores
+
+Catkin
+Catkin
+
+Cone
+Cone
+
+Fern Spores
+Fern Spores
+
+Ice
+Ice
+
+Stonecutter
+Stonecutter
+
+Shardforge
+Shardforge
+
+Gem Lantern
+Gem Lantern
+
+Rose
+Rose
+
+Small rose
+Small rose
+
+Sunflower
+Sunflower
+
+Small flower
+Small flower
+
+Lily Pad
+Lily Pad
+
+Mangrove
+Mangrove
+
+MangroveW
+MangroveW
+
+Azalea
+Azalea
+
+Coarse Dirt
+Coarse Dirt
+
+Deepslate
+Deepslate
+
+Aerocloud
+Aerocloud
+
+Skygrass
+Skygrass
+
+Small cactus
+Small cactus
+
+Small Tree
+Small Tree
+
+Confier
+Conifer
+
+Snowy conifer
+Snowy conifer
+
+Small snow conifer
+Small snow conifer
+
 # ToolItem.java
 
+Crude
+Crude
+
 Wood
 Wood
 
@@ -446,6 +547,9 @@ Gold
 
 Gem
 Gem
+
+Obsidium
+Obsidium
 
 Potato
 Potato
@@ -463,6 +567,9 @@ Gold Fishing Rod
 
 Gem Fishing Rod
 Gem Fishing Rod
+
+Obsidium Fishing Rod
+Obsidium Fishing Rod
 
 # ToolType.java
 
@@ -486,6 +593,12 @@ Bow
 
 Claymore
 Claymore
+
+Hammer
+Hammer
+
+Shears
+Shears
 
 # TorchItem.java
 
@@ -535,6 +648,18 @@ Stairs Up
 
 Stairs Down
 Stairs Down
+
+Obsidian Stairs Up
+Obsidian Stairs Up
+
+Obsidian Stairs Down
+Obsidian Stairs Down
+
+Raw Obsidian
+Raw Obsidian
+
+Lava Brick
+Lava Brick
 
 Water
 Water
@@ -1083,5 +1208,9 @@ Irregular
 
 Wear Suit
 Wear Suit
+
+
+
+
 
 ### minicraft end

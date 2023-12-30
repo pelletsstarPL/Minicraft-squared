@@ -11,8 +11,8 @@ import minicraft.item.PotionType;
 public class AncSkeleton extends EnemyMob {
 	private static MobSprite[][][] sprites;
 	static {
-		sprites = new MobSprite[1][4][2];
-		for (int i = 0; i < 1; i++) {
+		sprites = new MobSprite[2][4][2];
+		for (int i = 0; i < 2; i++) {
 			MobSprite[][] list = MobSprite.compileMobSpriteAnimations(24, 4 + (i * 2));
 			sprites[i] = list;
 		}
@@ -26,7 +26,7 @@ public class AncSkeleton extends EnemyMob {
 	 * @param lvl The skeleton's level.
 	 */
 	public AncSkeleton(int lvl) {
-		super(lvl, sprites, 90, false, 160, 45, 200);
+		super(lvl, sprites, lvl == 2 ? 140 :90, false, 160, 45, 200);
 
 		arrowtime = 500 / (2 + 5);
 		artime = arrowtime;
@@ -73,5 +73,5 @@ public class AncSkeleton extends EnemyMob {
 
 		super.die();
 	}
-	public int getMaxLevel() { return 1; }
+	public int getMaxLevel() { return 2; }
 }

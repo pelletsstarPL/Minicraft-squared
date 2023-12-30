@@ -13,6 +13,10 @@ public class Clallay extends PassiveMob {
 	public Clallay() {
 		super(sprites);
 	}
+	@Override
+	public boolean canFly() {
+		return true;
+	}
 	
 	public void die() {
 		super.die();

@@ -20,7 +20,7 @@ public class ItemEntity extends Entity implements ClientTickable {
 	// Solely for multiplayer use.
 	private boolean pickedUp = false;
 	private long pickupTimestamp;
-	
+
 	/**
 	 * Creates an item entity of the item item at position (x,y) with size 2*2.
 	 * @param item Item to add as item entity
@@ -29,7 +29,7 @@ public class ItemEntity extends Entity implements ClientTickable {
 	 */
 	public ItemEntity(Item item, int x, int y) {
 		super(2, 2);
-		
+
 		this.item = item;
 		this.x = x;
 		this.y = y;

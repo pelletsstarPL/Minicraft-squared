@@ -3,6 +3,7 @@ package minicraft.entity.furniture;
 import java.util.Random;
 
 import minicraft.core.io.Sound;
+import minicraft.gfx.Screen;
 import org.jetbrains.annotations.Nullable;
 
 import minicraft.core.Game;
@@ -24,27 +25,37 @@ import minicraft.item.StackableItem;
 public class DungeonChest extends Chest {
 	private static final Sprite openSprite = new Sprite(14, 28, 2, 2, 2);
 	private static final Sprite lockSprite = new Sprite(12, 28, 2, 2, 2);
+
+	private static final Sprite openTwoLocksSprite = new Sprite(18, 28, 2, 2, 2);
+	private static final Sprite lockTwoLocksSprite = new Sprite(16, 28, 2, 2, 2);
 	
 	public Random random = new Random();
 	private boolean isLocked;
+	private boolean  twoLocks;
 	
 	/**
 	 * Creates a custom chest with the name Dungeon Chest.
 	 * @param populateInv
 	 */
 	public DungeonChest(boolean populateInv) {
-		this(populateInv, false);
+		this(populateInv, false,false);
+	}
+	public DungeonChest(boolean populateInv,boolean unlocked) {
+		this(populateInv, unlocked,false);
 	}
 
-	public DungeonChest(boolean populateInv, boolean unlocked) {
+	public DungeonChest(boolean populateInv, boolean unlocked,boolean hasTwoLocks) {
 		super("Dungeon Chest");
 		if (populateInv) {
 			populateInv();
 		}
-
+		this.twoLocks = hasTwoLocks;
 		setLocked(!unlocked);
+	//setTw
 	}
-
+	public boolean hasTwoLocks(){
+		return this.twoLocks;
+	}
 	@Override
 	public Furniture clone() {
 		return new DungeonChest(false, !this.isLocked);
@@ -52,16 +63,18 @@ public class DungeonChest extends Chest {
 
 	public boolean use(Player player) {
 		if (isLocked) {
-			boolean activeKey = player.activeItem != null && player.activeItem.equals(Items.get("Key"));
-			boolean invKey = player.getInventory().count(Items.get("key")) > 0;
+			StackableItem key = (StackableItem) player.activeItem;
+			boolean activeKey = player.activeItem != null && player.activeItem.equals(Items.get("Key"))  && key.count > (twoLocks ? 1 : 0);
+			boolean invKey = player.getInventory().count(Items.get("key")) > (twoLocks ? 1 : 0);
 
-			if (activeKey || invKey) { // If the player has a key...
+			if (activeKey || invKey || Game.isMode("creative")) { // If the player has a key... or two if double locked
 				if (!Game.isMode("creative")) { // Remove the key unless on creative mode.
 					if (activeKey) { // Remove activeItem
-						StackableItem key = (StackableItem) player.activeItem;
-						key.count--;
+
+						key.count-=(twoLocks ? 2 : 1);
 					} else { // Remove from inv
 						player.getInventory().removeItem(Items.get("key"));
+						if(twoLocks)player.getInventory().removeItem(Items.get("key")); //remove one more
 					}
 				}
 
@@ -69,13 +82,13 @@ public class DungeonChest extends Chest {
 				this.sprite = openSprite; // Set to the unlocked color
 
 				level.add(new SmashParticle(x * 16, y * 16));
-				level.add(new TextParticle("-1 key", x, y, Color.RED));
-				int numChests = 0;
+				level.add(new TextParticle(twoLocks ? "-2 keys" : "-1 key", x, y, Color.RED));
+				/*int numChests = 0;
 				for (Entity e : level.getEntityArray())
 					if (e instanceof DungeonChest && ((DungeonChest) e).isLocked)
-						numChests++;
-				level.chestCount = numChests;
-				if (level.chestCount == 0) { // If this was the last chest...
+						numChests++;*/
+				level.chestCount--;
+				if (level.chestCount == 0 && level.depth==-6) { // If this was the last chest...
 					level.dropItem(x, y, 5, Items.get("Gold Apple"));
 					Sound.fuseChests.play();
 					Updater.notifyAll("You hear a noise from the surface!", -100); // Notify the player of the developments
@@ -83,7 +96,7 @@ public class DungeonChest extends Chest {
 					AirWizard wizard = new AirWizard(true);
 					wizard.x = World.levels[World.lvlIdx(0)].w / 2;
 					wizard.y = World.levels[World.lvlIdx(0)].h / 2;
-					World.levels[World.lvlIdx(0)].add(wizard);
+					World.levels[World.lvlIdx(0)].add(wizard); //JUST FOR OVERWORLD
 				}
 
 				return super.use(player); // the player unlocked the chest.
@@ -115,6 +128,19 @@ public class DungeonChest extends Chest {
 
 		// auto update sprite
 		sprite = locked ? DungeonChest.lockSprite : DungeonChest.openSprite;
+	}
+	public void setLocks(boolean twoLocks) {
+
+	}
+
+	public void render(Screen screen){
+		super.render(screen);
+		if(twoLocks)
+		if(isLocked)lockTwoLocksSprite.render(screen,x - 8,y  - 8);
+		else openTwoLocksSprite.render(screen,x - 8,y - 8);
+	}
+	public void setDoubleLock(boolean twoLocks){
+		this.twoLocks = twoLocks;
 	}
 	
 	/** what happens if the player tries to push a Dungeon Chest. */

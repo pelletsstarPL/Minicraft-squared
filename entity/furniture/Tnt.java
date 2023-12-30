@@ -2,6 +2,7 @@ package minicraft.entity.furniture;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.Timer;
@@ -17,6 +18,7 @@ import minicraft.gfx.Screen;
 import minicraft.gfx.Sprite;
 import minicraft.item.Item;
 import minicraft.level.Level;
+import minicraft.level.tile.Tile;
 import minicraft.level.tile.Tiles;
 
 public class Tnt extends Furniture implements ActionListener {
@@ -29,13 +31,13 @@ public class Tnt extends Furniture implements ActionListener {
 	private Timer explodeTimer;
 	private Level levelSave;
 
-	private String[] explosionBlacklist = new String[]{ "hard rock","hard rock II", "obsidian wall","obsidiand wall","obsidian stairs up","stairs up","obsidian stairs down","stairs down"};
-	
+	private String[] explosionBlacklist = new String[]{"obsidium block","gem block","infinite void","obsidian","decorated unbreakable","obsidiand door","obsidian void portal","obsidian bridge support","Obsidian void portal frame", "unbreakable wall","obsidian deepslate","hard rock","hard rock II", "obsidian wall","obsidiand wall","obsidian stairs up","stairs up","obsidian stairs down","stairs down","obsidian void portal"};
+
 	/**
 	 * Creates a new tnt furniture.
 	 */
 	public Tnt() {
-		super("Tnt", new Sprite(30, 30, 2, 2, 2), 3, 2);
+		super("TNT", new Sprite(30, 30, 2, 2, 2), 3, 2);
 		fuseLit = false;
 		ftik = 0;
 		
@@ -48,8 +50,8 @@ public class Tnt extends Furniture implements ActionListener {
 		
 		if (fuseLit) {
 			ftik++;
-			if(ftik%5<2) this.sprite=new Sprite(30, 28, 2, 2, 2);
-			else this.sprite=new Sprite(30, 30, 2, 2, 2);
+			if(ftik%5<2) this.sprite=new Sprite(30, 30, 2, 2, 2);
+			else this.sprite=new Sprite(30, 34, 2, 2, 2);
 			if (ftik >= FUSE_TIME) {
 				// Blow up
 				List<Entity> entitiesInRange = level.getEntitiesInRect(new Rectangle(x, y, BLAST_RADIUS * 2, BLAST_RADIUS * 2, Rectangle.CENTER_DIMS));

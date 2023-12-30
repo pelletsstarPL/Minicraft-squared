@@ -3,6 +3,7 @@ package minicraft.entity;
 import java.util.List;
 
 import com.sun.tools.classfile.ConstantPool;
+import minicraft.entity.furniture.KnightStatue;
 import minicraft.entity.mob.*;
 import minicraft.entity.particle.TextParticle;
 import minicraft.gfx.Color;
@@ -16,6 +17,10 @@ import javax.swing.*;
 public class Arrow extends Entity implements ClientTickable {
 	private Direction dir;
 	private int damage;
+	@Override
+	public boolean canFly() {
+		return true;
+	}
 	private int pierce;
 	public Mob owner;
 	public static boolean criticalHit = false;
@@ -74,7 +79,9 @@ public class Arrow extends Entity implements ClientTickable {
 			if (getClosestPlayer().potionEffects.containsKey(PotionType.Time) && !(owner instanceof Player)) speed = 3;
 			if (getClosestPlayer().potionEffects.containsKey(PotionType.AntiTime) && !(owner instanceof Player)) speed = 9;
 			for (Entity hit : entitylist) {
+				if(hit instanceof ObsidianKnight || hit instanceof KnightStatue){remove();break;};
 				//limited pierce
+
 				if (hit instanceof Mob && hit != owner) {
 					criticalHit = random.nextInt(15) > 12;
 					Mob mob = (Mob) hit;
@@ -132,7 +139,7 @@ public class Arrow extends Entity implements ClientTickable {
 		if(dir == Direction.UP) xt = 2;
 		if(dir == Direction.DOWN) xt = 3;
 		String own=owner.toString();
-		if(own.startsWith("AirWiz")) screen.render(x - 4, y - 4, (6+xt) + yt * 32, 0);
+		if(own.startsWith("AirWiz")) screen.render(x - 4, y - 4, (4+xt) + yt * 32, 0);
 		else screen.render(x - 4, y - 4, xt + yt * 32, 0);
 	}
 

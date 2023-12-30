@@ -121,8 +121,10 @@ public class Game {
 
 	// LEVEL
 
-	public static Level[] levels = new Level[7]; // This array stores the different levels.
-	public static int currentLevel = 3; // This is the level the player is on. It defaults to 3, the surface.
+	public static Level[] levels = new Level[World.idxToDepth.length]; // This array stores the different levels of real world.
+	public static Level[] obvLevels = new Level[World.idxToDepthObv.length]; // This array stores the different levels of the Obsidian Void
+	public static int currentLevel = World.idxToDepth.length -2; // Surface reference
+	public static int currentRealm = 0;
 
 	static boolean gameOver = false; // If the player wins this is set to true.
 
@@ -134,38 +136,10 @@ public class Game {
 		if (isValidServer()) server.endConnection();
 		running = false;
 	}
-	/*public static void dsc(){
-		Core discordCore = null;
-		CreateParams params = new CreateParams();
-		params.setClientID(981910802586034198L);
-		discordCore = new Core(params);
-		Activity activity = new Activity();
-		activity.assets().setLargeImage("logo");
-		activity.assets().setLargeText("² > +");
-		activity.setDetails(detail);
-		activity.setState("detail");
-	}*/
+
 	public static void main(String[] args) throws InterruptedException {
 		Core discordCore = null;
-		/*try {
-			Core.initDownload();
-			CreateParams params = new CreateParams();
-			params.setClientID(981910802586034198L);
-			params.setFlags(CreateParams.getDefaultFlags());
-			params.setFlags(CreateParams.Flags.NO_REQUIRE_DISCORD);
 
-			discordCore = new Core(params);
-			Activity activity = new Activity();
-			activity.assets().setLargeImage("logo");
-			activity.assets().setLargeText("² > +");
-			activity.setDetails(detail);
-			activity.setState("Browsing menus");
-			activity.timestamps().setStart(Instant.now());
-
-			discordCore.activityManager().updateActivity(activity);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}*/
 		Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
 			throwable.printStackTrace();
 
